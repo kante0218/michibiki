@@ -1,12 +1,12 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { signIn, signInWithGoogle } from "@/lib/auth";
 import Logo from "@/components/Logo";
 import TermsModal from "@/components/TermsModal";
-import KanjiSplash from "@/components/KanjiSplash";
+
 
 export default function LoginPage() {
   const router = useRouter();
@@ -19,25 +19,6 @@ export default function LoginPage() {
   const [privacyModalOpen, setPrivacyModalOpen] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const [showSplash, setShowSplash] = useState(false);
-
-  useEffect(() => {
-    // Only show splash once per session
-    try {
-      if (!sessionStorage.getItem("splashShown")) {
-        setShowSplash(true);
-      }
-    } catch {
-      // sessionStorage not available — show splash anyway
-      setShowSplash(true);
-    }
-  }, []);
-
-  const handleSplashComplete = useCallback(() => {
-    try { sessionStorage.setItem("splashShown", "true"); } catch {}
-    setShowSplash(false);
-  }, []);
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
@@ -78,7 +59,6 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50/30 flex flex-col">
-      {showSplash && <KanjiSplash onComplete={handleSplashComplete} />}
       {/* Header */}
       <header className="bg-white/80 backdrop-blur-sm border-b border-gray-100/80">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
