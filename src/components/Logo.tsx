@@ -45,9 +45,11 @@ export default function Logo({
     return (
       <div className={`flex items-center gap-1.5 ${className}`}>
         {imgElement}
-        <span className={`font-bold text-gray-900 ${config.brandText} tracking-tight`}>
-          みちびき
-        </span>
+        <img
+          src="/logo-brand.png"
+          alt="みちびき"
+          className={`${config.imgSize} w-auto object-contain`}
+        />
       </div>
     );
   }
@@ -77,9 +79,11 @@ export function LogoDark({
     return (
       <div className={`flex items-center gap-1.5 ${className}`}>
         {imgElement}
-        <span className={`text-white font-bold ${config.brandText}`}>
-          みちびき
-        </span>
+        <img
+          src="/logo-brand.png"
+          alt="みちびき"
+          className={`${config.imgSize} w-auto object-contain brightness-0 invert`}
+        />
       </div>
     );
   }
