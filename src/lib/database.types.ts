@@ -542,6 +542,67 @@ export interface Database {
         };
         Update: Record<string, never>;
       };
+      connections: {
+        Row: {
+          id: string;
+          user_id: string;
+          first_name: string;
+          last_name: string;
+          email: string | null;
+          company: string | null;
+          position: string | null;
+          connected_on: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          first_name: string;
+          last_name: string;
+          email?: string | null;
+          company?: string | null;
+          position?: string | null;
+          connected_on?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          first_name?: string;
+          last_name?: string;
+          email?: string | null;
+          company?: string | null;
+          position?: string | null;
+          connected_on?: string | null;
+        };
+      };
+      referrals: {
+        Row: {
+          id: string;
+          referrer_id: string;
+          referred_name: string;
+          referred_email: string;
+          status: "signed_up" | "application_started" | "application_completed" | "offer_extended" | "hired" | "paid";
+          reward_amount: number;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          referrer_id: string;
+          referred_name: string;
+          referred_email: string;
+          status?: "signed_up" | "application_started" | "application_completed" | "offer_extended" | "hired" | "paid";
+          reward_amount?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          referred_name?: string;
+          referred_email?: string;
+          status?: "signed_up" | "application_started" | "application_completed" | "offer_extended" | "hired" | "paid";
+          reward_amount?: number;
+          updated_at?: string;
+        };
+      };
     };
     Views: Record<string, never>;
     Functions: Record<string, never>;
