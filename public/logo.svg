@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 240" fill="none">
+  <defs>
+    <linearGradient id="logoGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#6366f1"/>
+      <stop offset="50%" stop-color="#a855f7"/>
+      <stop offset="100%" stop-color="#ec4899"/>
+    </linearGradient>
+  </defs>
+  <text x="100" y="160" text-anchor="middle" font-family="'Yuji Boku', 'Noto Serif JP', serif" font-size="180" fill="url(#logoGrad)">導</text>
+  <text x="100" y="220" text-anchor="middle" font-family="'Yuji Boku', 'Noto Serif JP', serif" font-size="40" fill="url(#logoGrad)">みちびき</text>
+</svg>
