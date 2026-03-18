@@ -32,6 +32,47 @@ export async function signInWithGoogle() {
   return { data, error };
 }
 
+export async function signInWithLinkedIn() {
+  const { data, error } = await supabase.auth.signInWithOAuth({
+    provider: "linkedin_oidc",
+    options: {
+      redirectTo: `${window.location.origin}/home`,
+      scopes: "openid profile email",
+    },
+  });
+  return { data, error };
+}
+
+export async function linkLinkedInAccount() {
+  const { data, error } = await supabase.auth.linkIdentity({
+    provider: "linkedin_oidc",
+    options: {
+      redirectTo: `${window.location.origin}/profile?tab=settings`,
+      scopes: "openid profile email",
+    },
+  });
+  return { data, error };
+}
+
+export async function unlinkLinkedInAccount() {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { error: new Error("ユーザーが見つかりません") };
+
+  const linkedinIdentity = user.identities?.find(
+    (id) => id.provider === "linkedin_oidc"
+  );
+  if (!linkedinIdentity) return { error: new Error("LinkedIn連携が見つかりません") };
+
+  const { data, error } = await supabase.auth.unlinkIdentity(linkedinIdentity);
+  return { data, error };
+}
+
+export async function getLinkedIdentities() {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { identities: [], user: null };
+  return { identities: user.identities || [], user };
+}
+
 export async function signOut() {
   const { error } = await supabase.auth.signOut();
   return { error };

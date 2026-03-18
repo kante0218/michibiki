@@ -19,6 +19,136 @@ interface SkillCategory {
   skills: Skill[];
 }
 
+/* ── LinkedIn Connection Section ── */
+function LinkedInConnectionSection() {
+  const [linkedInConnected, setLinkedInConnected] = useState(false);
+  const [linkedInEmail, setLinkedInEmail] = useState<string | null>(null);
+  const [linkedInName, setLinkedInName] = useState<string | null>(null);
+  const [linkLoading, setLinkLoading] = useState(false);
+  const [checkLoading, setCheckLoading] = useState(true);
+
+  useEffect(() => {
+    checkLinkedInStatus();
+  }, []);
+
+  const checkLinkedInStatus = async () => {
+    try {
+      const { getLinkedIdentities } = await import("@/lib/auth");
+      const { identities, user } = await getLinkedIdentities();
+      const linkedinId = identities.find(
+        (id: { provider: string }) => id.provider === "linkedin_oidc"
+      );
+      if (linkedinId) {
+        setLinkedInConnected(true);
+        setLinkedInEmail((linkedinId as { identity_data?: { email?: string } }).identity_data?.email || null);
+        setLinkedInName((linkedinId as { identity_data?: { full_name?: string; name?: string } }).identity_data?.full_name || (linkedinId as { identity_data?: { name?: string } }).identity_data?.name || null);
+      }
+    } catch {}
+    setCheckLoading(false);
+  };
+
+  const handleLink = async () => {
+    setLinkLoading(true);
+    try {
+      const { linkLinkedInAccount } = await import("@/lib/auth");
+      const { error } = await linkLinkedInAccount();
+      if (error) {
+        alert("LinkedIn連携に失敗しました: " + (error as Error).message);
+        setLinkLoading(false);
+      }
+    } catch {
+      alert("LinkedIn連携中にエラーが発生しました");
+      setLinkLoading(false);
+    }
+  };
+
+  const handleUnlink = async () => {
+    if (!confirm("LinkedIn連携を解除しますか？")) return;
+    setLinkLoading(true);
+    try {
+      const { unlinkLinkedInAccount } = await import("@/lib/auth");
+      const { error } = await unlinkLinkedInAccount();
+      if (error) {
+        alert("連携解除に失敗しました: " + (error as Error).message);
+      } else {
+        setLinkedInConnected(false);
+        setLinkedInEmail(null);
+        setLinkedInName(null);
+      }
+    } catch {
+      alert("連携解除中にエラーが発生しました");
+    }
+    setLinkLoading(false);
+  };
+
+  return (
+    <section className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 sm:p-8 hover:shadow-md transition-shadow duration-200">
+      <div className="flex items-center gap-3 mb-6">
+        <div className="w-8 h-8 rounded-lg bg-[#0A66C2]/10 flex items-center justify-center">
+          <svg className="w-4 h-4 text-[#0A66C2]" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+          </svg>
+        </div>
+        <h2 className="text-lg font-semibold text-gray-900">LinkedIn連携</h2>
+      </div>
+
+      {checkLoading ? (
+        <div className="flex items-center gap-3 py-4 px-4">
+          <div className="w-5 h-5 border-2 border-gray-200 border-t-indigo-500 rounded-full animate-spin" />
+          <span className="text-sm text-gray-400">確認中...</span>
+        </div>
+      ) : linkedInConnected ? (
+        <div className="space-y-4">
+          <div className="flex items-center gap-4 py-4 px-4 bg-emerald-50/50 border border-emerald-100 rounded-xl">
+            <div className="w-10 h-10 rounded-full bg-[#0A66C2] flex items-center justify-center flex-shrink-0">
+              <svg className="w-5 h-5 text-white" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+              </svg>
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2">
+                <p className="text-sm font-semibold text-gray-900">連携済み</p>
+                <svg className="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+              </div>
+              {linkedInName && <p className="text-sm text-gray-600 truncate">{linkedInName}</p>}
+              {linkedInEmail && <p className="text-xs text-gray-400 truncate">{linkedInEmail}</p>}
+            </div>
+          </div>
+          <button
+            onClick={handleUnlink}
+            disabled={linkLoading}
+            className="text-sm font-medium text-red-600 bg-red-50 hover:bg-red-100 disabled:opacity-50 px-5 py-2.5 rounded-xl transition-colors"
+          >
+            {linkLoading ? "解除中..." : "連携を解除"}
+          </button>
+        </div>
+      ) : (
+        <div className="space-y-4">
+          <p className="text-sm text-gray-500 leading-relaxed">
+            LinkedInアカウントを連携すると、プロフィール情報の自動インポートや、LinkedInネットワークを活用したリファラルが可能になります。
+          </p>
+          <button
+            onClick={handleLink}
+            disabled={linkLoading}
+            className="flex items-center gap-3 px-5 py-3 bg-[#0A66C2] hover:bg-[#004182] disabled:opacity-50 text-white text-sm font-medium rounded-xl shadow-sm hover:shadow transition-all duration-200 disabled:cursor-not-allowed"
+          >
+            {linkLoading ? (
+              <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+            ) : (
+              <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+              </svg>
+            )}
+            LinkedInアカウントを連携する
+          </button>
+        </div>
+      )}
+    </section>
+  );
+}
+
 /* ── Toast component ── */
 function Toast({ message, type, onClose }: { message: string; type: "success" | "error"; onClose: () => void }) {
   useEffect(() => {
@@ -1470,6 +1600,9 @@ export default function ProfilePage() {
                   </div>
                 </div>
               </section>
+
+              {/* LinkedIn連携 */}
+              <LinkedInConnectionSection />
 
               {/* プライバシー設定 */}
               <section className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 sm:p-8 hover:shadow-md transition-shadow duration-200">

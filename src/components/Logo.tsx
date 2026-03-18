@@ -16,12 +16,12 @@ interface LogoProps {
   className?: string;
 }
 
-const sizeConfig: Record<LogoSize, { imgSize: string; brandImg: string }> = {
-  xs: { imgSize: "h-14", brandImg: "h-28" },
-  sm: { imgSize: "h-20", brandImg: "h-36" },
-  md: { imgSize: "h-24", brandImg: "h-44" },
-  lg: { imgSize: "h-28", brandImg: "h-52" },
-  xl: { imgSize: "h-36", brandImg: "h-60" },
+const sizeConfig: Record<LogoSize, { imgSize: string; brandImg: string; overlap: string }> = {
+  xs: { imgSize: "h-14", brandImg: "h-32", overlap: "-ml-11" },
+  sm: { imgSize: "h-20", brandImg: "h-44", overlap: "-ml-14" },
+  md: { imgSize: "h-24", brandImg: "h-52", overlap: "-ml-16" },
+  lg: { imgSize: "h-28", brandImg: "h-60", overlap: "-ml-20" },
+  xl: { imgSize: "h-36", brandImg: "h-72", overlap: "-ml-24" },
 };
 
 export default function Logo({
@@ -37,7 +37,7 @@ export default function Logo({
     <img
       src={src}
       alt="Michibiki 導"
-      className={`${config.imgSize} w-auto object-contain`}
+      className={`${config.imgSize} w-auto object-contain relative z-10 mix-blend-multiply`}
     />
   );
 
@@ -48,7 +48,7 @@ export default function Logo({
         <img
           src="/logo-brand.png"
           alt="みちびき"
-          className={`${config.brandImg} w-auto object-contain -ml-4`}
+          className={`${config.brandImg} w-auto object-contain ${config.overlap} relative z-0 mix-blend-multiply`}
         />
       </div>
     );
@@ -71,7 +71,7 @@ export function LogoDark({
     <img
       src={src}
       alt="Michibiki 導"
-      className={`${config.imgSize} w-auto object-contain`}
+      className={`${config.imgSize} w-auto object-contain relative z-10`}
     />
   );
 
@@ -82,7 +82,7 @@ export function LogoDark({
         <img
           src="/logo-brand.png"
           alt="みちびき"
-          className={`${config.brandImg} w-auto object-contain brightness-0 invert -ml-4`}
+          className={`${config.brandImg} w-auto object-contain brightness-0 invert ${config.overlap} relative z-0`}
         />
       </div>
     );

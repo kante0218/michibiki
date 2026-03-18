@@ -242,7 +242,7 @@ function LoadingSpinner() {
 // --- Main Component ---
 export default function HomePage() {
   const router = useRouter();
-  const { user, loading: authLoading } = useAuth();
+  const { user, profile, loading: authLoading } = useAuth();
 
   const [activeTab, setActiveTab] = useState<Tab>("contracts");
   const [expandedOffer, setExpandedOffer] = useState<string | null>(null);
@@ -254,6 +254,8 @@ export default function HomePage() {
   const [assessments, setAssessments] = useState<AssessmentRow[]>([]);
   const [savedJobs, setSavedJobs] = useState<SavedJobRow[]>([]);
   const [dataLoading, setDataLoading] = useState(true);
+  const [linkedInConnected, setLinkedInConnected] = useState<boolean | null>(null);
+  const [linkedInLinking, setLinkedInLinking] = useState(false);
 
   // Interactive state
   const [timesheetModal, setTimesheetModal] = useState<string | null>(null);
@@ -305,6 +307,39 @@ export default function HomePage() {
       router.push("/login");
     }
   }, [authLoading, user, router]);
+
+  // Check LinkedIn connection
+  useEffect(() => {
+    if (!user) return;
+    async function checkLinkedIn() {
+      try {
+        const { getLinkedIdentities } = await import("@/lib/auth");
+        const { identities } = await getLinkedIdentities();
+        const hasLinkedIn = identities.some(
+          (id: { provider: string }) => id.provider === "linkedin_oidc"
+        );
+        setLinkedInConnected(hasLinkedIn);
+      } catch {
+        setLinkedInConnected(false);
+      }
+    }
+    checkLinkedIn();
+  }, [user]);
+
+  const handleLinkLinkedIn = async () => {
+    setLinkedInLinking(true);
+    try {
+      const { linkLinkedInAccount } = await import("@/lib/auth");
+      const { error } = await linkLinkedInAccount();
+      if (error) {
+        addToast("LinkedIn連携に失敗しました", "error");
+        setLinkedInLinking(false);
+      }
+    } catch {
+      addToast("LinkedIn連携中にエラーが発生しました", "error");
+      setLinkedInLinking(false);
+    }
+  };
 
   // Fetch all data
   useEffect(() => {
@@ -497,6 +532,84 @@ export default function HomePage() {
       <div className="ml-0 md:ml-[96px]">
         {/* Top bar */}
         <TopBar />
+
+        {/* Important Tasks Section - Mercor style */}
+        <div className="px-6 pt-6 pb-2">
+          <h1 className="text-2xl font-bold text-gray-900 mb-1">
+            おかえりなさい{profile?.full_name ? `、${profile.full_name}` : ""}！
+          </h1>
+          <p className="text-sm text-gray-500 mb-5">重要なタスク ({linkedInConnected === false ? 2 : 1})</p>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-2">
+            {/* Complete Profile Card */}
+            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all duration-200 p-6">
+              <div className="flex items-start justify-between mb-3">
+                <h3 className="text-base font-semibold text-gray-900">プロフィールを完成</h3>
+                <div className="w-8 h-8 rounded-lg bg-indigo-50 flex items-center justify-center flex-shrink-0">
+                  <svg className="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                  </svg>
+                </div>
+              </div>
+              <p className="text-sm text-gray-500 mb-4">プロフィールを完成させて、即時オファーの対象になりましょう</p>
+              <div className="flex items-center gap-3 mb-4">
+                <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
+                  <div className="h-full bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full" style={{ width: "60%" }} />
+                </div>
+                <span className="text-xs font-semibold text-gray-500">60%</span>
+              </div>
+              <button
+                onClick={() => router.push("/profile")}
+                className="px-5 py-2.5 bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 text-white text-sm font-semibold rounded-xl transition-all shadow-sm hover:shadow-md"
+              >
+                今すぐ完成
+              </button>
+            </div>
+
+            {/* Link LinkedIn Card */}
+            {linkedInConnected === false && (
+              <div className="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all duration-200 p-6">
+                <div className="flex items-start justify-between mb-3">
+                  <h3 className="text-base font-semibold text-gray-900">LinkedIn連携</h3>
+                  <div className="w-8 h-8 rounded-lg bg-[#0A66C2]/10 flex items-center justify-center flex-shrink-0">
+                    <svg className="w-4 h-4 text-[#0A66C2]" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+                    </svg>
+                  </div>
+                </div>
+                <p className="text-sm text-gray-500 mb-4">LinkedInアカウントをみちびきアカウントに連携しましょう</p>
+                <button
+                  onClick={handleLinkLinkedIn}
+                  disabled={linkedInLinking}
+                  className="flex items-center gap-2 px-5 py-2.5 bg-[#0A66C2] hover:bg-[#004182] disabled:opacity-50 text-white text-sm font-semibold rounded-xl transition-all shadow-sm hover:shadow-md disabled:cursor-not-allowed"
+                >
+                  {linkedInLinking ? (
+                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  ) : (
+                    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+                    </svg>
+                  )}
+                  今すぐ連携
+                </button>
+              </div>
+            )}
+
+            {linkedInConnected === true && (
+              <div className="bg-white rounded-2xl border border-emerald-100 shadow-sm p-6">
+                <div className="flex items-start justify-between mb-3">
+                  <h3 className="text-base font-semibold text-gray-900">LinkedIn連携</h3>
+                  <div className="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center flex-shrink-0">
+                    <svg className="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                    </svg>
+                  </div>
+                </div>
+                <p className="text-sm text-emerald-600 font-medium">✓ LinkedIn連携済み</p>
+              </div>
+            )}
+          </div>
+        </div>
 
         {/* Tab Navigation - modern segmented/pill style */}
         <div className="bg-white/80 backdrop-blur-sm border-b border-gray-100 sticky top-0 z-10">
