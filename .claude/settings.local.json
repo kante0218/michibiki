@@ -36,7 +36,8 @@
       "Bash(gh repo:*)",
       "Bash(vercel --yes)",
       "Bash(vercel login:*)",
-      "Bash(git push:*)"
+      "Bash(git push:*)",
+      "Bash(git checkout:*)"
     ]
   }
 }

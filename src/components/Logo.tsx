@@ -46,7 +46,7 @@ export default function Logo({
       <div className={`flex items-center gap-1.5 ${className}`}>
         {imgElement}
         <span className={`font-bold text-gray-900 ${config.brandText} tracking-tight`}>
-          Michibiki
+          みちびき
         </span>
       </div>
     );
@@ -78,7 +78,7 @@ export function LogoDark({
       <div className={`flex items-center gap-1.5 ${className}`}>
         {imgElement}
         <span className={`text-white font-bold ${config.brandText}`}>
-          Michibiki
+          みちびき
         </span>
       </div>
     );
