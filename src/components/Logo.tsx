@@ -16,12 +16,12 @@ interface LogoProps {
   className?: string;
 }
 
-const sizeConfig: Record<LogoSize, { imgSize: string; brandText: string }> = {
-  xs: { imgSize: "h-11", brandText: "text-sm" },
-  sm: { imgSize: "h-14", brandText: "text-lg" },
-  md: { imgSize: "h-16", brandText: "text-lg" },
-  lg: { imgSize: "h-20", brandText: "text-xl" },
-  xl: { imgSize: "h-28", brandText: "text-2xl" },
+const sizeConfig: Record<LogoSize, { imgSize: string; brandImg: string }> = {
+  xs: { imgSize: "h-14", brandImg: "h-28" },
+  sm: { imgSize: "h-20", brandImg: "h-36" },
+  md: { imgSize: "h-24", brandImg: "h-44" },
+  lg: { imgSize: "h-28", brandImg: "h-52" },
+  xl: { imgSize: "h-36", brandImg: "h-60" },
 };
 
 export default function Logo({
@@ -43,12 +43,12 @@ export default function Logo({
 
   if (showBrandName) {
     return (
-      <div className={`flex items-center gap-1.5 ${className}`}>
+      <div className={`flex items-center gap-0 ${className}`}>
         {imgElement}
         <img
           src="/logo-brand.png"
           alt="みちびき"
-          className={`${config.imgSize} w-auto object-contain`}
+          className={`${config.brandImg} w-auto object-contain -ml-4`}
         />
       </div>
     );
@@ -77,12 +77,12 @@ export function LogoDark({
 
   if (showBrandName) {
     return (
-      <div className={`flex items-center gap-1.5 ${className}`}>
+      <div className={`flex items-center gap-0 ${className}`}>
         {imgElement}
         <img
           src="/logo-brand.png"
           alt="みちびき"
-          className={`${config.imgSize} w-auto object-contain brightness-0 invert`}
+          className={`${config.brandImg} w-auto object-contain brightness-0 invert -ml-4`}
         />
       </div>
     );
