@@ -188,15 +188,22 @@ function ConnectionsTab({ userId }: { userId: string | undefined }) {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const fetchConnections = useCallback(async () => {
-    if (!userId) return;
+    if (!userId) {
+      setLoading(false);
+      return;
+    }
     setLoading(true);
-    const { data, error } = await (supabase.from("connections") as any)
-      .select("*")
-      .eq("user_id", userId)
-      .order("created_at", { ascending: false });
+    try {
+      const { data, error } = await (supabase.from("connections") as any)
+        .select("*")
+        .eq("user_id", userId)
+        .order("created_at", { ascending: false });
 
-    if (!error && data) {
-      setConnections(data);
+      if (!error && data) {
+        setConnections(data);
+      }
+    } catch {
+      // Table may not exist yet
     }
     setLoading(false);
   }, [userId]);
@@ -512,15 +519,22 @@ function ReferralsTabContent({
   ];
 
   const fetchReferrals = useCallback(async () => {
-    if (!userId) return;
+    if (!userId) {
+      setLoading(false);
+      return;
+    }
     setLoading(true);
-    const { data, error } = await (supabase.from("referrals") as any)
-      .select("*")
-      .eq("referrer_id", userId)
-      .order("created_at", { ascending: false });
+    try {
+      const { data, error } = await (supabase.from("referrals") as any)
+        .select("*")
+        .eq("referrer_id", userId)
+        .order("created_at", { ascending: false });
 
-    if (!error && data) {
-      setReferrals(data);
+      if (!error && data) {
+        setReferrals(data);
+      }
+    } catch {
+      // Table may not exist yet
     }
     setLoading(false);
   }, [userId]);
