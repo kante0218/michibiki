@@ -395,10 +395,31 @@ function PracticeInterviewContent() {
 
   // SessionStorage key for this category
   const storageKey = `michibiki_test_${category}`;
+  const sessionKey = `michibiki_session_${category}`;
 
-  // Save test data to sessionStorage whenever questions or answers change
+  // Save full session state to sessionStorage (all phases)
   useEffect(() => {
-    if (testQuestions.length > 0) {
+    if (phase === "loading") return;
+    try {
+      const sessionData: Record<string, unknown> = {
+        phase,
+        timerSeconds,
+        testQuestions,
+        testAnswers,
+        currentTestQ,
+        testEvaluation,
+        testResults,
+        conversationHistory,
+        currentQuestion,
+        interviewQuestionCount,
+      };
+      sessionStorage.setItem(sessionKey, JSON.stringify(sessionData));
+    } catch {}
+  }, [phase, timerSeconds, testQuestions, testAnswers, currentTestQ, testEvaluation, testResults, conversationHistory, currentQuestion, interviewQuestionCount, sessionKey]);
+
+  // Also keep the old test-specific storage for backward compat
+  useEffect(() => {
+    if (testQuestions.length > 0 && phase === "test") {
       try {
         sessionStorage.setItem(storageKey, JSON.stringify({
           questions: testQuestions,
@@ -408,7 +429,7 @@ function PracticeInterviewContent() {
         }));
       } catch {}
     }
-  }, [testQuestions, testAnswers, currentTestQ, timerSeconds, storageKey]);
+  }, [testQuestions, testAnswers, currentTestQ, timerSeconds, storageKey, phase]);
 
   // Auto-start camera when test phase begins
   useEffect(() => {
@@ -418,10 +439,81 @@ function PracticeInterviewContent() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [phase]);
 
-  // Generate test questions on mount (or restore from session)
+  // Restore session on mount
   useEffect(() => {
     if (user && phase === "loading") {
-      // Try to restore saved test data first
+      // Try full session restore first
+      try {
+        const savedSession = sessionStorage.getItem(sessionKey);
+        if (savedSession) {
+          const data = JSON.parse(savedSession);
+          const savedPhase = data.phase as Phase;
+
+          // Restore based on saved phase
+          if (savedPhase === "test" && data.testQuestions?.length > 0) {
+            setTestQuestions(data.testQuestions);
+            setTestAnswers(data.testAnswers || {});
+            setCurrentTestQ(data.currentTestQ || 0);
+            setTimerSeconds(data.timerSeconds || 0);
+            setPhase("test");
+            setIsTimerRunning(true);
+            return;
+          }
+
+          if (savedPhase === "test_result" && data.testEvaluation) {
+            setTestQuestions(data.testQuestions || []);
+            setTestAnswers(data.testAnswers || {});
+            setTestResults(data.testResults || []);
+            setTestEvaluation(data.testEvaluation);
+            setTimerSeconds(data.timerSeconds || 0);
+            setPhase("test_result");
+            return;
+          }
+
+          if (savedPhase === "camera_setup" && data.testEvaluation) {
+            setTestQuestions(data.testQuestions || []);
+            setTestEvaluation(data.testEvaluation);
+            setTestResults(data.testResults || []);
+            setTimerSeconds(data.timerSeconds || 0);
+            setPhase("camera_setup");
+            startCamera();
+            return;
+          }
+
+          if (savedPhase === "interview" && data.conversationHistory) {
+            setTestQuestions(data.testQuestions || []);
+            setTestEvaluation(data.testEvaluation);
+            setTestResults(data.testResults || []);
+            setConversationHistory(data.conversationHistory || []);
+            setCurrentQuestion(data.currentQuestion);
+            setInterviewQuestionCount(data.interviewQuestionCount || 1);
+            setTimerSeconds(data.timerSeconds || 0);
+            setPhase("interview");
+            setIsTimerRunning(true);
+            // Restart camera for interview
+            startCamera().then(() => {
+              setTimeout(() => {
+                if (videoRef.current && streamRef.current) {
+                  videoRef.current.srcObject = streamRef.current;
+                }
+              }, 200);
+            });
+            return;
+          }
+
+          if ((savedPhase === "result" || savedPhase === "evaluating") && data.testEvaluation) {
+            // For result/evaluating, go back to test_result to allow re-entering interview
+            setTestQuestions(data.testQuestions || []);
+            setTestEvaluation(data.testEvaluation);
+            setTestResults(data.testResults || []);
+            setTimerSeconds(data.timerSeconds || 0);
+            setPhase("test_result");
+            return;
+          }
+        }
+      } catch {}
+
+      // Fallback: try old test-only storage
       try {
         const saved = sessionStorage.getItem(storageKey);
         if (saved) {
@@ -437,6 +529,7 @@ function PracticeInterviewContent() {
           }
         }
       } catch {}
+
       // No saved data — generate fresh questions
       generateTest();
     }
@@ -719,7 +812,18 @@ function PracticeInterviewContent() {
   // Fallback text input (for browsers without speech recognition)
   const [fallbackText, setFallbackText] = useState("");
 
-  if (authLoading || !user) return null;
+  // Show loading spinner while auth is checking (instead of blank page)
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-indigo-600 mx-auto mb-4" />
+          <p className="text-sm text-gray-500">読み込み中...</p>
+        </div>
+      </div>
+    );
+  }
+  if (!user) return null;
 
   // Header component
   const Header = ({ subtitle }: { subtitle: string }) => (
