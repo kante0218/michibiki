@@ -615,23 +615,75 @@ function PracticeInterviewContent() {
     }
   };
 
-  // Text-to-Speech: read question aloud
-  const speakQuestion = useCallback((text: string) => {
+  // Text-to-Speech: Edge TTS (natural neural voice)
+  const ttsAudioRef = useRef<HTMLAudioElement | null>(null);
+  const [isSpeaking, setIsSpeaking] = useState(false);
+
+  const speakQuestion = useCallback(async (text: string) => {
     try {
-      if (typeof window === "undefined" || !window.speechSynthesis) return;
-      window.speechSynthesis.cancel();
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.lang = "ja-JP";
-      utterance.rate = 0.95;
-      utterance.pitch = 1.0;
-      // Try to pick a Japanese voice
-      const voices = window.speechSynthesis.getVoices();
-      const jaVoice = voices.find(v => v.lang.startsWith("ja"));
-      if (jaVoice) utterance.voice = jaVoice;
-      window.speechSynthesis.speak(utterance);
+      // Stop any currently playing audio
+      if (ttsAudioRef.current) {
+        ttsAudioRef.current.pause();
+        ttsAudioRef.current = null;
+      }
+      setIsSpeaking(true);
+
+      const res = await fetch("/api/tts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text }),
+      });
+
+      if (!res.ok) {
+        // Fallback to browser TTS
+        if (window.speechSynthesis) {
+          window.speechSynthesis.cancel();
+          const u = new SpeechSynthesisUtterance(text);
+          u.lang = "ja-JP";
+          u.rate = 0.95;
+          u.onend = () => setIsSpeaking(false);
+          window.speechSynthesis.speak(u);
+        }
+        return;
+      }
+
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const audio = new Audio(url);
+      ttsAudioRef.current = audio;
+      audio.onended = () => {
+        setIsSpeaking(false);
+        URL.revokeObjectURL(url);
+        ttsAudioRef.current = null;
+      };
+      audio.onerror = () => {
+        setIsSpeaking(false);
+        URL.revokeObjectURL(url);
+        ttsAudioRef.current = null;
+      };
+      await audio.play();
     } catch {
-      // TTS not available, silently ignore
+      setIsSpeaking(false);
+      // Fallback to browser TTS
+      try {
+        if (window.speechSynthesis) {
+          const u = new SpeechSynthesisUtterance(text);
+          u.lang = "ja-JP";
+          u.rate = 0.95;
+          u.onend = () => setIsSpeaking(false);
+          window.speechSynthesis.speak(u);
+        }
+      } catch {}
     }
+  }, []);
+
+  const stopSpeaking = useCallback(() => {
+    if (ttsAudioRef.current) {
+      ttsAudioRef.current.pause();
+      ttsAudioRef.current = null;
+    }
+    try { window.speechSynthesis?.cancel(); } catch {}
+    setIsSpeaking(false);
   }, []);
 
   const handleStartVideoInterview = async () => {
@@ -764,7 +816,7 @@ function PracticeInterviewContent() {
   const handleEndInterview = async () => {
     handleStopRecording();
     stopScreenRecording();
-    try { window.speechSynthesis.cancel(); } catch {}
+    stopSpeaking();
     setPhase("evaluating");
     setIsTimerRunning(false);
     stopCamera();
@@ -1413,22 +1465,32 @@ function PracticeInterviewContent() {
                     {/* Speaker icon to replay TTS */}
                     <button
                       onClick={() => {
-                        if (currentQuestion?.question) {
-                          window.speechSynthesis.cancel();
-                          const u = new SpeechSynthesisUtterance(currentQuestion.question);
-                          u.lang = "ja-JP";
-                          u.rate = 0.95;
-                          u.pitch = 1.0;
-                          window.speechSynthesis.speak(u);
+                        if (isSpeaking) {
+                          stopSpeaking();
+                        } else if (currentQuestion?.question) {
+                          speakQuestion(currentQuestion.question);
                         }
                       }}
-                      className="ml-auto flex items-center gap-1 text-[10px] text-indigo-500 hover:text-indigo-700 transition-colors"
-                      title="質問を読み上げる"
+                      className={`ml-auto flex items-center gap-1 text-[10px] transition-colors ${
+                        isSpeaking ? "text-red-500 hover:text-red-700" : "text-indigo-500 hover:text-indigo-700"
+                      }`}
+                      title={isSpeaking ? "読み上げを停止" : "質問を読み上げる"}
                     >
-                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.536 8.464a5 5 0 010 7.072M17.95 6.05a8 8 0 010 11.9M6.5 8.8l4.2-3.15A1 1 0 0112 6.5v11a1 1 0 01-1.3.95L6.5 15.2H4a1 1 0 01-1-1v-4.4a1 1 0 011-1h2.5z" />
-                      </svg>
-                      再生
+                      {isSpeaking ? (
+                        <>
+                          <div className="w-3.5 h-3.5 flex items-center justify-center">
+                            <div className="w-2 h-2 rounded-sm bg-red-500" />
+                          </div>
+                          停止
+                        </>
+                      ) : (
+                        <>
+                          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.536 8.464a5 5 0 010 7.072M17.95 6.05a8 8 0 010 11.9M6.5 8.8l4.2-3.15A1 1 0 0112 6.5v11a1 1 0 01-1.3.95L6.5 15.2H4a1 1 0 01-1-1v-4.4a1 1 0 011-1h2.5z" />
+                          </svg>
+                          再生
+                        </>
+                      )}
                     </button>
                   </div>
 
