@@ -1,6 +1,14 @@
 import type { Metadata } from "next";
+import { Noto_Sans_JP } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/lib/AuthContext";
+
+const notoSansJP = Noto_Sans_JP({
+  subsets: ["latin"],
+  weight: ["300", "400", "500", "600", "700"],
+  display: "swap",
+  preload: true,
+});
 
 const SITE_URL = "https://michibiki.tech";
 const SITE_NAME = "みちびき 導";
@@ -72,10 +80,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="ja">
+    <html lang="ja" className={notoSansJP.className}>
       <head>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link
-          href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;600;700&family=Yuji+Boku&display=swap"
+          href="https://fonts.googleapis.com/css2?family=Yuji+Boku&display=swap"
           rel="stylesheet"
         />
         {/* Structured Data - Organization */}

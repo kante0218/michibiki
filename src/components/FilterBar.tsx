@@ -18,6 +18,113 @@ type FilterBarProps = {
   onFilterChange: (key: string, values: string[]) => void;
 };
 
+// Domain filter uses grouped categories for better UX
+const domainGroups: { group: string; options: { value: string; label: string }[] }[] = [
+  {
+    group: "IT・エンジニアリング",
+    options: [
+      { value: "フロントエンド", label: "フロントエンド" },
+      { value: "バックエンド", label: "バックエンド" },
+      { value: "フルスタック", label: "フルスタック" },
+      { value: "モバイル", label: "モバイル" },
+      { value: "インフラ/DevOps", label: "インフラ/DevOps" },
+      { value: "クラウドエンジニア", label: "クラウドエンジニア" },
+      { value: "組み込み/IoT", label: "組み込み/IoT" },
+      { value: "SRE", label: "SRE" },
+      { value: "セキュリティ", label: "セキュリティ" },
+      { value: "QA/テスト", label: "QA/テスト" },
+    ],
+  },
+  {
+    group: "データ・AI",
+    options: [
+      { value: "データサイエンス", label: "データサイエンス" },
+      { value: "データエンジニア", label: "データエンジニア" },
+      { value: "AI/機械学習", label: "AI/機械学習" },
+      { value: "LLM/生成AI", label: "LLM/生成AI" },
+      { value: "データアナリスト", label: "データアナリスト" },
+      { value: "プロンプトエンジニア", label: "プロンプトエンジニア" },
+      { value: "AIトレーナー", label: "AIトレーナー" },
+    ],
+  },
+  {
+    group: "デザイン・クリエイティブ",
+    options: [
+      { value: "UI/UXデザイン", label: "UI/UXデザイン" },
+      { value: "グラフィックデザイン", label: "グラフィックデザイン" },
+      { value: "プロダクトデザイン", label: "プロダクトデザイン" },
+      { value: "動画制作/編集", label: "動画制作/編集" },
+      { value: "写真/フォトグラファー", label: "写真/フォトグラファー" },
+      { value: "コンテンツ制作", label: "コンテンツ制作" },
+      { value: "テクニカルライター", label: "テクニカルライター" },
+      { value: "翻訳/ローカライズ", label: "翻訳/ローカライズ" },
+    ],
+  },
+  {
+    group: "マーケティング・メディア",
+    options: [
+      { value: "マーケティング", label: "マーケティング" },
+      { value: "グロースハック", label: "グロースハック" },
+      { value: "SEO/SEM", label: "SEO/SEM" },
+      { value: "SNS運用", label: "SNS運用" },
+      { value: "インフルエンサー", label: "インフルエンサー" },
+      { value: "YouTuber/配信者", label: "YouTuber/配信者" },
+      { value: "音声/ポッドキャスト", label: "音声/ポッドキャスト" },
+      { value: "広報/PR", label: "広報/PR" },
+    ],
+  },
+  {
+    group: "ビジネス・営業",
+    options: [
+      { value: "営業", label: "営業" },
+      { value: "事業開発/BizDev", label: "事業開発/BizDev" },
+      { value: "カスタマーサクセス", label: "カスタマーサクセス" },
+      { value: "カスタマーサポート", label: "カスタマーサポート" },
+      { value: "コンサルティング", label: "コンサルティング" },
+      { value: "Eコマース", label: "Eコマース" },
+    ],
+  },
+  {
+    group: "マネジメント",
+    options: [
+      { value: "プロダクトマネジメント", label: "プロダクトマネジメント" },
+      { value: "プロジェクトマネジメント", label: "プロジェクトマネジメント" },
+      { value: "エンジニアリングマネージャー", label: "エンジニアリングマネージャー" },
+      { value: "CTO/VPoE", label: "CTO/VPoE" },
+      { value: "コミュニティマネージャー", label: "コミュニティマネージャー" },
+    ],
+  },
+  {
+    group: "コーポレート・管理",
+    options: [
+      { value: "人事/採用", label: "人事/採用" },
+      { value: "経理/財務", label: "経理/財務" },
+      { value: "法務", label: "法務" },
+      { value: "総務/事務", label: "総務/事務" },
+    ],
+  },
+  {
+    group: "金融・専門職",
+    options: [
+      { value: "医療/ヘルスケア", label: "医療/ヘルスケア" },
+      { value: "教育", label: "教育" },
+      { value: "リサーチ", label: "リサーチ" },
+    ],
+  },
+  {
+    group: "新領域・先端技術",
+    options: [
+      { value: "ブロックチェーン/Web3", label: "ブロックチェーン/Web3" },
+      { value: "ゲーム開発", label: "ゲーム開発" },
+      { value: "ノーコード/ローコード", label: "ノーコード/ローコード" },
+      { value: "DX推進", label: "DX推進" },
+    ],
+  },
+];
+
+// Flat list of all domain options (for filter logic compatibility)
+const allDomainOptions = domainGroups.flatMap((g) => g.options);
+
 const filterOptions: {
   key: string;
   label: string;
@@ -26,32 +133,7 @@ const filterOptions: {
   {
     key: "domain",
     label: "分野",
-    options: [
-      { value: "フロントエンド", label: "フロントエンド" },
-      { value: "バックエンド", label: "バックエンド" },
-      { value: "フルスタック", label: "フルスタック" },
-      { value: "モバイル", label: "モバイル" },
-      { value: "インフラ/DevOps", label: "インフラ/DevOps" },
-      { value: "データサイエンス", label: "データサイエンス" },
-      { value: "AI/機械学習", label: "AI/機械学習" },
-      { value: "セキュリティ", label: "セキュリティ" },
-      { value: "QA/テスト", label: "QA/テスト" },
-      { value: "UI/UXデザイン", label: "UI/UXデザイン" },
-      { value: "グラフィックデザイン", label: "グラフィックデザイン" },
-      { value: "プロダクトマネジメント", label: "プロダクトマネジメント" },
-      { value: "プロジェクトマネジメント", label: "プロジェクトマネジメント" },
-      { value: "マーケティング", label: "マーケティング" },
-      { value: "営業", label: "営業" },
-      { value: "カスタマーサクセス", label: "カスタマーサクセス" },
-      { value: "人事/採用", label: "人事/採用" },
-      { value: "経理/財務", label: "経理/財務" },
-      { value: "法務", label: "法務" },
-      { value: "コンサルティング", label: "コンサルティング" },
-      { value: "医療/ヘルスケア", label: "医療/ヘルスケア" },
-      { value: "教育", label: "教育" },
-      { value: "ブロックチェーン/Web3", label: "ブロックチェーン/Web3" },
-      { value: "ゲーム開発", label: "ゲーム開発" },
-    ],
+    options: allDomainOptions,
   },
   {
     key: "pay",
@@ -261,8 +343,55 @@ export default function FilterBar({
                   </button>
                 )}
               </div>
-              <div className="space-y-5">
-                {filterOptions.map((section) => (
+              <div className="space-y-5 max-h-[70vh] overflow-y-auto pr-1">
+                {/* Domain filter - grouped */}
+                <div>
+                  <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">
+                    分野
+                  </h4>
+                  <div className="space-y-3">
+                    {domainGroups.map((group) => (
+                      <div key={group.group}>
+                        <p className="text-[11px] font-semibold text-gray-500 mb-1.5 pl-1">
+                          {group.group}
+                        </p>
+                        <div className="flex flex-wrap gap-1.5">
+                          {group.options.map((opt) => {
+                            const checked = filters.domain.includes(opt.value);
+                            return (
+                              <label
+                                key={opt.value}
+                                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs cursor-pointer border-2 transition-all duration-150 select-none ${
+                                  checked
+                                    ? "bg-indigo-50 border-indigo-300 text-indigo-700 shadow-sm"
+                                    : "bg-white border-gray-200 text-gray-600 hover:bg-gray-50 hover:border-gray-300"
+                                }`}
+                              >
+                                <input
+                                  type="checkbox"
+                                  checked={checked}
+                                  onChange={() =>
+                                    handleCheckboxChange("domain", opt.value)
+                                  }
+                                  className="sr-only"
+                                />
+                                {checked && (
+                                  <svg className="w-3.5 h-3.5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                                  </svg>
+                                )}
+                                {opt.label}
+                              </label>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Other filters - flat */}
+                {filterOptions.slice(1).map((section) => (
                   <div key={section.key}>
                     <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2.5">
                       {section.label}
