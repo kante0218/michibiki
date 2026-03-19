@@ -152,6 +152,14 @@ function PracticeInterviewContent() {
   const screenChunksRef = useRef<Blob[]>([]);
   const screenStreamRef = useRef<MediaStream | null>(null);
 
+  // Interview recording (always-on during interview phase)
+  const interviewRecorderRef = useRef<MediaRecorder | null>(null);
+  const interviewChunksRef = useRef<Blob[]>([]);
+  const recordingStartTimeRef = useRef<number>(0);
+  const speechSegmentsRef = useRef<{ start: number; end: number }[]>([]);
+  const currentSpeechStartRef = useRef<number | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+
   // Refs
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -269,8 +277,20 @@ function PracticeInterviewContent() {
         const t = event.results[i][0].transcript;
         if (event.results[i].isFinal) {
           finalTranscript += t;
+          // Close speech segment on final result
+          if (currentSpeechStartRef.current !== null && recordingStartTimeRef.current > 0) {
+            speechSegmentsRef.current.push({
+              start: currentSpeechStartRef.current,
+              end: (Date.now() - recordingStartTimeRef.current) / 1000,
+            });
+            currentSpeechStartRef.current = null;
+          }
         } else {
           interim += t;
+          // Start speech segment on first interim result
+          if (currentSpeechStartRef.current === null && recordingStartTimeRef.current > 0) {
+            currentSpeechStartRef.current = (Date.now() - recordingStartTimeRef.current) / 1000;
+          }
         }
       }
       setTranscript(finalTranscript + interim);
@@ -288,6 +308,14 @@ function PracticeInterviewContent() {
     };
 
     recognition.onend = () => {
+      // Close any open speech segment
+      if (currentSpeechStartRef.current !== null && recordingStartTimeRef.current > 0) {
+        speechSegmentsRef.current.push({
+          start: currentSpeechStartRef.current,
+          end: (Date.now() - recordingStartTimeRef.current) / 1000,
+        });
+        currentSpeechStartRef.current = null;
+      }
       if (isRecording) {
         try { recognition.start(); } catch {}
       }
@@ -723,6 +751,105 @@ function PracticeInterviewContent() {
     setIsSpeaking(false);
   }, []);
 
+  // Interview recording functions
+  const startInterviewRecording = useCallback(() => {
+    if (!streamRef.current) return;
+    interviewChunksRef.current = [];
+    speechSegmentsRef.current = [];
+    recordingStartTimeRef.current = Date.now();
+
+    const mimeType = MediaRecorder.isTypeSupported("video/webm;codecs=vp9")
+      ? "video/webm;codecs=vp9"
+      : MediaRecorder.isTypeSupported("video/webm")
+        ? "video/webm"
+        : "video/mp4";
+
+    try {
+      const recorder = new MediaRecorder(streamRef.current, {
+        mimeType,
+        videoBitsPerSecond: 500000, // ~500kbps to keep file size reasonable
+      });
+      recorder.ondataavailable = (e) => {
+        if (e.data.size > 0) interviewChunksRef.current.push(e.data);
+      };
+      recorder.start(1000); // chunk every second
+      interviewRecorderRef.current = recorder;
+      console.log("Interview recording started:", mimeType);
+    } catch (err) {
+      console.error("Failed to start interview recording:", err);
+    }
+  }, []);
+
+  const stopInterviewRecording = useCallback((): Promise<Blob | null> => {
+    return new Promise((resolve) => {
+      const recorder = interviewRecorderRef.current;
+      if (!recorder || recorder.state === "inactive") {
+        resolve(interviewChunksRef.current.length > 0
+          ? new Blob(interviewChunksRef.current, { type: recorder?.mimeType || "video/webm" })
+          : null);
+        interviewRecorderRef.current = null;
+        return;
+      }
+
+      // Close any open speech segment
+      if (currentSpeechStartRef.current !== null) {
+        speechSegmentsRef.current.push({
+          start: currentSpeechStartRef.current,
+          end: (Date.now() - recordingStartTimeRef.current) / 1000,
+        });
+        currentSpeechStartRef.current = null;
+      }
+
+      recorder.onstop = () => {
+        const blob = interviewChunksRef.current.length > 0
+          ? new Blob(interviewChunksRef.current, { type: recorder.mimeType })
+          : null;
+        interviewRecorderRef.current = null;
+        resolve(blob);
+      };
+      recorder.stop();
+    });
+  }, []);
+
+  const uploadInterviewRecording = useCallback(async (blob: Blob) => {
+    if (!user || !blob) return;
+    setIsUploading(true);
+    try {
+      const fileId = crypto.randomUUID();
+      const ext = blob.type.includes("mp4") ? "mp4" : "webm";
+      const fileName = `${user.id}/${fileId}.${ext}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from("interview-recordings")
+        .upload(fileName, blob, { contentType: blob.type, upsert: false });
+
+      if (uploadError) {
+        console.error("Recording upload failed:", uploadError);
+        return;
+      }
+
+      const duration = Math.round((Date.now() - recordingStartTimeRef.current) / 1000);
+      await (supabase.from("interview_recordings") as ReturnType<typeof supabase.from>)
+        .insert({
+          user_id: user.id,
+          assessment_id: assessmentId || null,
+          category,
+          storage_path: fileName,
+          duration_seconds: duration,
+          speech_segments: speechSegmentsRef.current,
+          file_size_bytes: blob.size,
+          mime_type: blob.type,
+          status: "ready",
+        } as Record<string, unknown>);
+
+      console.log("Interview recording uploaded:", fileName, `${(blob.size / 1024 / 1024).toFixed(1)}MB`, `${speechSegmentsRef.current.length} segments`);
+    } catch (err) {
+      console.error("Failed to upload recording:", err);
+    } finally {
+      setIsUploading(false);
+    }
+  }, [user, assessmentId, category]);
+
   const handleStartVideoInterview = async () => {
     setTimerSeconds(0);
     setIsTimerRunning(true);
@@ -734,7 +861,9 @@ function PracticeInterviewContent() {
       if (videoRef.current && streamRef.current) {
         videoRef.current.srcObject = streamRef.current;
       }
-    }, 100);
+      // Start automatic interview recording
+      startInterviewRecording();
+    }, 200);
 
     try {
       const res = await fetch("/api/interview", {
@@ -786,11 +915,13 @@ function PracticeInterviewContent() {
 
     try {
       if (newCount > maxInterviewQuestions) {
-        // End interview
+        // End interview - stop recording and upload in background
+        const recordingBlob = await stopInterviewRecording();
         setPhase("evaluating");
         setIsTimerRunning(false);
         stopCamera();
         stopScreenRecording();
+        if (recordingBlob) uploadInterviewRecording(recordingBlob);
 
         const evalRes = await fetch("/api/interview", {
           method: "POST",
@@ -860,9 +991,11 @@ function PracticeInterviewContent() {
     handleStopRecording();
     stopScreenRecording();
     stopSpeaking();
+    const recordingBlob = await stopInterviewRecording();
     setPhase("evaluating");
     setIsTimerRunning(false);
     stopCamera();
+    if (recordingBlob) uploadInterviewRecording(recordingBlob);
     setAiThinking(true);
 
     try {
@@ -1392,6 +1525,13 @@ function PracticeInterviewContent() {
               </div>
             </div>
             <div className="flex items-center gap-3">
+              {/* Always-on interview recording indicator */}
+              {interviewRecorderRef.current && (
+                <div className="flex items-center gap-1 px-2 py-0.5 bg-red-50 border border-red-200 rounded-md">
+                  <div className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
+                  <span className="text-[10px] text-red-600 font-medium">REC</span>
+                </div>
+              )}
               {isRecording && (
                 <div className="flex items-center gap-1.5">
                   <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />

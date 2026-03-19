@@ -574,6 +574,40 @@ export interface Database {
           connected_on?: string | null;
         };
       };
+      interview_recordings: {
+        Row: {
+          id: string;
+          user_id: string;
+          assessment_id: string | null;
+          category: string | null;
+          storage_path: string;
+          duration_seconds: number;
+          speech_segments: Json;
+          file_size_bytes: number | null;
+          mime_type: string;
+          status: "processing" | "ready" | "failed";
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          assessment_id?: string | null;
+          category?: string | null;
+          storage_path: string;
+          duration_seconds: number;
+          speech_segments?: Json;
+          file_size_bytes?: number | null;
+          mime_type?: string;
+          status?: "processing" | "ready" | "failed";
+          created_at?: string;
+        };
+        Update: {
+          status?: "processing" | "ready" | "failed";
+          speech_segments?: Json;
+          duration_seconds?: number;
+          file_size_bytes?: number | null;
+        };
+      };
       referrals: {
         Row: {
           id: string;
