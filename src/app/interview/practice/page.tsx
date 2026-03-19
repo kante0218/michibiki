@@ -131,7 +131,7 @@ function PracticeInterviewContent() {
   const [recordingSeconds, setRecordingSeconds] = useState(0);
   const [cameraReady, setCameraReady] = useState(false);
   const [cameraDenied, setCameraDenied] = useState(false);
-  const maxInterviewQuestions = 8;
+  const maxInterviewQuestions = 5;
 
   // Result state
   const [evaluation, setEvaluation] = useState<InterviewEvaluation | null>(null);
@@ -204,11 +204,75 @@ function PracticeInterviewContent() {
   const categoryNames: Record<string, string> = {
     software_engineering: "ソフトウェアエンジニアリング",
     data_science: "データサイエンス",
+    ai_ml_engineer: "AI・機械学習エンジニア",
+    infra_devops: "インフラ・DevOps",
+    security_engineer: "セキュリティエンジニア",
+    mobile_development: "モバイルアプリ開発",
+    design: "UI/UXデザイン",
+    graphic_design: "グラフィックデザイン",
+    video_production: "動画制作・映像",
     product_management: "プロダクトマネジメント",
-    design: "デザイン",
     business_consulting: "ビジネスコンサルティング",
-    healthcare: "ヘルスケア",
+    sales: "営業・セールス",
+    marketing: "マーケティング",
+    financial_analyst: "金融アナリスト",
+    investment_fund: "投資・ファンドマネジメント",
+    fintech: "フィンテック",
+    accounting_tax: "会計・税務",
+    healthcare: "医療・臨床",
+    nursing_care: "看護・介護",
+    pharmacy: "薬剤師・製薬",
+    health_tech: "医療IT・ヘルステック",
+    education: "教育・講師",
+    edtech: "EdTech",
+    research_academia: "研究員・アカデミア",
+    influencer_sns: "インフルエンサー・SNS",
+    youtuber_streamer: "YouTuber・配信者",
+    content_creator: "コンテンツクリエイター",
+    hr_recruitment: "人事・採用",
+    accounting_finance: "経理・財務",
+    legal_compliance: "法務・コンプライアンス",
+    blockchain_web3: "ブロックチェーン・Web3",
+    game_development: "ゲーム開発",
+    dx_consultant: "DX推進・コンサルタント",
   };
+
+  // Anti-cheating: track tab switches
+  const [tabSwitchCount, setTabSwitchCount] = useState(0);
+  const [showTabWarning, setShowTabWarning] = useState(false);
+
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.hidden && (phase === "test")) {
+        setTabSwitchCount((c) => {
+          const newCount = c + 1;
+          if (newCount >= 1) setShowTabWarning(true);
+          return newCount;
+        });
+      }
+    };
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    return () => document.removeEventListener("visibilitychange", handleVisibilityChange);
+  }, [phase]);
+
+  // Anti-cheating: prevent copy/paste during test
+  useEffect(() => {
+    if (phase !== "test") return;
+    const preventCopy = (e: ClipboardEvent) => {
+      e.preventDefault();
+    };
+    const preventContextMenu = (e: MouseEvent) => {
+      e.preventDefault();
+    };
+    document.addEventListener("copy", preventCopy);
+    document.addEventListener("paste", preventCopy);
+    document.addEventListener("contextmenu", preventContextMenu);
+    return () => {
+      document.removeEventListener("copy", preventCopy);
+      document.removeEventListener("paste", preventCopy);
+      document.removeEventListener("contextmenu", preventContextMenu);
+    };
+  }, [phase]);
 
   // Permission state for showing specific guidance
   const [permissionState, setPermissionState] = useState<"prompt" | "denied" | "granted" | "unknown">("unknown");
@@ -638,6 +702,7 @@ function PracticeInterviewContent() {
       questionId: q.id,
       question: q.question,
       answer: testAnswers[q.id] || "未回答",
+      correct: q.type === "multiple_choice" ? testAnswers[q.id] === q.correctAnswer : undefined,
       points: q.points,
     }));
     setTestResults(results);
@@ -1128,11 +1193,38 @@ function PracticeInterviewContent() {
     if (!q) return null;
 
     const answeredCount = Object.keys(testAnswers).length;
-    const progress = (currentTestQ / testQuestions.length) * 100;
+    const progress = ((currentTestQ + 1) / testQuestions.length) * 100;
+    const isMultipleChoiceSection = q.type === "multiple_choice";
+    const mcCount = testQuestions.filter((t) => t.type === "multiple_choice").length;
+    const sectionLabel = isMultipleChoiceSection
+      ? `選択問題 ${currentTestQ + 1}/${mcCount}`
+      : `記述問題 ${currentTestQ + 1 - mcCount}/${testQuestions.length - mcCount}`;
 
     return (
       <div className="min-h-screen bg-gray-50 flex flex-col">
         <InterviewHeader subtitle={`オンラインテスト - ${categoryNames[category] || category}`} timerDisplay={timerDisplay} showQuestionCount={false} questionCount={0} maxQuestions={maxInterviewQuestions} />
+
+        {/* Tab switch warning overlay */}
+        {showTabWarning && (
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[100]">
+            <div className="bg-white rounded-2xl p-8 max-w-md mx-4 text-center shadow-2xl">
+              <div className="w-16 h-16 rounded-full bg-red-100 text-red-600 flex items-center justify-center mx-auto mb-4">
+                <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+                </svg>
+              </div>
+              <h3 className="text-lg font-bold text-gray-900 mb-2">タブ切り替えを検知しました</h3>
+              <p className="text-sm text-gray-500 mb-2">テスト中に別のタブやアプリに切り替えることは禁止されています。</p>
+              <p className="text-xs text-red-600 mb-4 font-medium">切り替え回数: {tabSwitchCount}回（記録されます）</p>
+              <button
+                onClick={() => setShowTabWarning(false)}
+                className="bg-indigo-600 text-white px-6 py-2.5 rounded-lg text-sm font-medium hover:bg-indigo-700"
+              >
+                テストに戻る
+              </button>
+            </div>
+          </div>
+        )}
 
         <div className="bg-white border-b border-gray-100 px-4 py-2">
           <div className="max-w-screen-lg mx-auto flex items-center gap-4">
@@ -1140,7 +1232,11 @@ function PracticeInterviewContent() {
             <div className="flex-1 h-1.5 bg-gray-100 rounded-full overflow-hidden">
               <div className="h-full bg-indigo-600 rounded-full transition-all" style={{ width: `${progress}%` }} />
             </div>
+            <span className="text-xs font-medium text-indigo-600">{sectionLabel}</span>
             <span className="text-xs text-gray-500">{answeredCount}/{testQuestions.length} 回答済み</span>
+            {tabSwitchCount > 0 && (
+              <span className="text-[10px] text-red-500 font-medium">離脱{tabSwitchCount}回</span>
+            )}
           </div>
         </div>
 

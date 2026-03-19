@@ -39,38 +39,57 @@ export async function POST(req: NextRequest) {
     }
 
     if (action === "generate_test") {
-      // Generate field-specific online test questions
+      // Generate field-specific online test questions: 5 multiple choice + 5 written = 10 total
       const message = await callWithRetry(() => anthropic.messages.create({
         model: "claude-sonnet-4-20250514",
-        max_tokens: 4000,
+        max_tokens: 6000,
         messages: [
           {
             role: "user",
             content: `あなたは日本の採用プラットフォーム「みちびき」のAI面接官です。
-以下の求人に対する技術テスト問題を5問生成してください。
+以下の求人に対する技術テスト問題を合計10問生成してください。
+
+【構成】
+- 前半5問: multiple_choice（4択問題）
+- 後半5問: short_answer または case_study（記述問題）
 
 カテゴリ: ${category}
 求人タイトル: ${jobTitle || "一般"}
 求人内容: ${jobDescription || "なし"}
+
+【重要なルール】
+1. 問題の順序をランダム化しないでください（選択→記述の順番を守る）
+2. 選択問題の正解の位置は均等に分散させてください（全てAやBにしない）
+3. 記述問題は実務に即した具体的なシナリオベースにしてください
+4. 同じ知識を問う問題を重複させないでください
+5. 難易度は段階的に上げてください（各セクション内でeasy→hard）
 
 各問題は以下のJSON形式で出力してください:
 {
   "questions": [
     {
       "id": 1,
-      "type": "multiple_choice" | "coding" | "short_answer" | "case_study",
+      "type": "multiple_choice",
       "question": "問題文",
-      "options": ["選択肢A", "選択肢B", "選択肢C", "選択肢D"] (multiple_choiceの場合のみ),
-      "correctAnswer": "正解" (multiple_choiceの場合のみ),
+      "options": ["選択肢A", "選択肢B", "選択肢C", "選択肢D"],
+      "correctAnswer": "正解の選択肢テキスト",
       "hint": "ヒント",
       "difficulty": "easy" | "medium" | "hard",
-      "timeLimit": 秒数,
-      "points": 配点
+      "timeLimit": 60,
+      "points": 10
+    },
+    {
+      "id": 6,
+      "type": "short_answer" | "case_study",
+      "question": "具体的なシナリオ付きの記述問題文",
+      "hint": "ヒント",
+      "difficulty": "easy" | "medium" | "hard",
+      "timeLimit": 180,
+      "points": 10
     }
   ]
 }
 
-難易度は段階的に上げてください。最初は基本、最後は応用問題。
 JSONのみを出力してください。`,
           },
         ],
@@ -148,17 +167,19 @@ JSONのみを出力してください。`,
 日本語で自然に会話してください。敬語を使用してください。
 
 面接のルール:
-1. 候補者のテスト結果を参考に、深掘り質問をしてください
-2. 技術的な質問だけでなく、人間性やチームワークについても聞いてください
-3. 回答に基づいて適切なフォローアップ質問をしてください
-4. 質問は簡潔にしてください。前置きは1文程度、質問は1つだけにしてください
-5. 必ず1つの明確な質問で終わってください
-6. 長い文章は避け、合計3文以内にしてください
-7. 音声で読み上げられることを意識し、自然な話し言葉を使ってください
+1. 候補者のテスト結果（選択5問+記述5問）を必ず参考にしてください
+2. テストで間違えた問題や記述の弱い部分を重点的に深掘りしてください
+3. 記述回答の内容をもとに「なぜそう考えたのか」「他のアプローチは？」などフォローアップしてください
+4. 技術的な質問だけでなく、人間性やチームワークについても聞いてください
+5. 質問は簡潔にしてください。前置きは1文程度、質問は1つだけにしてください
+6. 必ず1つの明確な質問で終わってください
+7. 長い文章は避け、合計3文以内にしてください
+8. 音声で読み上げられることを意識し、自然な話し言葉を使ってください
+9. テストの記述回答をそのまま繰り返さず、さらに発展的な質問をしてください
 
 カテゴリ: ${category}
 求人: ${jobTitle || "一般"}
-${testResults ? `テスト結果: ${JSON.stringify(testResults)}` : ""}`;
+${testResults ? `テスト結果（選択5問+記述5問の回答と評価）: ${JSON.stringify(testResults)}` : ""}`;
 
       const messages: Anthropic.MessageParam[] = conversationHistory || [];
 
