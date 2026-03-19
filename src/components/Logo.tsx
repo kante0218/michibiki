@@ -4,7 +4,7 @@
  * logo.png = with みちびき text, logo-icon.png = kanji only
  */
 
-type LogoSize = "xs" | "sm" | "md" | "lg" | "xl";
+type LogoSize = "header" | "xs" | "sm" | "md" | "lg" | "xl";
 
 interface LogoProps {
   size?: LogoSize;
@@ -17,6 +17,7 @@ interface LogoProps {
 }
 
 const sizeConfig: Record<LogoSize, { imgSize: string; brandImg: string; overlap: string }> = {
+  header: { imgSize: "h-9", brandImg: "h-5", overlap: "-ml-1" },
   xs: { imgSize: "h-14", brandImg: "h-32", overlap: "-ml-11" },
   sm: { imgSize: "h-20", brandImg: "h-44", overlap: "-ml-14" },
   md: { imgSize: "h-24", brandImg: "h-52", overlap: "-ml-16" },

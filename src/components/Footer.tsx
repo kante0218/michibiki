@@ -7,7 +7,7 @@ export default function Footer() {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-12">
           <div className="col-span-2 md:col-span-1">
             <div className="mb-4">
-              <LogoDark size="sm" showBrandName />
+              <LogoDark size="header" iconOnly showBrandName />
             </div>
             <p className="text-gray-500 text-sm leading-relaxed">
               AIが最適な人材と企業をマッチング。
