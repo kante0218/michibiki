@@ -209,7 +209,7 @@ export function Sidebar({ activeItem = "explore" }: SidebarProps) {
     <>
       {/* Logo */}
       <a href="/" className="mt-5 mb-8 group">
-        <Logo size="header" iconOnly showBrandName />
+        <Logo size="header" iconOnly />
       </a>
 
       {/* Close button - mobile only */}
