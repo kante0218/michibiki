@@ -68,8 +68,14 @@ export default function JobPostPage() {
     location: "",
     experience: "",
     aiRecommend: true,
+    interview_difficulty: "intermediate",
+    interview_topics: [] as string[],
+    interview_question_count: 5,
+    interview_duration_minutes: 20,
+    interview_custom_instructions: "",
   });
   const [skillInput, setSkillInput] = useState("");
+  const [topicInput, setTopicInput] = useState("");
   const [showPreview, setShowPreview] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [publishing, setPublishing] = useState(false);
@@ -140,6 +146,28 @@ export default function JobPostPage() {
     }
   };
 
+  const addTopic = () => {
+    const trimmed = topicInput.trim();
+    if (trimmed && !form.interview_topics.includes(trimmed)) {
+      setForm((prev) => ({ ...prev, interview_topics: [...prev.interview_topics, trimmed] }));
+      setTopicInput("");
+    }
+  };
+
+  const removeTopic = (topic: string) => {
+    setForm((prev) => ({
+      ...prev,
+      interview_topics: prev.interview_topics.filter((t) => t !== topic),
+    }));
+  };
+
+  const handleTopicKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      addTopic();
+    }
+  };
+
   const validate = (): boolean => {
     const errors: Record<string, string> = {};
     if (!form.title.trim()) errors.title = "職種名は必須です";
@@ -166,6 +194,11 @@ export default function JobPostPage() {
         max_rate: form.rateMax ? parseFloat(form.rateMax) : 0,
         requirements: form.skills.length > 0 ? form.skills.join(", ") : null,
         status,
+        interview_difficulty: form.interview_difficulty,
+        interview_topics: form.interview_topics.length > 0 ? form.interview_topics : null,
+        interview_question_count: form.interview_question_count,
+        interview_duration_minutes: form.interview_duration_minutes,
+        interview_custom_instructions: form.interview_custom_instructions.trim() || null,
       } as any)
       .select()
       .single() as { data: { id: string; title: string } | null; error: any };
@@ -649,6 +682,154 @@ export default function JobPostPage() {
                     }`}
                   />
                 </button>
+              </div>
+            </div>
+
+            {/* Interview Configuration */}
+            <div className="bg-white rounded-2xl border border-gray-200/60 shadow-sm p-6">
+              <div className="flex items-center gap-2 mb-2">
+                <div className="w-6 h-6 rounded-lg bg-violet-50 text-violet-600 flex items-center justify-center">
+                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
+                  </svg>
+                </div>
+                <h2 className="font-semibold text-gray-900">面接設定</h2>
+              </div>
+              <p className="text-sm text-gray-500 mb-5 ml-8">この求人に応募した候補者へのAI面接の内容を設定します。</p>
+
+              <div className="space-y-5">
+                {/* Difficulty Level */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    難易度レベル
+                  </label>
+                  <div className="flex flex-wrap gap-3">
+                    {[
+                      { value: "beginner", label: "初級" },
+                      { value: "intermediate", label: "中級" },
+                      { value: "advanced", label: "上級" },
+                      { value: "expert", label: "エキスパート" },
+                    ].map((level) => (
+                      <label
+                        key={level.value}
+                        className={`flex items-center gap-2 px-4 py-2.5 rounded-xl border cursor-pointer transition-all text-sm ${
+                          form.interview_difficulty === level.value
+                            ? "border-violet-300 bg-gradient-to-r from-violet-50 to-purple-50 text-violet-700 ring-1 ring-violet-200"
+                            : "border-gray-200 text-gray-600 hover:border-gray-300 hover:bg-gray-50"
+                        }`}
+                      >
+                        <input
+                          type="radio"
+                          name="interview_difficulty"
+                          value={level.value}
+                          checked={form.interview_difficulty === level.value}
+                          onChange={(e) => handleChange("interview_difficulty", e.target.value)}
+                          className="sr-only"
+                        />
+                        <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center transition-colors ${
+                          form.interview_difficulty === level.value ? "border-violet-600" : "border-gray-300"
+                        }`}>
+                          {form.interview_difficulty === level.value && (
+                            <div className="w-2 h-2 rounded-full bg-violet-600" />
+                          )}
+                        </div>
+                        {level.label}
+                      </label>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Topics */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                    出題トピック
+                  </label>
+                  <div className="flex gap-2 mb-2">
+                    <input
+                      type="text"
+                      value={topicInput}
+                      onChange={(e) => setTopicInput(e.target.value)}
+                      onKeyDown={handleTopicKeyDown}
+                      placeholder="トピックを入力してEnterで追加"
+                      className="flex-1 px-4 py-2.5 rounded-xl border border-gray-200 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-violet-500/50 focus:border-violet-300 transition-all"
+                    />
+                    <button
+                      onClick={addTopic}
+                      type="button"
+                      className="px-4 py-2.5 rounded-xl border border-gray-200 text-sm text-gray-600 hover:bg-gray-50 hover:border-gray-300 transition-all font-medium"
+                    >
+                      追加
+                    </button>
+                  </div>
+                  {form.interview_topics.length > 0 && (
+                    <div className="flex flex-wrap gap-2">
+                      {form.interview_topics.map((topic) => (
+                        <span
+                          key={topic}
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-violet-50 to-purple-50 text-violet-700 text-sm font-medium ring-1 ring-violet-100"
+                        >
+                          {topic}
+                          <button
+                            onClick={() => removeTopic(topic)}
+                            className="ml-0.5 text-violet-400 hover:text-violet-600 transition-colors"
+                          >
+                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                          </button>
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* Question Count and Duration */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                      問題数
+                    </label>
+                    <select
+                      value={form.interview_question_count}
+                      onChange={(e) => setForm((prev) => ({ ...prev, interview_question_count: parseInt(e.target.value) }))}
+                      className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-violet-500/50 focus:border-violet-300 transition-all bg-white"
+                    >
+                      {[3, 4, 5, 6, 7, 8, 9, 10].map((n) => (
+                        <option key={n} value={n}>{n}問</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                      面接時間
+                    </label>
+                    <select
+                      value={form.interview_duration_minutes}
+                      onChange={(e) => setForm((prev) => ({ ...prev, interview_duration_minutes: parseInt(e.target.value) }))}
+                      className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-violet-500/50 focus:border-violet-300 transition-all bg-white"
+                    >
+                      <option value={15}>15分</option>
+                      <option value={20}>20分</option>
+                      <option value={25}>25分</option>
+                      <option value={30}>30分</option>
+                    </select>
+                  </div>
+                </div>
+
+                {/* Custom Instructions */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                    カスタム指示
+                  </label>
+                  <textarea
+                    value={form.interview_custom_instructions}
+                    onChange={(e) => handleChange("interview_custom_instructions", e.target.value)}
+                    placeholder="AIへの追加指示を入力してください（例：実務経験に基づいた質問を重視してください、コーディング問題を含めてください等）"
+                    rows={3}
+                    className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-violet-500/50 focus:border-violet-300 transition-all resize-none"
+                  />
+                </div>
               </div>
             </div>
 

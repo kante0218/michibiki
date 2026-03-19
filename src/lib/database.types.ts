@@ -608,6 +608,113 @@ export interface Database {
           file_size_bytes?: number | null;
         };
       };
+      production_interviews: {
+        Row: {
+          id: string;
+          candidate_id: string;
+          job_posting_id: string;
+          company_id: string;
+          status: "pending" | "in_progress" | "completed" | "analyzed";
+          questions: Json;
+          answers: Json;
+          conversation_log: Json;
+          recording_path: string | null;
+          recording_duration_seconds: number | null;
+          speech_segments: Json;
+          started_at: string | null;
+          completed_at: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          candidate_id: string;
+          job_posting_id: string;
+          company_id: string;
+          status?: "pending" | "in_progress" | "completed" | "analyzed";
+          questions?: Json;
+          answers?: Json;
+          conversation_log?: Json;
+          recording_path?: string | null;
+          recording_duration_seconds?: number | null;
+          speech_segments?: Json;
+          started_at?: string | null;
+          completed_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          status?: "pending" | "in_progress" | "completed" | "analyzed";
+          questions?: Json;
+          answers?: Json;
+          conversation_log?: Json;
+          recording_path?: string | null;
+          recording_duration_seconds?: number | null;
+          speech_segments?: Json;
+          started_at?: string | null;
+          completed_at?: string | null;
+          updated_at?: string;
+        };
+      };
+      interview_results: {
+        Row: {
+          id: string;
+          production_interview_id: string;
+          job_posting_id: string;
+          candidate_id: string;
+          company_id: string;
+          overall_score: number | null;
+          technical_score: number | null;
+          communication_score: number | null;
+          appearance_score: number | null;
+          problem_solving_score: number | null;
+          correct_rate: number | null;
+          matching_score: number | null;
+          ai_analysis: string | null;
+          strengths: string[];
+          weaknesses: string[];
+          recommendation: string | null;
+          sent_to_company: boolean;
+          sent_at: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          production_interview_id: string;
+          job_posting_id: string;
+          candidate_id: string;
+          company_id: string;
+          overall_score?: number | null;
+          technical_score?: number | null;
+          communication_score?: number | null;
+          appearance_score?: number | null;
+          problem_solving_score?: number | null;
+          correct_rate?: number | null;
+          matching_score?: number | null;
+          ai_analysis?: string | null;
+          strengths?: string[];
+          weaknesses?: string[];
+          recommendation?: string | null;
+          sent_to_company?: boolean;
+          sent_at?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          overall_score?: number | null;
+          technical_score?: number | null;
+          communication_score?: number | null;
+          appearance_score?: number | null;
+          problem_solving_score?: number | null;
+          correct_rate?: number | null;
+          matching_score?: number | null;
+          ai_analysis?: string | null;
+          strengths?: string[];
+          weaknesses?: string[];
+          recommendation?: string | null;
+          sent_to_company?: boolean;
+          sent_at?: string | null;
+        };
+      };
       referrals: {
         Row: {
           id: string;
