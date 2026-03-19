@@ -37,7 +37,7 @@ export default function Logo({
     <img
       src={src}
       alt="Michibiki 導"
-      className={`${config.imgSize} w-auto object-contain relative z-10 mix-blend-multiply`}
+      className={`${config.imgSize} w-auto object-contain relative z-10`}
     />
   );
 
@@ -48,7 +48,7 @@ export default function Logo({
         <img
           src="/logo-brand.png"
           alt="みちびき"
-          className={`${config.brandImg} w-auto object-contain ${config.overlap} relative z-0 mix-blend-multiply`}
+          className={`${config.brandImg} w-auto object-contain ${config.overlap} relative z-0`}
         />
       </div>
     );
