@@ -99,6 +99,7 @@ function PracticeInterviewContent() {
   const [aiThinking, setAiThinking] = useState(false);
   const [recordingSeconds, setRecordingSeconds] = useState(0);
   const [cameraReady, setCameraReady] = useState(false);
+  const [cameraDenied, setCameraDenied] = useState(false);
   const maxInterviewQuestions = 8;
 
   // Result state
@@ -174,7 +175,8 @@ function PracticeInterviewContent() {
       setCameraReady(true);
     } catch (err) {
       console.error("Camera error:", err);
-      setError("カメラ・マイクへのアクセスを許可してください。ブラウザの設定を確認してください。");
+      setCameraDenied(true);
+      setCameraReady(true); // Allow proceeding with text-only mode
     }
   };
 
@@ -818,22 +820,50 @@ function PracticeInterviewContent() {
 
             {cameraReady && (
               <div className="space-y-4">
-                <div className="flex items-center justify-center gap-6 text-white">
-                  <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 rounded-full bg-emerald-400 animate-pulse" />
-                    <span className="text-sm">カメラ OK</span>
+                {cameraDenied ? (
+                  <>
+                    <div className="bg-amber-900/50 border border-amber-600/50 rounded-xl p-4 max-w-md mx-auto">
+                      <h3 className="text-amber-300 text-sm font-semibold mb-2 flex items-center gap-2">
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.072 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                        </svg>
+                        カメラへのアクセスが拒否されました
+                      </h3>
+                      <p className="text-amber-200/80 text-xs mb-3">カメラを有効にするには：</p>
+                      <ol className="text-amber-200/80 text-xs space-y-1 text-left list-decimal list-inside">
+                        <li>アドレスバー左の🔒アイコンをクリック</li>
+                        <li>「カメラ」と「マイク」を「許可」に変更</li>
+                        <li>ページをリロードしてください</li>
+                      </ol>
+                      <div className="mt-3 flex gap-2">
+                        <button
+                          onClick={() => { setCameraDenied(false); setCameraReady(false); startCamera(); }}
+                          className="flex-1 bg-amber-600 text-white px-4 py-2 rounded-lg text-xs font-medium hover:bg-amber-700"
+                        >
+                          再試行
+                        </button>
+                      </div>
+                    </div>
+                    <p className="text-gray-400 text-xs">カメラなしでもテキスト入力で面接を続行できます</p>
+                  </>
+                ) : (
+                  <div className="flex items-center justify-center gap-6 text-white">
+                    <div className="flex items-center gap-2">
+                      <div className="w-3 h-3 rounded-full bg-emerald-400 animate-pulse" />
+                      <span className="text-sm">カメラ OK</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-3 h-3 rounded-full bg-emerald-400 animate-pulse" />
+                      <span className="text-sm">マイク OK</span>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 rounded-full bg-emerald-400 animate-pulse" />
-                    <span className="text-sm">マイク OK</span>
-                  </div>
-                </div>
+                )}
 
                 <div className="bg-gray-800 rounded-xl p-4 max-w-md mx-auto">
                   <h3 className="text-white text-sm font-semibold mb-2">面接の進め方</h3>
                   <ul className="text-gray-300 text-xs space-y-1.5 text-left">
                     <li>• AIが質問を画面に表示します</li>
-                    <li>• 「録画開始」を押して、声に出して回答してください</li>
+                    <li>• {cameraDenied ? "テキストで回答を入力してください" : "「録画開始」を押して、声に出して回答してください"}</li>
                     <li>• 回答が終わったら「回答を送信」を押してください</li>
                     <li>• 全{maxInterviewQuestions}問で終了です</li>
                   </ul>
