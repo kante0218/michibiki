@@ -33,28 +33,32 @@ export default function Logo({
   const config = sizeConfig[size];
   const src = iconOnly ? "/logo-icon.png" : "/logo.png";
 
+  const gpuStyle = { transform: "translateZ(0)", backfaceVisibility: "hidden" as const, WebkitBackfaceVisibility: "hidden" as const };
+
   const imgElement = (
     <img
       src={src}
       alt="Michibiki 導"
-      className={`${config.imgSize} w-auto object-contain relative z-10`}
+      className={`${config.imgSize} w-auto object-contain`}
+      style={gpuStyle}
     />
   );
 
   if (showBrandName) {
     return (
-      <div className={`flex items-center gap-0 ${className}`}>
+      <div className={`flex items-center gap-0 ${className}`} style={gpuStyle}>
         {imgElement}
         <img
           src="/logo-brand.png"
           alt="みちびき"
-          className={`${config.brandImg} w-auto object-contain ${config.overlap} relative z-0`}
+          className={`${config.brandImg} w-auto object-contain ${config.overlap}`}
+          style={gpuStyle}
         />
       </div>
     );
   }
 
-  return <div className={className}>{imgElement}</div>;
+  return <div className={className} style={gpuStyle}>{imgElement}</div>;
 }
 
 /** Variant for dark backgrounds (landing page header, footer) */
@@ -67,26 +71,30 @@ export function LogoDark({
   const config = sizeConfig[size];
   const src = iconOnly ? "/logo-icon.png" : "/logo.png";
 
+  const gpuStyle = { transform: "translateZ(0)", backfaceVisibility: "hidden" as const, WebkitBackfaceVisibility: "hidden" as const };
+
   const imgElement = (
     <img
       src={src}
       alt="Michibiki 導"
-      className={`${config.imgSize} w-auto object-contain relative z-10`}
+      className={`${config.imgSize} w-auto object-contain`}
+      style={gpuStyle}
     />
   );
 
   if (showBrandName) {
     return (
-      <div className={`flex items-center gap-0 ${className}`}>
+      <div className={`flex items-center gap-0 ${className}`} style={gpuStyle}>
         {imgElement}
         <img
           src="/logo-brand.png"
           alt="みちびき"
-          className={`${config.brandImg} w-auto object-contain brightness-0 invert ${config.overlap} relative z-0`}
+          className={`${config.brandImg} w-auto object-contain brightness-0 invert ${config.overlap}`}
+          style={gpuStyle}
         />
       </div>
     );
   }
 
-  return <div className={className}>{imgElement}</div>;
+  return <div className={className} style={gpuStyle}>{imgElement}</div>;
 }

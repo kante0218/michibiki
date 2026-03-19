@@ -699,7 +699,7 @@ function PracticeInterviewContent() {
 
   // Header component
   const Header = ({ subtitle }: { subtitle: string }) => (
-    <header className="border-b border-gray-200 bg-white sticky top-0 z-40" style={{ isolation: "isolate", willChange: "transform" }}>
+    <header className="border-b border-gray-200 bg-white sticky top-0 z-40" style={{ isolation: "isolate", transform: "translateZ(0)", backfaceVisibility: "hidden" }}>
       <div className="flex items-center justify-between px-4 py-3 max-w-screen-2xl mx-auto">
         <div className="flex items-center gap-3">
           <a href="/interview" className="flex items-center gap-2 flex-shrink-0">
@@ -1171,7 +1171,7 @@ function PracticeInterviewContent() {
     return (
       <div className="h-screen bg-gray-900 flex flex-col overflow-hidden">
         {/* Compact header for interview */}
-        <header className="bg-gray-900 border-b border-gray-700/50 px-4 py-2 z-40 flex-shrink-0" style={{ isolation: "isolate", willChange: "transform" }}>
+        <header className="bg-gray-900 border-b border-gray-700/50 px-4 py-2 z-40 flex-shrink-0" style={{ isolation: "isolate", transform: "translateZ(0)", backfaceVisibility: "hidden" }}>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <span className="text-sm font-medium text-white">ビデオ面接</span>
