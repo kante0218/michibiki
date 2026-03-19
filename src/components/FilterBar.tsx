@@ -101,14 +101,39 @@ const domainGroups: { group: string; options: { value: string; label: string }[]
       { value: "経理/財務", label: "経理/財務" },
       { value: "法務", label: "法務" },
       { value: "総務/事務", label: "総務/事務" },
+      { value: "リサーチ", label: "リサーチ" },
     ],
   },
   {
-    group: "金融・専門職",
+    group: "金融・保険",
+    options: [
+      { value: "金融アナリスト", label: "金融アナリスト" },
+      { value: "投資/ファンド", label: "投資/ファンド" },
+      { value: "保険", label: "保険" },
+      { value: "フィンテック", label: "フィンテック" },
+      { value: "会計/税務", label: "会計/税務" },
+      { value: "不動産", label: "不動産" },
+    ],
+  },
+  {
+    group: "医療・ヘルスケア",
     options: [
       { value: "医療/ヘルスケア", label: "医療/ヘルスケア" },
+      { value: "看護", label: "看護" },
+      { value: "薬剤師", label: "薬剤師" },
+      { value: "介護/福祉", label: "介護/福祉" },
+      { value: "メンタルヘルス", label: "メンタルヘルス" },
+      { value: "医療IT", label: "医療IT" },
+    ],
+  },
+  {
+    group: "教育・研究",
+    options: [
       { value: "教育", label: "教育" },
-      { value: "リサーチ", label: "リサーチ" },
+      { value: "EdTech", label: "EdTech" },
+      { value: "講師/トレーナー", label: "講師/トレーナー" },
+      { value: "研究員", label: "研究員" },
+      { value: "学術/アカデミア", label: "学術/アカデミア" },
     ],
   },
   {
