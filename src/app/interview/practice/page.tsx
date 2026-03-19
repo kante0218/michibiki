@@ -175,25 +175,8 @@ function PracticeInterviewContent() {
   // Camera functions
   const startCamera = async () => {
     try {
-      // First check permission status (if browser supports it)
-      if (navigator.permissions) {
-        try {
-          const cameraStatus = await navigator.permissions.query({ name: "camera" as PermissionName });
-          setPermissionState(cameraStatus.state as "prompt" | "denied" | "granted");
-
-          // If already denied by browser, skip getUserMedia (it won't prompt again)
-          if (cameraStatus.state === "denied") {
-            console.log("Camera permission permanently denied by browser");
-            setCameraDenied(true);
-            setCameraReady(true);
-            return;
-          }
-        } catch {
-          // permissions.query may not support "camera" in all browsers
-        }
-      }
-
-      // This triggers the browser's permission prompt if state is "prompt"
+      // Always try getUserMedia directly - this is the most reliable way
+      // to check if camera access is actually available
       const stream = await navigator.mediaDevices.getUserMedia({
         video: { width: 1280, height: 720, facingMode: "user" },
         audio: true,
@@ -203,6 +186,7 @@ function PracticeInterviewContent() {
         videoRef.current.srcObject = stream;
       }
       setPermissionState("granted");
+      setCameraDenied(false);
       setCameraReady(true);
     } catch (err) {
       console.error("Camera error:", err);
@@ -210,6 +194,11 @@ function PracticeInterviewContent() {
       const error = err as any;
       if (error?.name === "NotAllowedError" || error?.name === "PermissionDeniedError") {
         setPermissionState("denied");
+      } else if (error?.name === "NotFoundError" || error?.name === "DevicesNotFoundError") {
+        // No camera device found
+        setPermissionState("unknown");
+      } else {
+        setPermissionState("unknown");
       }
       setCameraDenied(true);
       setCameraReady(true); // Allow proceeding with text-only mode
