@@ -522,6 +522,25 @@ function PracticeInterviewContent() {
     }
   };
 
+  // Text-to-Speech: read question aloud
+  const speakQuestion = useCallback((text: string) => {
+    try {
+      if (typeof window === "undefined" || !window.speechSynthesis) return;
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = "ja-JP";
+      utterance.rate = 0.95;
+      utterance.pitch = 1.0;
+      // Try to pick a Japanese voice
+      const voices = window.speechSynthesis.getVoices();
+      const jaVoice = voices.find(v => v.lang.startsWith("ja"));
+      if (jaVoice) utterance.voice = jaVoice;
+      window.speechSynthesis.speak(utterance);
+    } catch {
+      // TTS not available, silently ignore
+    }
+  }, []);
+
   const handleStartVideoInterview = async () => {
     setTimerSeconds(0);
     setIsTimerRunning(true);
@@ -552,6 +571,8 @@ function PracticeInterviewContent() {
       setCurrentQuestion({ question: data.question, questionNumber: 1 });
       setConversationHistory(data.conversationHistory || []);
       setInterviewQuestionCount(1);
+      // Auto-read the first question aloud
+      speakQuestion(data.question);
     } catch {
       setError("面接の開始に失敗しました。");
       setPhase("test_result");
@@ -638,6 +659,8 @@ function PracticeInterviewContent() {
       setConversationHistory(data.conversationHistory || updatedHistory);
       setInterviewQuestionCount(newCount);
       setTranscript("");
+      // Auto-read the next question aloud
+      speakQuestion(data.question);
     } catch {
       setError("AIからの応答に失敗しました。");
     } finally {
@@ -648,6 +671,7 @@ function PracticeInterviewContent() {
   const handleEndInterview = async () => {
     handleStopRecording();
     stopScreenRecording();
+    try { window.speechSynthesis.cancel(); } catch {}
     setPhase("evaluating");
     setIsTimerRunning(false);
     stopCamera();
@@ -1169,34 +1193,38 @@ function PracticeInterviewContent() {
     const interviewProgress = (answeredInterviewCount / maxInterviewQuestions) * 100;
 
     return (
-      <div className="h-screen bg-gray-900 flex flex-col overflow-hidden">
-        {/* Compact header for interview */}
-        <header className="bg-gray-900 border-b border-gray-700/50 px-4 py-2 z-40 flex-shrink-0" style={{ isolation: "isolate", transform: "translateZ(0)", backfaceVisibility: "hidden" }}>
+      <div className="h-screen bg-gray-50 flex flex-col overflow-hidden">
+        {/* Header - same white style as other pages */}
+        <header className="border-b border-gray-200 bg-white px-4 py-2 z-40 flex-shrink-0" style={{ isolation: "isolate", transform: "translateZ(0)", backfaceVisibility: "hidden" }}>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <span className="text-sm font-medium text-white">ビデオ面接</span>
+              <a href="/interview" className="flex items-center gap-2 flex-shrink-0">
+                <Logo size="xs" />
+              </a>
+              <span className="text-gray-300">|</span>
+              <span className="text-sm text-gray-500 whitespace-nowrap">ビデオ面接</span>
               <div className="flex items-center gap-2 ml-4">
                 <span className="text-[10px] text-gray-400">面接進行</span>
-                <div className="w-32 h-1.5 bg-gray-700 rounded-full overflow-hidden">
+                <div className="w-32 h-1.5 bg-gray-100 rounded-full overflow-hidden">
                   <div
-                    className="h-full bg-indigo-500 rounded-full transition-all duration-500"
+                    className="h-full bg-indigo-600 rounded-full transition-all duration-500"
                     style={{ width: `${interviewProgress}%` }}
                   />
                 </div>
-                <span className="text-[10px] text-gray-400">{answeredInterviewCount}/{maxInterviewQuestions}</span>
+                <span className="text-[10px] text-gray-400">{answeredInterviewCount}/{maxInterviewQuestions} 回答済み</span>
               </div>
             </div>
             <div className="flex items-center gap-3">
               {isRecording && (
                 <div className="flex items-center gap-1.5">
                   <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
-                  <span className="text-xs text-red-400 font-mono">{formatTime(recordingSeconds)}</span>
+                  <span className="text-xs text-red-500 font-mono">{formatTime(recordingSeconds)}</span>
                 </div>
               )}
-              <span className="text-xs font-mono text-gray-400 bg-gray-800 px-2.5 py-1 rounded-lg">
+              <span className="text-xs font-mono text-gray-500 bg-gray-100 px-2.5 py-1 rounded-lg">
                 {formatTime(timerSeconds)}
               </span>
-              <span className="text-[10px] text-gray-500">
+              <span className="text-[10px] text-gray-400">
                 質問 {interviewQuestionCount}/{maxInterviewQuestions}
               </span>
               {/* Screen recording toggle */}
@@ -1204,8 +1232,8 @@ function PracticeInterviewContent() {
                 onClick={isScreenRecording ? stopScreenRecording : startScreenRecording}
                 className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-medium transition-colors ${
                   isScreenRecording
-                    ? "bg-red-900/50 text-red-400 border border-red-700 hover:bg-red-900/80"
-                    : "bg-gray-800 text-gray-400 border border-gray-700 hover:bg-gray-700"
+                    ? "bg-red-50 text-red-600 border border-red-200 hover:bg-red-100"
+                    : "bg-gray-50 text-gray-600 border border-gray-200 hover:bg-gray-100"
                 }`}
               >
                 {isScreenRecording ? (
@@ -1229,7 +1257,7 @@ function PracticeInterviewContent() {
         {/* Main content: Left 2/3 camera, Right 1/3 AI */}
         <div className="flex-1 flex min-h-0">
           {/* Left: Camera feed (2/3) */}
-          <div className="w-2/3 relative bg-black flex items-center justify-center">
+          <div className="w-2/3 relative bg-gray-900 flex items-center justify-center">
             {!cameraDenied && streamRef.current ? (
               <>
                 <video
@@ -1254,8 +1282,8 @@ function PracticeInterviewContent() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                   </svg>
                 </div>
-                <p className="text-gray-500 text-sm">カメラが無効です</p>
-                <p className="text-gray-600 text-xs mt-1">テキスト入力で回答できます</p>
+                <p className="text-gray-400 text-sm">カメラが無効です</p>
+                <p className="text-gray-500 text-xs mt-1">テキスト入力で回答できます</p>
               </div>
             )}
           </div>
@@ -1278,10 +1306,30 @@ function PracticeInterviewContent() {
                       Q{currentQuestion?.questionNumber || 1}
                     </span>
                     <span className="text-gray-400 text-[10px]">/ {maxInterviewQuestions}</span>
+                    {/* Speaker icon to replay TTS */}
+                    <button
+                      onClick={() => {
+                        if (currentQuestion?.question) {
+                          window.speechSynthesis.cancel();
+                          const u = new SpeechSynthesisUtterance(currentQuestion.question);
+                          u.lang = "ja-JP";
+                          u.rate = 0.95;
+                          u.pitch = 1.0;
+                          window.speechSynthesis.speak(u);
+                        }
+                      }}
+                      className="ml-auto flex items-center gap-1 text-[10px] text-indigo-500 hover:text-indigo-700 transition-colors"
+                      title="質問を読み上げる"
+                    >
+                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.536 8.464a5 5 0 010 7.072M17.95 6.05a8 8 0 010 11.9M6.5 8.8l4.2-3.15A1 1 0 0112 6.5v11a1 1 0 01-1.3.95L6.5 15.2H4a1 1 0 01-1-1v-4.4a1 1 0 011-1h2.5z" />
+                      </svg>
+                      再生
+                    </button>
                   </div>
 
-                  <div className="bg-gray-50 rounded-xl p-4 mb-4">
-                    <p className="text-gray-900 text-sm leading-relaxed font-medium">
+                  <div className="bg-indigo-50 rounded-xl p-4 mb-4 border border-indigo-100">
+                    <p className="text-gray-900 text-sm leading-7 font-medium whitespace-pre-line">
                       {currentQuestion?.question || ""}
                     </p>
                   </div>
@@ -1292,7 +1340,7 @@ function PracticeInterviewContent() {
                       <svg className="w-3.5 h-3.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
                       </svg>
-                      <span className="text-[10px] text-gray-500">音声認識テキスト</span>
+                      <span className="text-[10px] text-gray-500">あなたの回答</span>
                     </div>
                     <div className="bg-gray-50 rounded-lg p-3 min-h-[60px] max-h-[120px] overflow-y-auto border border-gray-100">
                       {transcript ? (
@@ -1325,7 +1373,7 @@ function PracticeInterviewContent() {
                     {!isRecording ? (
                       <button
                         onClick={handleStartRecording}
-                        className="flex-1 bg-red-600 hover:bg-red-700 text-white py-2.5 rounded-lg text-xs font-semibold transition-colors flex items-center justify-center gap-1.5"
+                        className="flex-1 bg-red-500 hover:bg-red-600 text-white py-2.5 rounded-xl text-xs font-semibold transition-colors flex items-center justify-center gap-1.5"
                       >
                         <div className="w-3 h-3 rounded-full bg-white" />
                         録画開始
@@ -1333,7 +1381,7 @@ function PracticeInterviewContent() {
                     ) : (
                       <button
                         onClick={handleStopRecording}
-                        className="flex-1 bg-gray-500 hover:bg-gray-600 text-white py-2.5 rounded-lg text-xs font-semibold transition-colors flex items-center justify-center gap-1.5"
+                        className="flex-1 bg-gray-500 hover:bg-gray-600 text-white py-2.5 rounded-xl text-xs font-semibold transition-colors flex items-center justify-center gap-1.5"
                       >
                         <div className="w-3 h-3 rounded bg-white" />
                         録画停止
@@ -1343,7 +1391,7 @@ function PracticeInterviewContent() {
                     <button
                       onClick={handleSubmitAnswer}
                       disabled={!transcript.trim() && !fallbackText.trim()}
-                      className="flex-1 bg-indigo-600 hover:bg-indigo-700 disabled:bg-gray-200 disabled:text-gray-400 text-white py-2.5 rounded-lg text-xs font-semibold transition-colors disabled:cursor-not-allowed flex items-center justify-center gap-1.5"
+                      className="flex-1 bg-indigo-600 hover:bg-indigo-700 disabled:bg-gray-200 disabled:text-gray-400 text-white py-2.5 rounded-xl text-xs font-semibold transition-colors disabled:cursor-not-allowed flex items-center justify-center gap-1.5"
                     >
                       回答を送信
                       <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
