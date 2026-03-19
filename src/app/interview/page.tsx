@@ -298,9 +298,9 @@ export default function InterviewPage() {
           <h2 className="text-2xl font-bold text-gray-900 text-center mb-12">AI面接の流れ</h2>
           <div className="grid md:grid-cols-3 gap-8">
             {steps.map((s) => (
-              <div key={s.step} className="relative">
-                <div className="text-5xl font-bold text-indigo-100 mb-3">{s.step}</div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">{s.title}</h3>
+              <div key={s.step} className="relative group cursor-default">
+                <div className="text-5xl font-bold text-indigo-100 mb-3 transition-all duration-500 group-hover:text-indigo-500 group-hover:scale-110 group-hover:drop-shadow-lg origin-left">{s.step}</div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-2 transition-colors duration-300 group-hover:text-indigo-700">{s.title}</h3>
                 <p className="text-sm text-gray-600 leading-relaxed">{s.description}</p>
               </div>
             ))}
