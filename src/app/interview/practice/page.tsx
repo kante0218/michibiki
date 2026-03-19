@@ -39,12 +39,11 @@ interface InterviewEvaluation {
   detailedFeedback: string;
 }
 
-type Phase = "loading" | "test" | "test_result" | "interview_prep" | "interview" | "evaluating" | "result";
+type Phase = "loading" | "test" | "test_result" | "camera_setup" | "interview" | "evaluating" | "result";
 
-// Message type for conversation
-interface Message {
-  role: "ai" | "user";
-  content: string;
+interface InterviewQuestion {
+  question: string;
+  questionNumber: number;
 }
 
 export default function PracticeInterviewPage() {
@@ -89,14 +88,17 @@ function PracticeInterviewContent() {
     weaknesses: string[];
   } | null>(null);
 
-  // Interview state
-  const [messages, setMessages] = useState<Message[]>([]);
+  // Video interview state
+  const [currentQuestion, setCurrentQuestion] = useState<InterviewQuestion | null>(null);
+  const [isRecording, setIsRecording] = useState(false);
+  const [transcript, setTranscript] = useState("");
+  const [interviewQuestionCount, setInterviewQuestionCount] = useState(0);
   const [conversationHistory, setConversationHistory] = useState<
     { role: "user" | "assistant"; content: string }[]
   >([]);
-  const [userInput, setUserInput] = useState("");
   const [aiThinking, setAiThinking] = useState(false);
-  const [interviewQuestionCount, setInterviewQuestionCount] = useState(0);
+  const [recordingSeconds, setRecordingSeconds] = useState(0);
+  const [cameraReady, setCameraReady] = useState(false);
   const maxInterviewQuestions = 8;
 
   // Result state
@@ -110,13 +112,11 @@ function PracticeInterviewContent() {
   const [error, setError] = useState("");
 
   // Refs
-  const chatEndRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLTextAreaElement>(null);
-
-  // Scroll to bottom of chat
-  useEffect(() => {
-    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const streamRef = useRef<MediaStream | null>(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const recognitionRef = useRef<any>(null);
+  const recordingTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // Auth check
   useEffect(() => {
@@ -134,6 +134,16 @@ function PracticeInterviewContent() {
     return () => clearInterval(interval);
   }, [isTimerRunning]);
 
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      stopCamera();
+      stopRecognition();
+      if (recordingTimerRef.current) clearInterval(recordingTimerRef.current);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const formatTime = useCallback((seconds: number) => {
     const m = Math.floor(seconds / 60).toString().padStart(2, "0");
     const s = (seconds % 60).toString().padStart(2, "0");
@@ -150,6 +160,113 @@ function PracticeInterviewContent() {
     healthcare: "ヘルスケア",
   };
 
+  // Camera functions
+  const startCamera = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { width: 1280, height: 720, facingMode: "user" },
+        audio: true,
+      });
+      streamRef.current = stream;
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+      }
+      setCameraReady(true);
+    } catch (err) {
+      console.error("Camera error:", err);
+      setError("カメラ・マイクへのアクセスを許可してください。ブラウザの設定を確認してください。");
+    }
+  };
+
+  const stopCamera = () => {
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach((track) => track.stop());
+      streamRef.current = null;
+    }
+    setCameraReady(false);
+  };
+
+  // Speech Recognition
+  const startRecognition = () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const SpeechRecognitionClass = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SpeechRecognitionClass) {
+      // Fallback: allow text input if speech recognition is not available
+      return;
+    }
+
+    const recognition = new SpeechRecognitionClass();
+    recognition.lang = "ja-JP";
+    recognition.continuous = true;
+    recognition.interimResults = true;
+
+    let finalTranscript = "";
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    recognition.onresult = (event: any) => {
+      let interim = "";
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        const t = event.results[i][0].transcript;
+        if (event.results[i].isFinal) {
+          finalTranscript += t;
+        } else {
+          interim += t;
+        }
+      }
+      setTranscript(finalTranscript + interim);
+    };
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    recognition.onerror = (event: any) => {
+      console.error("Speech recognition error:", event.error);
+      if (event.error === "no-speech") {
+        try { recognition.stop(); } catch {}
+        setTimeout(() => {
+          try { recognition.start(); } catch {}
+        }, 100);
+      }
+    };
+
+    recognition.onend = () => {
+      if (isRecording) {
+        try { recognition.start(); } catch {}
+      }
+    };
+
+    recognitionRef.current = recognition;
+    try {
+      recognition.start();
+    } catch {}
+  };
+
+  const stopRecognition = () => {
+    if (recognitionRef.current) {
+      try { recognitionRef.current.stop(); } catch {}
+      recognitionRef.current = null;
+    }
+  };
+
+  // Recording control
+  const handleStartRecording = () => {
+    setTranscript("");
+    setIsRecording(true);
+    setRecordingSeconds(0);
+    startRecognition();
+
+    recordingTimerRef.current = setInterval(() => {
+      setRecordingSeconds((s) => s + 1);
+    }, 1000);
+  };
+
+  const handleStopRecording = () => {
+    setIsRecording(false);
+    stopRecognition();
+    if (recordingTimerRef.current) {
+      clearInterval(recordingTimerRef.current);
+      recordingTimerRef.current = null;
+    }
+  };
+
   // Generate test questions on mount
   useEffect(() => {
     if (user && phase === "loading") {
@@ -164,17 +281,10 @@ function PracticeInterviewContent() {
       const res = await fetch("/api/interview", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          action: "generate_test",
-          category,
-          jobTitle,
-        }),
+        body: JSON.stringify({ action: "generate_test", category, jobTitle }),
       });
       const data = await res.json();
-      if (data.error) {
-        setError(data.error);
-        return;
-      }
+      if (data.error) { setError(data.error); return; }
       setTestQuestions(data.questions || []);
       setPhase("test");
       setIsTimerRunning(true);
@@ -188,22 +298,17 @@ function PracticeInterviewContent() {
   };
 
   const handleNextTestQuestion = () => {
-    if (currentTestQ < testQuestions.length - 1) {
-      setCurrentTestQ((q) => q + 1);
-    }
+    if (currentTestQ < testQuestions.length - 1) setCurrentTestQ((q) => q + 1);
   };
 
   const handlePrevTestQuestion = () => {
-    if (currentTestQ > 0) {
-      setCurrentTestQ((q) => q - 1);
-    }
+    if (currentTestQ > 0) setCurrentTestQ((q) => q - 1);
   };
 
   const handleSubmitTest = async () => {
     setIsTimerRunning(false);
     setPhase("loading");
 
-    // Build results
     const results: TestResult[] = testQuestions.map((q) => ({
       questionId: q.id,
       question: q.question,
@@ -216,17 +321,10 @@ function PracticeInterviewContent() {
       const res = await fetch("/api/interview", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          action: "evaluate_test",
-          testResults: results,
-        }),
+        body: JSON.stringify({ action: "evaluate_test", testResults: results }),
       });
       const data = await res.json();
-      if (data.error) {
-        setError(data.error);
-        setPhase("test");
-        return;
-      }
+      if (data.error) { setError(data.error); setPhase("test"); return; }
       setTestEvaluation(data);
       setPhase("test_result");
     } catch {
@@ -235,11 +333,17 @@ function PracticeInterviewContent() {
     }
   };
 
-  const handleStartInterview = async () => {
-    setPhase("interview_prep");
+  // Camera setup & start interview
+  const handleStartCameraSetup = async () => {
+    setPhase("camera_setup");
+    await startCamera();
+  };
+
+  const handleStartVideoInterview = async () => {
     setTimerSeconds(0);
     setIsTimerRunning(true);
     setAiThinking(true);
+    setPhase("interview");
 
     try {
       const res = await fetch("/api/interview", {
@@ -254,15 +358,10 @@ function PracticeInterviewContent() {
         }),
       });
       const data = await res.json();
-      if (data.error) {
-        setError(data.error);
-        setPhase("test_result");
-        return;
-      }
-      setMessages([{ role: "ai", content: data.question }]);
+      if (data.error) { setError(data.error); setPhase("test_result"); return; }
+      setCurrentQuestion({ question: data.question, questionNumber: 1 });
       setConversationHistory(data.conversationHistory || []);
       setInterviewQuestionCount(1);
-      setPhase("interview");
     } catch {
       setError("面接の開始に失敗しました。");
       setPhase("test_result");
@@ -271,31 +370,30 @@ function PracticeInterviewContent() {
     }
   };
 
-  const handleSendMessage = async () => {
-    if (!userInput.trim() || aiThinking) return;
+  // Submit video answer (using transcript)
+  const handleSubmitAnswer = async () => {
+    if (!transcript.trim() && !fallbackText.trim()) return;
 
-    const userMsg = userInput.trim();
-    setUserInput("");
-    setMessages((prev) => [...prev, { role: "user", content: userMsg }]);
+    handleStopRecording();
+    const answerText = transcript.trim() || fallbackText.trim();
     setAiThinking(true);
+    setFallbackText("");
 
-    // Get the last AI message
-    const lastAiMessage = messages.filter((m) => m.role === "ai").pop()?.content || "";
+    const lastAiMessage = currentQuestion?.question || "";
+    const updatedHistory = [
+      ...conversationHistory,
+      { role: "assistant" as const, content: lastAiMessage },
+      { role: "user" as const, content: answerText },
+    ];
+
+    const newCount = interviewQuestionCount + 1;
 
     try {
-      // Update conversation history
-      const updatedHistory = [
-        ...conversationHistory,
-        { role: "assistant" as const, content: lastAiMessage },
-        { role: "user" as const, content: userMsg },
-      ];
-
-      const newCount = interviewQuestionCount + 1;
-
       if (newCount > maxInterviewQuestions) {
-        // End interview and evaluate
+        // End interview
         setPhase("evaluating");
         setIsTimerRunning(false);
+        stopCamera();
 
         const evalRes = await fetch("/api/interview", {
           method: "POST",
@@ -308,16 +406,9 @@ function PracticeInterviewContent() {
           }),
         });
         const evalData = await evalRes.json();
-
-        if (evalData.error) {
-          setError(evalData.error);
-          setPhase("interview");
-          return;
-        }
-
+        if (evalData.error) { setError(evalData.error); setPhase("interview"); return; }
         setEvaluation(evalData);
 
-        // Save to Supabase if formal assessment
         if (assessmentId && user) {
           try {
             await (supabase.from("assessments") as ReturnType<typeof supabase.from>)
@@ -337,6 +428,7 @@ function PracticeInterviewContent() {
         return;
       }
 
+      // Get next question
       const res = await fetch("/api/interview", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -349,15 +441,12 @@ function PracticeInterviewContent() {
         }),
       });
       const data = await res.json();
+      if (data.error) { setError(data.error); return; }
 
-      if (data.error) {
-        setError(data.error);
-        return;
-      }
-
-      setMessages((prev) => [...prev, { role: "ai", content: data.question }]);
+      setCurrentQuestion({ question: data.question, questionNumber: newCount });
       setConversationHistory(data.conversationHistory || updatedHistory);
       setInterviewQuestionCount(newCount);
+      setTranscript("");
     } catch {
       setError("AIからの応答に失敗しました。");
     } finally {
@@ -366,8 +455,10 @@ function PracticeInterviewContent() {
   };
 
   const handleEndInterview = async () => {
+    handleStopRecording();
     setPhase("evaluating");
     setIsTimerRunning(false);
+    stopCamera();
     setAiThinking(true);
 
     try {
@@ -382,13 +473,7 @@ function PracticeInterviewContent() {
         }),
       });
       const evalData = await evalRes.json();
-
-      if (evalData.error) {
-        setError(evalData.error);
-        setPhase("interview");
-        return;
-      }
-
+      if (evalData.error) { setError(evalData.error); setPhase("interview"); return; }
       setEvaluation(evalData);
 
       if (assessmentId && user) {
@@ -415,12 +500,8 @@ function PracticeInterviewContent() {
     }
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      handleSendMessage();
-    }
-  };
+  // Fallback text input (for browsers without speech recognition)
+  const [fallbackText, setFallbackText] = useState("");
 
   if (authLoading || !user) return null;
 
@@ -439,7 +520,7 @@ function PracticeInterviewContent() {
           <span className="text-xs font-mono text-gray-500 bg-gray-100 px-3 py-1.5 rounded-lg">
             {formatTime(timerSeconds)}
           </span>
-          {phase === "interview" && (
+          {(phase === "interview") && (
             <span className="text-xs text-gray-400">
               質問 {interviewQuestionCount}/{maxInterviewQuestions}
             </span>
@@ -511,7 +592,6 @@ function PracticeInterviewContent() {
       <div className="min-h-screen bg-gray-50 flex flex-col">
         <Header subtitle={`オンラインテスト - ${categoryNames[category] || category}`} />
 
-        {/* Progress */}
         <div className="bg-white border-b border-gray-100 px-4 py-2">
           <div className="max-w-screen-lg mx-auto flex items-center gap-4">
             <span className="text-xs text-gray-500">問題 {currentTestQ + 1}/{testQuestions.length}</span>
@@ -524,7 +604,6 @@ function PracticeInterviewContent() {
 
         <div className="flex-1 flex items-start justify-center px-4 py-8">
           <div className="max-w-2xl w-full">
-            {/* Difficulty badge */}
             <div className="flex items-center gap-2 mb-4">
               <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${
                 q.difficulty === "easy" ? "bg-emerald-50 text-emerald-700" :
@@ -538,11 +617,9 @@ function PracticeInterviewContent() {
               <span className="text-xs text-gray-400">{q.type === "multiple_choice" ? "選択問題" : q.type === "coding" ? "コーディング" : q.type === "case_study" ? "ケーススタディ" : "記述問題"}</span>
             </div>
 
-            {/* Question */}
             <div className="bg-white rounded-xl border border-gray-200 p-6 mb-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-6 leading-relaxed">{q.question}</h3>
 
-              {/* Multiple choice */}
               {q.type === "multiple_choice" && q.options && (
                 <div className="space-y-3">
                   {q.options.map((opt, i) => (
@@ -562,7 +639,6 @@ function PracticeInterviewContent() {
                 </div>
               )}
 
-              {/* Text answer */}
               {(q.type === "short_answer" || q.type === "case_study") && (
                 <textarea
                   value={testAnswers[q.id] || ""}
@@ -573,7 +649,6 @@ function PracticeInterviewContent() {
                 />
               )}
 
-              {/* Coding */}
               {q.type === "coding" && (
                 <textarea
                   value={testAnswers[q.id] || ""}
@@ -585,14 +660,12 @@ function PracticeInterviewContent() {
               )}
             </div>
 
-            {/* Hint */}
             {q.hint && (
               <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-6">
                 <p className="text-xs text-amber-700">💡 ヒント: {q.hint}</p>
               </div>
             )}
 
-            {/* Navigation */}
             <div className="flex items-center justify-between">
               <button
                 onClick={handlePrevTestQuestion}
@@ -649,7 +722,6 @@ function PracticeInterviewContent() {
         <Header subtitle="テスト結果" />
         <div className="flex-1 flex items-start justify-center px-4 py-8">
           <div className="max-w-2xl w-full">
-            {/* Score card */}
             <div className="bg-white rounded-2xl border border-gray-200 p-8 mb-6 text-center">
               <div className="w-24 h-24 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 text-white flex items-center justify-center mx-auto mb-4">
                 <span className="text-3xl font-bold">{testEvaluation.percentage}%</span>
@@ -661,7 +733,6 @@ function PracticeInterviewContent() {
               <p className="text-gray-600 text-sm leading-relaxed">{testEvaluation.evaluation}</p>
             </div>
 
-            {/* Strengths & Weaknesses */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
               <div className="bg-white rounded-xl border border-gray-200 p-5">
                 <h3 className="text-sm font-semibold text-emerald-700 mb-3 flex items-center gap-2">
@@ -695,20 +766,22 @@ function PracticeInterviewContent() {
               </div>
             </div>
 
-            {/* Next step */}
             <div className="bg-indigo-50 border border-indigo-200 rounded-xl p-6 text-center">
-              <h3 className="text-base font-semibold text-indigo-900 mb-2">次のステップ：AI面接</h3>
-              <p className="text-sm text-indigo-700 mb-4">
-                テスト結果を踏まえて、AIがあなたに面接を行います。{maxInterviewQuestions}つの質問に回答してください。
+              <h3 className="text-base font-semibold text-indigo-900 mb-2">次のステップ：ビデオ面接</h3>
+              <p className="text-sm text-indigo-700 mb-2">
+                テスト結果を踏まえて、AIがビデオ面接を行います。
+              </p>
+              <p className="text-xs text-indigo-500 mb-4">
+                カメラとマイクを使用します。質問が画面に表示されたら、声に出して回答してください。
               </p>
               <button
-                onClick={handleStartInterview}
+                onClick={handleStartCameraSetup}
                 className="bg-indigo-600 text-white px-8 py-3 rounded-lg font-medium hover:bg-indigo-700 transition-colors inline-flex items-center gap-2"
               >
-                AI面接を開始する
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
                 </svg>
+                ビデオ面接を開始する
               </button>
             </div>
           </div>
@@ -717,102 +790,236 @@ function PracticeInterviewContent() {
     );
   }
 
-  // PHASE 3: Interview (Chat-based)
-  if (phase === "interview" || phase === "interview_prep") {
+  // PHASE: Camera Setup
+  if (phase === "camera_setup") {
     return (
-      <div className="min-h-screen bg-gray-50 flex flex-col">
-        <Header subtitle="AI面接" />
-
-        {/* Interview progress */}
-        <div className="bg-white border-b border-gray-100 px-4 py-2">
-          <div className="max-w-screen-lg mx-auto flex items-center gap-4">
-            <span className="text-xs text-gray-500">面接進行</span>
-            <div className="flex-1 h-1.5 bg-gray-100 rounded-full overflow-hidden">
-              <div
-                className="h-full bg-indigo-600 rounded-full transition-all"
-                style={{ width: `${(interviewQuestionCount / maxInterviewQuestions) * 100}%` }}
+      <div className="min-h-screen bg-gray-900 flex flex-col">
+        <Header subtitle="カメラ設定" />
+        <div className="flex-1 flex items-center justify-center px-4">
+          <div className="max-w-2xl w-full text-center">
+            <div className="relative rounded-2xl overflow-hidden bg-black mb-8 aspect-video max-w-lg mx-auto">
+              <video
+                ref={videoRef}
+                autoPlay
+                playsInline
+                muted
+                className="w-full h-full object-cover mirror"
+                style={{ transform: "scaleX(-1)" }}
               />
+              {!cameraReady && (
+                <div className="absolute inset-0 flex items-center justify-center bg-gray-800">
+                  <div className="text-center">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white mx-auto mb-3" />
+                    <p className="text-white text-sm">カメラを起動中...</p>
+                  </div>
+                </div>
+              )}
             </div>
-            <span className="text-xs text-gray-500">{interviewQuestionCount}/{maxInterviewQuestions}</span>
-          </div>
-        </div>
 
-        {/* Chat area */}
-        <div className="flex-1 overflow-y-auto px-4 py-6">
-          <div className="max-w-2xl mx-auto space-y-4">
-            {messages.map((msg, i) => (
-              <div key={i} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
-                <div className={`max-w-[80%] ${msg.role === "user" ? "" : "flex gap-3"}`}>
-                  {msg.role === "ai" && (
-                    <div className="w-8 h-8 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center flex-shrink-0 mt-1">
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                      </svg>
-                    </div>
-                  )}
-                  <div className={`px-4 py-3 rounded-2xl text-sm leading-relaxed ${
-                    msg.role === "user"
-                      ? "bg-indigo-600 text-white rounded-br-md"
-                      : "bg-white border border-gray-200 text-gray-800 rounded-bl-md"
-                  }`}>
-                    {msg.content}
+            {cameraReady && (
+              <div className="space-y-4">
+                <div className="flex items-center justify-center gap-6 text-white">
+                  <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 rounded-full bg-emerald-400 animate-pulse" />
+                    <span className="text-sm">カメラ OK</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 rounded-full bg-emerald-400 animate-pulse" />
+                    <span className="text-sm">マイク OK</span>
                   </div>
                 </div>
-              </div>
-            ))}
 
-            {aiThinking && (
-              <div className="flex justify-start">
-                <div className="flex gap-3">
-                  <div className="w-8 h-8 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center flex-shrink-0 mt-1">
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                    </svg>
-                  </div>
-                  <div className="bg-white border border-gray-200 px-4 py-3 rounded-2xl rounded-bl-md">
-                    <div className="flex gap-1">
-                      <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
-                      <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
-                      <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
-                    </div>
-                  </div>
+                <div className="bg-gray-800 rounded-xl p-4 max-w-md mx-auto">
+                  <h3 className="text-white text-sm font-semibold mb-2">面接の進め方</h3>
+                  <ul className="text-gray-300 text-xs space-y-1.5 text-left">
+                    <li>• AIが質問を画面に表示します</li>
+                    <li>• 「録画開始」を押して、声に出して回答してください</li>
+                    <li>• 回答が終わったら「回答を送信」を押してください</li>
+                    <li>• 全{maxInterviewQuestions}問で終了です</li>
+                  </ul>
                 </div>
+
+                <button
+                  onClick={handleStartVideoInterview}
+                  className="bg-indigo-600 text-white px-10 py-3.5 rounded-xl font-semibold hover:bg-indigo-700 transition-colors text-lg inline-flex items-center gap-2"
+                >
+                  面接を始める
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </button>
               </div>
             )}
-
-            <div ref={chatEndRef} />
           </div>
         </div>
+      </div>
+    );
+  }
 
-        {/* Input area */}
-        <div className="border-t border-gray-200 bg-white px-4 py-4">
-          <div className="max-w-2xl mx-auto flex gap-3">
-            <textarea
-              ref={inputRef}
-              value={userInput}
-              onChange={(e) => setUserInput(e.target.value)}
-              onKeyDown={handleKeyDown}
-              placeholder="回答を入力してください... (Enterで送信、Shift+Enterで改行)"
-              rows={2}
-              disabled={aiThinking}
-              className="flex-1 px-4 py-3 rounded-xl border border-gray-200 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 resize-none disabled:opacity-50"
-            />
-            <div className="flex flex-col gap-2">
-              <button
-                onClick={handleSendMessage}
-                disabled={!userInput.trim() || aiThinking}
-                className="bg-indigo-600 text-white px-4 py-2.5 rounded-xl text-sm font-medium hover:bg-indigo-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-              >
-                送信
-              </button>
-              <button
-                onClick={handleEndInterview}
-                disabled={aiThinking}
-                className="text-red-500 text-xs hover:text-red-600 transition-colors disabled:opacity-40"
-              >
-                面接終了
-              </button>
+  // PHASE 3: Video Interview
+  if (phase === "interview") {
+    return (
+      <div className="min-h-screen bg-gray-900 flex flex-col">
+        <header className="border-b border-gray-700 bg-gray-900 sticky top-0 z-40">
+          <div className="flex items-center justify-between px-4 py-3 max-w-screen-2xl mx-auto">
+            <div className="flex items-center gap-3">
+              <a href="/interview" className="flex items-center gap-2">
+                <Logo size="xs" />
+              </a>
+              <span className="text-gray-600">|</span>
+              <span className="text-sm text-gray-400">ビデオ面接</span>
             </div>
+            <div className="flex items-center gap-4">
+              {isRecording && (
+                <div className="flex items-center gap-2">
+                  <div className="w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse" />
+                  <span className="text-xs text-red-400 font-mono">{formatTime(recordingSeconds)}</span>
+                </div>
+              )}
+              <span className="text-xs font-mono text-gray-400 bg-gray-800 px-3 py-1.5 rounded-lg">
+                {formatTime(timerSeconds)}
+              </span>
+              <span className="text-xs text-gray-500">
+                {interviewQuestionCount}/{maxInterviewQuestions}
+              </span>
+            </div>
+          </div>
+        </header>
+
+        {/* Progress bar */}
+        <div className="h-1 bg-gray-800">
+          <div
+            className="h-full bg-indigo-500 transition-all duration-500"
+            style={{ width: `${(interviewQuestionCount / maxInterviewQuestions) * 100}%` }}
+          />
+        </div>
+
+        <div className="flex-1 flex flex-col lg:flex-row">
+          {/* Left: Video feed */}
+          <div className="lg:w-1/2 flex flex-col">
+            <div className="flex-1 relative">
+              <video
+                ref={videoRef}
+                autoPlay
+                playsInline
+                muted
+                className="w-full h-full object-cover"
+                style={{ transform: "scaleX(-1)", minHeight: "300px" }}
+              />
+
+              {/* Recording indicator overlay */}
+              {isRecording && (
+                <div className="absolute top-4 left-4 flex items-center gap-2 bg-red-600/90 text-white px-3 py-1.5 rounded-full text-xs font-medium backdrop-blur-sm">
+                  <div className="w-2 h-2 rounded-full bg-white animate-pulse" />
+                  録画中
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Right: Question & Controls */}
+          <div className="lg:w-1/2 flex flex-col bg-gray-850" style={{ backgroundColor: "#1a1a2e" }}>
+            {/* Question area */}
+            <div className="flex-1 p-6 lg:p-8 flex flex-col">
+              {aiThinking ? (
+                <div className="flex-1 flex items-center justify-center">
+                  <div className="text-center">
+                    <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-indigo-400 mx-auto mb-4" />
+                    <p className="text-gray-300 text-sm">AIが次の質問を準備中...</p>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  <div className="flex items-center gap-2 mb-4">
+                    <span className="bg-indigo-600 text-white text-xs font-bold px-2.5 py-1 rounded-lg">
+                      Q{currentQuestion?.questionNumber || 1}
+                    </span>
+                    <span className="text-gray-400 text-xs">/ {maxInterviewQuestions}</span>
+                  </div>
+
+                  <div className="flex-1">
+                    <p className="text-white text-lg lg:text-xl leading-relaxed font-medium">
+                      {currentQuestion?.question || ""}
+                    </p>
+                  </div>
+
+                  {/* Transcript */}
+                  <div className="mt-4">
+                    <div className="flex items-center gap-2 mb-2">
+                      <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+                      </svg>
+                      <span className="text-xs text-gray-400">音声認識テキスト</span>
+                    </div>
+                    <div className="bg-gray-800/50 rounded-xl p-4 min-h-[80px] max-h-[150px] overflow-y-auto border border-gray-700">
+                      {transcript ? (
+                        <p className="text-gray-200 text-sm leading-relaxed">{transcript}</p>
+                      ) : isRecording ? (
+                        <p className="text-gray-500 text-sm animate-pulse">話してください...</p>
+                      ) : (
+                        <p className="text-gray-600 text-sm">録画を開始して回答してください</p>
+                      )}
+                    </div>
+
+                    {/* Fallback text input */}
+                    {!isRecording && (
+                      <div className="mt-3">
+                        <textarea
+                          value={fallbackText}
+                          onChange={(e) => setFallbackText(e.target.value)}
+                          placeholder="音声認識がうまくいかない場合はここに入力..."
+                          rows={2}
+                          className="w-full px-4 py-2.5 rounded-xl bg-gray-800 border border-gray-700 text-sm text-gray-200 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500 resize-none"
+                        />
+                      </div>
+                    )}
+                  </div>
+                </>
+              )}
+            </div>
+
+            {/* Controls */}
+            {!aiThinking && (
+              <div className="p-4 lg:p-6 border-t border-gray-700/50">
+                <div className="flex items-center gap-3">
+                  {!isRecording ? (
+                    <button
+                      onClick={handleStartRecording}
+                      className="flex-1 bg-red-600 hover:bg-red-700 text-white py-3.5 rounded-xl font-semibold transition-colors flex items-center justify-center gap-2"
+                    >
+                      <div className="w-4 h-4 rounded-full bg-white" />
+                      録画開始
+                    </button>
+                  ) : (
+                    <button
+                      onClick={handleStopRecording}
+                      className="flex-1 bg-gray-600 hover:bg-gray-700 text-white py-3.5 rounded-xl font-semibold transition-colors flex items-center justify-center gap-2"
+                    >
+                      <div className="w-4 h-4 rounded bg-white" />
+                      録画停止
+                    </button>
+                  )}
+
+                  <button
+                    onClick={handleSubmitAnswer}
+                    disabled={!transcript.trim() && !fallbackText.trim()}
+                    className="flex-1 bg-indigo-600 hover:bg-indigo-700 disabled:bg-gray-700 disabled:text-gray-500 text-white py-3.5 rounded-xl font-semibold transition-colors disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  >
+                    回答を送信
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                    </svg>
+                  </button>
+                </div>
+
+                <button
+                  onClick={handleEndInterview}
+                  className="w-full mt-3 text-gray-500 text-xs hover:text-gray-300 transition-colors py-2"
+                >
+                  面接を終了する
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -842,7 +1049,6 @@ function PracticeInterviewContent() {
         <Header subtitle="評価結果" />
         <div className="flex-1 overflow-y-auto px-4 py-8">
           <div className="max-w-3xl mx-auto">
-            {/* Overall Score */}
             <div className="bg-white rounded-2xl border border-gray-200 p-8 mb-6 text-center">
               <h2 className="text-sm font-medium text-gray-500 mb-4">総合評価</h2>
               <div className="w-28 h-28 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 text-white flex items-center justify-center mx-auto mb-4">
@@ -852,7 +1058,6 @@ function PracticeInterviewContent() {
               <p className="text-gray-500 text-sm leading-relaxed max-w-md mx-auto">{evaluation.summary}</p>
             </div>
 
-            {/* Score breakdown */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
               {[
                 { label: "技術力", score: evaluation.technicalScore, color: "indigo" },
@@ -872,7 +1077,6 @@ function PracticeInterviewContent() {
               ))}
             </div>
 
-            {/* Strengths & Improvements */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
               <div className="bg-white rounded-xl border border-gray-200 p-5">
                 <h3 className="text-sm font-semibold text-emerald-700 mb-3">✨ あなたの強み</h3>
@@ -896,13 +1100,11 @@ function PracticeInterviewContent() {
               </div>
             </div>
 
-            {/* Detailed feedback */}
             <div className="bg-white rounded-xl border border-gray-200 p-6 mb-6">
               <h3 className="text-sm font-semibold text-gray-900 mb-3">詳細フィードバック</h3>
               <p className="text-sm text-gray-600 leading-relaxed">{evaluation.detailedFeedback}</p>
             </div>
 
-            {/* Test score if available */}
             {testEvaluation && (
               <div className="bg-gray-50 rounded-xl border border-gray-200 p-5 mb-6">
                 <h3 className="text-sm font-semibold text-gray-700 mb-2">オンラインテスト結果</h3>
@@ -913,7 +1115,6 @@ function PracticeInterviewContent() {
               </div>
             )}
 
-            {/* Actions */}
             <div className="flex gap-3 justify-center">
               <button
                 onClick={() => router.push("/home")}
@@ -936,3 +1137,4 @@ function PracticeInterviewContent() {
 
   return null;
 }
+
