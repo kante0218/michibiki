@@ -17,12 +17,12 @@ interface LogoProps {
 }
 
 const sizeConfig: Record<LogoSize, { imgSize: string; brandImg: string; overlap: string }> = {
-  header: { imgSize: "h-14", brandImg: "h-28", overlap: "-ml-8" },
-  xs: { imgSize: "h-14", brandImg: "h-32", overlap: "-ml-11" },
-  sm: { imgSize: "h-20", brandImg: "h-44", overlap: "-ml-14" },
-  md: { imgSize: "h-24", brandImg: "h-52", overlap: "-ml-16" },
-  lg: { imgSize: "h-28", brandImg: "h-60", overlap: "-ml-20" },
-  xl: { imgSize: "h-36", brandImg: "h-72", overlap: "-ml-24" },
+  header: { imgSize: "h-10", brandImg: "h-7", overlap: "-ml-1" },
+  xs: { imgSize: "h-12", brandImg: "h-8", overlap: "-ml-1" },
+  sm: { imgSize: "h-16", brandImg: "h-10", overlap: "-ml-2" },
+  md: { imgSize: "h-20", brandImg: "h-12", overlap: "-ml-2" },
+  lg: { imgSize: "h-24", brandImg: "h-14", overlap: "-ml-3" },
+  xl: { imgSize: "h-32", brandImg: "h-18", overlap: "-ml-4" },
 };
 
 export default function Logo({
