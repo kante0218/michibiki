@@ -391,6 +391,14 @@ function PracticeInterviewContent() {
     document.body.removeChild(a);
   };
 
+  // Auto-start camera when test phase begins
+  useEffect(() => {
+    if (phase === "test" && !streamRef.current) {
+      startCamera();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [phase]);
+
   // Generate test questions on mount
   useEffect(() => {
     if (user && phase === "loading") {
@@ -460,7 +468,17 @@ function PracticeInterviewContent() {
   // Camera setup & start interview
   const handleStartCameraSetup = async () => {
     setPhase("camera_setup");
-    await startCamera();
+    // If camera is already running from test phase, just reassign to new video element
+    if (streamRef.current) {
+      // Wait for next render so videoRef points to the camera_setup video element
+      setTimeout(() => {
+        if (videoRef.current && streamRef.current) {
+          videoRef.current.srcObject = streamRef.current;
+        }
+      }, 100);
+    } else {
+      await startCamera();
+    }
   };
 
   const handleStartVideoInterview = async () => {
@@ -468,6 +486,13 @@ function PracticeInterviewContent() {
     setIsTimerRunning(true);
     setAiThinking(true);
     setPhase("interview");
+
+    // Reassign stream to the new video element after render
+    setTimeout(() => {
+      if (videoRef.current && streamRef.current) {
+        videoRef.current.srcObject = streamRef.current;
+      }
+    }, 100);
 
     try {
       const res = await fetch("/api/interview", {
@@ -743,6 +768,29 @@ function PracticeInterviewContent() {
             <span className="text-xs text-gray-500">{answeredCount}/{testQuestions.length} 回答済み</span>
           </div>
         </div>
+
+        {/* Camera PiP overlay */}
+        {!cameraDenied && (
+          <div className="fixed bottom-6 right-6 z-50 rounded-2xl overflow-hidden shadow-2xl border-2 border-white/80 bg-black" style={{ width: 200, height: 150 }}>
+            <video
+              ref={videoRef}
+              autoPlay
+              playsInline
+              muted
+              className="w-full h-full object-cover"
+              style={{ transform: "scaleX(-1)" }}
+            />
+            {!cameraReady && (
+              <div className="absolute inset-0 flex items-center justify-center bg-gray-800">
+                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white" />
+              </div>
+            )}
+            <div className="absolute top-2 left-2 flex items-center gap-1.5">
+              <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
+              <span className="text-[10px] text-white/80 font-medium drop-shadow">REC</span>
+            </div>
+          </div>
+        )}
 
         <div className="flex-1 flex items-start justify-center px-4 py-8">
           <div className="max-w-2xl w-full">
