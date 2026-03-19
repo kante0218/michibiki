@@ -391,6 +391,23 @@ function PracticeInterviewContent() {
     document.body.removeChild(a);
   };
 
+  // SessionStorage key for this category
+  const storageKey = `michibiki_test_${category}`;
+
+  // Save test data to sessionStorage whenever questions or answers change
+  useEffect(() => {
+    if (testQuestions.length > 0) {
+      try {
+        sessionStorage.setItem(storageKey, JSON.stringify({
+          questions: testQuestions,
+          answers: testAnswers,
+          timerSeconds,
+          currentQ: currentTestQ,
+        }));
+      } catch {}
+    }
+  }, [testQuestions, testAnswers, currentTestQ, timerSeconds, storageKey]);
+
   // Auto-start camera when test phase begins
   useEffect(() => {
     if (phase === "test" && !streamRef.current) {
@@ -399,9 +416,26 @@ function PracticeInterviewContent() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [phase]);
 
-  // Generate test questions on mount
+  // Generate test questions on mount (or restore from session)
   useEffect(() => {
     if (user && phase === "loading") {
+      // Try to restore saved test data first
+      try {
+        const saved = sessionStorage.getItem(storageKey);
+        if (saved) {
+          const data = JSON.parse(saved);
+          if (data.questions && data.questions.length > 0) {
+            setTestQuestions(data.questions);
+            setTestAnswers(data.answers || {});
+            setCurrentTestQ(data.currentQ || 0);
+            setTimerSeconds(data.timerSeconds || 0);
+            setPhase("test");
+            setIsTimerRunning(true);
+            return;
+          }
+        }
+      } catch {}
+      // No saved data — generate fresh questions
       generateTest();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -440,6 +474,8 @@ function PracticeInterviewContent() {
   const handleSubmitTest = async () => {
     setIsTimerRunning(false);
     setPhase("test_evaluating");
+    // Clear saved test data since test is now submitted
+    try { sessionStorage.removeItem(storageKey); } catch {}
 
     const results: TestResult[] = testQuestions.map((q) => ({
       questionId: q.id,
