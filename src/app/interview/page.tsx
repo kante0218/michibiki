@@ -1,18 +1,13 @@
 "use client";
 
-import { useState } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
-import { useAuth } from "@/lib/AuthContext";
-import { supabase } from "@/lib/supabase";
-import Logo from "@/components/Logo";
+import { Sidebar, TopBar } from "@/components/ExploreHeader";
 
 const interviewTypes = [
   {
     title: "ソフトウェアエンジニアリング",
     category: "software_engineering",
     duration: "20分",
-    durationMinutes: 20,
     format: ["ビデオ", "コーディング"],
     icon: (
       <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -25,7 +20,6 @@ const interviewTypes = [
     title: "データサイエンス",
     category: "data_science",
     duration: "25分",
-    durationMinutes: 25,
     format: ["ビデオ", "ケーススタディ"],
     icon: (
       <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -38,7 +32,6 @@ const interviewTypes = [
     title: "プロダクトマネジメント",
     category: "product_management",
     duration: "20分",
-    durationMinutes: 20,
     format: ["ビデオ", "ケーススタディ"],
     icon: (
       <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -51,7 +44,6 @@ const interviewTypes = [
     title: "デザイン",
     category: "design",
     duration: "15分",
-    durationMinutes: 15,
     format: ["ビデオ", "ポートフォリオレビュー"],
     icon: (
       <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -64,7 +56,6 @@ const interviewTypes = [
     title: "ビジネス・コンサルティング",
     category: "business_consulting",
     duration: "20分",
-    durationMinutes: 20,
     format: ["ビデオ", "ケーススタディ"],
     icon: (
       <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -77,7 +68,6 @@ const interviewTypes = [
     title: "医療・ヘルスケア",
     category: "healthcare",
     duration: "25分",
-    durationMinutes: 25,
     format: ["ビデオ", "専門知識テスト"],
     icon: (
       <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -88,235 +78,35 @@ const interviewTypes = [
   },
 ];
 
-const steps = [
-  {
-    step: "01",
-    title: "準備",
-    description: "面接タイプを選択し、カメラ・マイクの動作確認を行います。練習モードで何度でもリハーサルできます。",
-  },
-  {
-    step: "02",
-    title: "面接実施",
-    description: "AIが構造化された質問を行います。ビデオ通話形式で、自然な会話のように進行します。",
-  },
-  {
-    step: "03",
-    title: "結果確認",
-    description: "面接終了後、AIがスキルを分析。詳細なフィードバックとスコアを確認できます。",
-  },
-];
-
-const features = [
-  {
-    title: "再受験可能（最大3回）",
-    description: "結果に満足できなければ、最大3回まで再挑戦できます。",
-    icon: (
-      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-      </svg>
-    ),
-  },
-  {
-    title: "練習モード無制限",
-    description: "本番前に何度でも練習できます。評価には影響しません。",
-    icon: (
-      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-      </svg>
-    ),
-  },
-  {
-    title: "AIフィードバック",
-    description: "面接後に詳細なフィードバックとスキル評価を受け取れます。",
-    icon: (
-      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-      </svg>
-    ),
-  },
-  {
-    title: "日本語完全対応",
-    description: "質問・回答・フィードバックすべて日本語で完結します。",
-    icon: (
-      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129" />
-      </svg>
-    ),
-  },
-];
-
-const faqs = [
-  {
-    q: "AI面接はどのように行われますか？",
-    a: "Webブラウザ上でAIとビデオ通話形式で行います。AIが質問を出し、あなたが回答する形式です。自然な会話のように進行し、追加質問もAIが自動で行います。",
-  },
-  {
-    q: "面接の結果はどのように使われますか？",
-    a: "面接結果はスキルスコアとしてプロフィールに反映され、企業があなたを見つけやすくなります。スコアが高いほど、より多くの企業からオファーを受ける可能性が高まります。",
-  },
-  {
-    q: "不合格になることはありますか？",
-    a: "合格・不合格という概念はありません。あなたのスキルレベルを正確に測定し、そのレベルに合った求人をマッチングします。結果に満足できなければ再受験も可能です。",
-  },
-  {
-    q: "どのような環境で受験すべきですか？",
-    a: "安定したインターネット接続、静かな環境、Webカメラとマイクが必要です。Chrome またはEdgeブラウザの最新版を推奨します。",
-  },
-  {
-    q: "練習モードと本番の違いは何ですか？",
-    a: "練習モードは何度でも利用でき、結果はプロフィールに反映されません。本番は最大3回まで受験でき、最高スコアがプロフィールに反映されます。",
-  },
-];
-
 export default function InterviewPage() {
-  const [openFaq, setOpenFaq] = useState<number | null>(null);
-  const [startingInterview, setStartingInterview] = useState<string | null>(null);
-  const { user } = useAuth();
   const router = useRouter();
 
-  const handleStartInterview = async (type: typeof interviewTypes[number]) => {
-    if (!user) {
-      router.push("/login");
-      return;
-    }
-
-    setStartingInterview(type.category);
-
-    try {
-      const { data, error } = await (supabase.from("assessments") as any).insert({
-        user_id: user.id,
-        category: type.category,
-        title: type.title,
-        max_score: 100,
-        duration_minutes: type.durationMinutes,
-        status: "in_progress",
-      }).select("id").single();
-
-      if (error) {
-        console.error("Failed to create assessment:", error);
-        alert("面接の開始に失敗しました。もう一度お試しください。");
-        setStartingInterview(null);
-        return;
-      }
-
-      router.push(`/interview/practice?assessmentId=${data.id}&category=${type.category}&jobTitle=${encodeURIComponent(type.title)}`);
-    } catch {
-      alert("面接の開始に失敗しました。もう一度お試しください。");
-      setStartingInterview(null);
-    }
-  };
-
-  const handlePractice = (category?: string) => {
-    router.push(`/interview/practice${category ? `?category=${category}` : ""}`);
+  const handlePractice = (category: string) => {
+    router.push(`/interview/practice?category=${category}`);
   };
 
   return (
-    <div className="min-h-screen bg-white">
-      {/* Header */}
-      <header className="border-b border-gray-200 bg-white">
-        <div className="flex items-center justify-between px-4 py-3 max-w-screen-2xl mx-auto">
-          <div className="flex items-center gap-6">
-            <Link href="/" className="flex items-center gap-2">
-              <Logo size="header" iconOnly showBrandName />
-            </Link>
-            <nav className="hidden md:flex items-center gap-1">
-              <Link href="/" className="text-sm text-gray-500 hover:text-gray-900 hover:bg-gray-50 px-3 py-1.5 rounded-md transition-colors">
-                ホーム
-              </Link>
-              <Link href="/explore" className="text-sm text-gray-500 hover:text-gray-900 hover:bg-gray-50 px-3 py-1.5 rounded-md transition-colors">
-                求人を探す
-              </Link>
-              <Link href="/interview" className="text-sm text-indigo-600 bg-indigo-50 px-3 py-1.5 rounded-md font-medium">
-                AI面接
-              </Link>
-              <Link href="/profile" className="text-sm text-gray-500 hover:text-gray-900 hover:bg-gray-50 px-3 py-1.5 rounded-md transition-colors">
-                プロフィール
-              </Link>
-            </nav>
-          </div>
-          <div className="flex items-center gap-3">
-            {user ? (
-              <Link href="/home" className="text-sm text-gray-700 hover:text-gray-900 px-3 py-1.5 rounded-md border border-gray-200 hover:border-gray-300 transition-colors">
-                ダッシュボード
-              </Link>
-            ) : (
-              <>
-                <Link href="/login" className="text-sm text-gray-700 hover:text-gray-900 px-3 py-1.5 rounded-md border border-gray-200 hover:border-gray-300 transition-colors">
-                  ログイン
-                </Link>
-                <Link href="/signup" className="text-sm text-white bg-indigo-600 hover:bg-indigo-700 px-4 py-1.5 rounded-md transition-colors font-medium">
-                  登録する
-                </Link>
-              </>
-            )}
-          </div>
-        </div>
-      </header>
+    <div className="min-h-screen bg-gray-50">
+      <Sidebar activeItem="interview" />
+      <TopBar />
 
-      {/* Hero */}
-      <section className="py-20 px-4">
-        <div className="max-w-3xl mx-auto text-center">
-          <div className="inline-flex items-center gap-2 bg-indigo-50 text-indigo-700 text-sm font-medium px-4 py-1.5 rounded-full mb-6">
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-            </svg>
-            AI搭載の次世代面接
+      {/* Main content */}
+      <main className="md:ml-[96px] pt-14">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8">
+          {/* Page header */}
+          <div className="mb-8">
+            <h1 className="text-2xl font-bold text-gray-900 mb-2">面接練習</h1>
+            <p className="text-sm text-gray-500">
+              あなたの専門分野に合わせた面接を練習できます。それぞれの面接は専門家が設計した質問で構成されています。
+            </p>
           </div>
-          <h1 className="text-4xl sm:text-5xl font-bold text-gray-900 leading-tight mb-6">
-            AI面接で、あなたの
-            <br />
-            <span className="text-indigo-600">実力を証明</span>しよう
-          </h1>
-          <p className="text-lg text-gray-600 leading-relaxed max-w-2xl mx-auto mb-10">
-            20分間の構造化されたAI面接で、あなたのスキルを客観的に評価。
-            面接結果は世界中の企業に共有され、あなたに最適な求人とマッチングされます。
-          </p>
-          <div className="flex flex-col sm:flex-row gap-3 justify-center">
-            <button
-              onClick={() => handlePractice()}
-              className="inline-flex items-center justify-center gap-2 bg-indigo-600 text-white px-8 py-3 rounded-lg font-medium hover:bg-indigo-700 transition-colors text-base"
-            >
-              練習を始める
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-              </svg>
-            </button>
-            <button className="inline-flex items-center justify-center gap-2 border border-gray-300 text-gray-700 px-8 py-3 rounded-lg font-medium hover:bg-gray-50 transition-colors text-base">
-              詳しく見る
-            </button>
-          </div>
-        </div>
-      </section>
 
-      {/* How it works */}
-      <section className="py-16 px-4 bg-gray-50">
-        <div className="max-w-5xl mx-auto">
-          <h2 className="text-2xl font-bold text-gray-900 text-center mb-12">AI面接の流れ</h2>
-          <div className="grid md:grid-cols-3 gap-8">
-            {steps.map((s) => (
-              <div key={s.step} className="relative group cursor-default">
-                <div className="text-5xl font-bold text-indigo-100 mb-3 transition-all duration-500 group-hover:text-indigo-500 group-hover:scale-110 group-hover:drop-shadow-lg origin-left">{s.step}</div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-2 transition-colors duration-300 group-hover:text-indigo-700">{s.title}</h3>
-                <p className="text-sm text-gray-600 leading-relaxed">{s.description}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Interview types */}
-      <section className="py-16 px-4">
-        <div className="max-w-6xl mx-auto">
-          <h2 className="text-2xl font-bold text-gray-900 text-center mb-3">面接タイプを選ぶ</h2>
-          <p className="text-gray-500 text-center mb-12 max-w-xl mx-auto">
-            あなたの専門分野に合わせた面接を受験できます。それぞれの面接は専門家が設計した質問で構成されています。
-          </p>
+          {/* Interview type cards */}
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
             {interviewTypes.map((type) => (
               <div
                 key={type.title}
-                className="border border-gray-200 rounded-xl p-6 hover:border-indigo-200 hover:shadow-sm transition-all group"
+                className="bg-white border border-gray-200 rounded-xl p-6 hover:border-indigo-200 hover:shadow-md transition-all group"
               >
                 <div className="text-indigo-600 mb-4">{type.icon}</div>
                 <h3 className="text-base font-semibold text-gray-900 mb-1">{type.title}</h3>
@@ -329,107 +119,17 @@ export default function InterviewPage() {
                     </span>
                   ))}
                 </div>
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => handlePractice(type.category)}
-                    className="flex-1 text-center text-sm border border-gray-200 text-gray-700 px-3 py-2 rounded-lg hover:bg-gray-50 transition-colors font-medium"
-                  >
-                    練習する
-                  </button>
-                  <button
-                    onClick={() => handleStartInterview(type)}
-                    disabled={startingInterview === type.category}
-                    className="flex-1 text-center text-sm bg-indigo-600 text-white px-3 py-2 rounded-lg hover:bg-indigo-700 transition-colors font-medium disabled:opacity-50"
-                  >
-                    {startingInterview === type.category ? "開始中..." : "面接を開始"}
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Features */}
-      <section className="py-16 px-4 bg-gray-50">
-        <div className="max-w-5xl mx-auto">
-          <h2 className="text-2xl font-bold text-gray-900 text-center mb-12">MichibikiAI面接の特長</h2>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {features.map((f) => (
-              <div key={f.title} className="bg-white rounded-xl p-6 border border-gray-100">
-                <div className="w-10 h-10 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center mb-4">
-                  {f.icon}
-                </div>
-                <h3 className="text-sm font-semibold text-gray-900 mb-2">{f.title}</h3>
-                <p className="text-sm text-gray-500 leading-relaxed">{f.description}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* FAQ */}
-      <section className="py-16 px-4">
-        <div className="max-w-2xl mx-auto">
-          <h2 className="text-2xl font-bold text-gray-900 text-center mb-10">よくある質問</h2>
-          <div className="space-y-3">
-            {faqs.map((faq, i) => (
-              <div key={i} className="border border-gray-200 rounded-lg overflow-hidden">
                 <button
-                  onClick={() => setOpenFaq(openFaq === i ? null : i)}
-                  className="flex items-center justify-between w-full px-5 py-4 text-left hover:bg-gray-50 transition-colors"
+                  onClick={() => handlePractice(type.category)}
+                  className="w-full text-center text-sm bg-indigo-600 text-white px-3 py-2.5 rounded-lg hover:bg-indigo-700 transition-colors font-medium"
                 >
-                  <span className="text-sm font-medium text-gray-900">{faq.q}</span>
-                  <svg
-                    className={`w-4 h-4 text-gray-400 transition-transform flex-shrink-0 ml-4 ${openFaq === i ? "rotate-180" : ""}`}
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                  </svg>
+                  練習する
                 </button>
-                {openFaq === i && (
-                  <div className="px-5 pb-4">
-                    <p className="text-sm text-gray-600 leading-relaxed">{faq.a}</p>
-                  </div>
-                )}
               </div>
             ))}
           </div>
         </div>
-      </section>
-
-      {/* CTA */}
-      <section className="py-20 px-4 bg-indigo-600">
-        <div className="max-w-2xl mx-auto text-center">
-          <h2 className="text-3xl font-bold text-white mb-4">面接を始めましょう</h2>
-          <p className="text-indigo-100 mb-8 text-base">
-            まずは練習モードで体験してみませんか？登録不要で、すぐに始められます。
-          </p>
-          <div className="flex flex-col sm:flex-row gap-3 justify-center">
-            <button
-              onClick={() => handlePractice()}
-              className="inline-flex items-center justify-center gap-2 bg-white text-indigo-600 px-8 py-3 rounded-lg font-medium hover:bg-indigo-50 transition-colors"
-            >
-              面接を始める
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-              </svg>
-            </button>
-          </div>
-        </div>
-      </section>
-
-      {/* Footer */}
-      <footer className="border-t border-gray-200 py-8 px-4">
-        <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-2">
-            <Logo size="header" iconOnly showBrandName />
-          </div>
-          <p className="text-xs text-gray-400">&copy; 2026 Michibiki. All rights reserved.</p>
-        </div>
-      </footer>
+      </main>
     </div>
   );
 }
