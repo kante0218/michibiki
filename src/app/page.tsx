@@ -242,7 +242,10 @@ export default function RootPage() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
               </svg>
             </button>
-            <button className="inline-flex items-center justify-center gap-2 border border-gray-300 text-gray-700 px-8 py-3 rounded-lg font-medium hover:bg-gray-50 transition-colors text-base">
+            <button
+              onClick={() => document.getElementById("how-it-works")?.scrollIntoView({ behavior: "smooth" })}
+              className="inline-flex items-center justify-center gap-2 border border-gray-300 text-gray-700 px-8 py-3 rounded-lg font-medium hover:bg-gray-50 transition-colors text-base"
+            >
               詳しく見る
             </button>
           </div>
@@ -250,7 +253,7 @@ export default function RootPage() {
       </section>
 
       {/* How it works */}
-      <section className="py-16 px-4 bg-gray-50">
+      <section id="how-it-works" className="py-16 px-4 bg-gray-50">
         <div className="max-w-5xl mx-auto">
           <h2 className="text-2xl font-bold text-gray-900 text-center mb-12">AI面接の流れ</h2>
           <div className="grid md:grid-cols-3 gap-8">
