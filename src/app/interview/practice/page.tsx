@@ -753,7 +753,7 @@ function PracticeInterviewContent() {
     if (!q) return null;
 
     const answeredCount = Object.keys(testAnswers).length;
-    const progress = ((currentTestQ + 1) / testQuestions.length) * 100;
+    const progress = (answeredCount / testQuestions.length) * 100;
 
     return (
       <div className="min-h-screen bg-gray-50 flex flex-col">
