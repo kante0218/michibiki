@@ -515,12 +515,12 @@ export default function InterviewPage() {
                       {visibleCategories.map((type) => (
                         <div
                           key={type.category}
-                          className="border border-gray-100 rounded-xl p-5 hover:border-indigo-200 hover:shadow-md transition-all group cursor-pointer"
+                          className="flex flex-col border border-gray-100 rounded-xl p-5 hover:border-indigo-200 hover:shadow-md transition-all group cursor-pointer"
                           onClick={() => handlePractice(type.category)}
                         >
                           <div className="text-indigo-600 mb-3">{type.icon}</div>
                           <h3 className="text-sm font-semibold text-gray-900 mb-1">{type.title}</h3>
-                          <p className="text-xs text-gray-500 mb-3 leading-relaxed line-clamp-2">{type.description}</p>
+                          <p className="text-xs text-gray-500 mb-3 leading-relaxed line-clamp-2 flex-1">{type.description}</p>
                           <div className="flex items-center gap-1.5 mb-4 flex-wrap">
                             <span className="text-[10px] bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">{type.duration}</span>
                             {type.format.map((f) => (
@@ -530,7 +530,7 @@ export default function InterviewPage() {
                             ))}
                           </div>
                           <button
-                            className="w-full text-center text-xs bg-indigo-600 text-white px-3 py-2 rounded-lg hover:bg-indigo-700 transition-colors font-medium group-hover:bg-indigo-700"
+                            className="w-full text-center text-xs bg-indigo-600 text-white px-3 py-2 rounded-lg hover:bg-indigo-700 transition-colors font-medium group-hover:bg-indigo-700 mt-auto"
                           >
                             練習する
                           </button>
