@@ -200,15 +200,15 @@ export default function InterviewPage() {
         return;
       }
 
-      router.push(`/interview/practice?assessmentId=${data.id}`);
+      router.push(`/interview/practice?assessmentId=${data.id}&category=${type.category}&jobTitle=${encodeURIComponent(type.title)}`);
     } catch {
       alert("面接の開始に失敗しました。もう一度お試しください。");
       setStartingInterview(null);
     }
   };
 
-  const handlePractice = () => {
-    router.push("/interview/practice");
+  const handlePractice = (category?: string) => {
+    router.push(`/interview/practice${category ? `?category=${category}` : ""}`);
   };
 
   return (
@@ -277,7 +277,7 @@ export default function InterviewPage() {
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <button
-              onClick={handlePractice}
+              onClick={() => handlePractice()}
               className="inline-flex items-center justify-center gap-2 bg-indigo-600 text-white px-8 py-3 rounded-lg font-medium hover:bg-indigo-700 transition-colors text-base"
             >
               練習を始める
@@ -334,7 +334,7 @@ export default function InterviewPage() {
                 </div>
                 <div className="flex gap-2">
                   <button
-                    onClick={handlePractice}
+                    onClick={() => handlePractice(type.category)}
                     className="flex-1 text-center text-sm border border-gray-200 text-gray-700 px-3 py-2 rounded-lg hover:bg-gray-50 transition-colors font-medium"
                   >
                     練習する
@@ -412,7 +412,7 @@ export default function InterviewPage() {
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <button
-              onClick={handlePractice}
+              onClick={() => handlePractice()}
               className="inline-flex items-center justify-center gap-2 bg-white text-indigo-600 px-8 py-3 rounded-lg font-medium hover:bg-indigo-50 transition-colors"
             >
               面接を始める
