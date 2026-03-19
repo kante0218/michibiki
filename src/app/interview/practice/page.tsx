@@ -39,7 +39,7 @@ interface InterviewEvaluation {
   detailedFeedback: string;
 }
 
-type Phase = "loading" | "test" | "test_result" | "camera_setup" | "interview" | "evaluating" | "result";
+type Phase = "loading" | "test" | "test_evaluating" | "test_result" | "camera_setup" | "interview" | "evaluating" | "result";
 
 interface InterviewQuestion {
   question: string;
@@ -414,7 +414,7 @@ function PracticeInterviewContent() {
 
   const handleSubmitTest = async () => {
     setIsTimerRunning(false);
-    setPhase("loading");
+    setPhase("test_evaluating");
 
     const results: TestResult[] = testQuestions.map((q) => ({
       questionId: q.id,
@@ -683,6 +683,22 @@ function PracticeInterviewContent() {
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto mb-6" />
             <h2 className="text-lg font-bold text-gray-900 mb-2">テストを準備中...</h2>
             <p className="text-sm text-gray-500">AIが{categoryNames[category] || category}の問題を生成しています</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // PHASE: Test Evaluating
+  if (phase === "test_evaluating") {
+    return (
+      <div className="min-h-screen bg-gray-50 flex flex-col">
+        <Header subtitle="テスト評価中" />
+        <div className="flex-1 flex items-center justify-center px-4">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto mb-6" />
+            <h2 className="text-lg font-bold text-gray-900 mb-2">テストを評価中...</h2>
+            <p className="text-sm text-gray-500">AIが回答を分析しています</p>
           </div>
         </div>
       </div>
