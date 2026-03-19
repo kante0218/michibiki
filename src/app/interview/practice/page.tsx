@@ -112,6 +112,10 @@ function PracticeInterviewContent() {
   // Error
   const [error, setError] = useState("");
 
+  // Track whether user has already returned to test after submission (limit to 1 time)
+  const [hasReturnedToTest, setHasReturnedToTest] = useState(false);
+  const returnedStorageKey = `michibiki_returned_${category}`;
+
   // Screen recording state
   const [isScreenRecording, setIsScreenRecording] = useState(false);
   const [screenRecordingUrl, setScreenRecordingUrl] = useState<string | null>(null);
@@ -416,6 +420,16 @@ function PracticeInterviewContent() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [phase]);
 
+  // Restore hasReturnedToTest flag from sessionStorage
+  useEffect(() => {
+    try {
+      const returned = sessionStorage.getItem(returnedStorageKey);
+      if (returned === "true") {
+        setHasReturnedToTest(true);
+      }
+    } catch {}
+  }, [returnedStorageKey]);
+
   // Generate test questions on mount (or restore from session)
   useEffect(() => {
     if (user && phase === "loading") {
@@ -499,6 +513,15 @@ function PracticeInterviewContent() {
       setError("テストの評価に失敗しました。");
       setPhase("test");
     }
+  };
+
+  // Return to test to review answers (only allowed once after submission)
+  const handleReturnToTest = () => {
+    if (hasReturnedToTest) return;
+    setHasReturnedToTest(true);
+    try { sessionStorage.setItem(returnedStorageKey, "true"); } catch {}
+    setPhase("test");
+    setIsTimerRunning(false); // Don't restart timer — this is review-only
   };
 
   // Camera setup & start interview
@@ -1000,15 +1023,31 @@ function PracticeInterviewContent() {
               <p className="text-xs text-indigo-500 mb-4">
                 カメラとマイクを使用します。質問が画面に表示されたら、声に出して回答してください。
               </p>
-              <button
-                onClick={handleStartCameraSetup}
-                className="bg-indigo-600 text-white px-8 py-3 rounded-lg font-medium hover:bg-indigo-700 transition-colors inline-flex items-center gap-2"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                </svg>
-                ビデオ面接を開始する
-              </button>
+              <div className="flex items-center justify-center gap-3">
+                <button
+                  onClick={handleReturnToTest}
+                  disabled={hasReturnedToTest}
+                  className={`px-6 py-3 rounded-lg font-medium transition-colors inline-flex items-center gap-2 ${
+                    hasReturnedToTest
+                      ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+                      : "bg-white border border-gray-300 text-gray-700 hover:bg-gray-50"
+                  }`}
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 17l-5-5m0 0l5-5m-5 5h12" />
+                  </svg>
+                  {hasReturnedToTest ? "見直し済み" : "回答を見直す"}
+                </button>
+                <button
+                  onClick={handleStartCameraSetup}
+                  className="bg-indigo-600 text-white px-8 py-3 rounded-lg font-medium hover:bg-indigo-700 transition-colors inline-flex items-center gap-2"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                  </svg>
+                  ビデオ面接を開始する
+                </button>
+              </div>
             </div>
           </div>
         </div>
