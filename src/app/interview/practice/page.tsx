@@ -918,91 +918,103 @@ function PracticeInterviewContent() {
   // PHASE: Camera Setup
   if (phase === "camera_setup") {
     return (
-      <div className="min-h-screen bg-gray-900 flex flex-col">
-        <Header subtitle="カメラ設定" />
-        <div className="flex-1 flex items-center justify-center px-4">
-          <div className="max-w-2xl w-full text-center">
-            <div className="relative rounded-2xl overflow-hidden bg-black mb-8 aspect-video max-w-lg mx-auto">
-              <video
-                ref={videoRef}
-                autoPlay
-                playsInline
-                muted
-                className="w-full h-full object-cover mirror"
-                style={{ transform: "scaleX(-1)" }}
-              />
-              {!cameraReady && (
-                <div className="absolute inset-0 flex items-center justify-center bg-gray-800">
-                  <div className="text-center">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white mx-auto mb-3" />
-                    <p className="text-white text-sm">カメラを起動中...</p>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {cameraReady && (
-              <div className="space-y-4">
-                {cameraDenied ? (
-                  <>
-                    <div className="bg-amber-900/50 border border-amber-600/50 rounded-xl p-4 max-w-md mx-auto">
-                      <h3 className="text-amber-300 text-sm font-semibold mb-2 flex items-center gap-2">
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.072 16.5c-.77.833.192 2.5 1.732 2.5z" />
-                        </svg>
-                        カメラへのアクセスが拒否されました
-                      </h3>
-                      <p className="text-amber-200/80 text-xs mb-3">カメラを有効にするには：</p>
-                      <ol className="text-amber-200/80 text-xs space-y-1 text-left list-decimal list-inside">
-                        <li>アドレスバー左の🔒アイコンをクリック</li>
-                        <li>「カメラ」と「マイク」を「許可」に変更</li>
-                        <li>ページをリロードしてください</li>
-                      </ol>
-                      <div className="mt-3 flex gap-2">
-                        <button
-                          onClick={() => { setCameraDenied(false); setCameraReady(false); startCamera(); }}
-                          className="flex-1 bg-amber-600 text-white px-4 py-2 rounded-lg text-xs font-medium hover:bg-amber-700"
-                        >
-                          再試行
-                        </button>
-                      </div>
-                    </div>
-                    <p className="text-gray-400 text-xs">カメラなしでもテキスト入力で面接を続行できます</p>
-                  </>
-                ) : (
-                  <div className="flex items-center justify-center gap-6 text-white">
-                    <div className="flex items-center gap-2">
-                      <div className="w-3 h-3 rounded-full bg-emerald-400 animate-pulse" />
-                      <span className="text-sm">カメラ OK</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <div className="w-3 h-3 rounded-full bg-emerald-400 animate-pulse" />
-                      <span className="text-sm">マイク OK</span>
+      <div className="min-h-screen bg-gray-50 flex flex-col">
+        <Header subtitle="面接準備" />
+        <div className="flex-1 flex items-center justify-center px-4 py-8">
+          <div className="max-w-2xl w-full">
+            {!cameraDenied && (
+              <div className="relative rounded-2xl overflow-hidden bg-black mb-6 aspect-video max-w-lg mx-auto">
+                <video
+                  ref={videoRef}
+                  autoPlay
+                  playsInline
+                  muted
+                  className="w-full h-full object-cover mirror"
+                  style={{ transform: "scaleX(-1)" }}
+                />
+                {!cameraReady && (
+                  <div className="absolute inset-0 flex items-center justify-center bg-gray-800">
+                    <div className="text-center">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white mx-auto mb-3" />
+                      <p className="text-white text-sm">カメラを起動中...</p>
                     </div>
                   </div>
                 )}
-
-                <div className="bg-gray-800 rounded-xl p-4 max-w-md mx-auto">
-                  <h3 className="text-white text-sm font-semibold mb-2">面接の進め方</h3>
-                  <ul className="text-gray-300 text-xs space-y-1.5 text-left">
-                    <li>• AIが質問を画面に表示します</li>
-                    <li>• {cameraDenied ? "テキストで回答を入力してください" : "「録画開始」を押して、声に出して回答してください"}</li>
-                    <li>• 回答が終わったら「回答を送信」を押してください</li>
-                    <li>• 全{maxInterviewQuestions}問で終了です</li>
-                  </ul>
-                </div>
-
-                <button
-                  onClick={handleStartVideoInterview}
-                  className="bg-indigo-600 text-white px-10 py-3.5 rounded-xl font-semibold hover:bg-indigo-700 transition-colors text-lg inline-flex items-center gap-2"
-                >
-                  面接を始める
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                  </svg>
-                </button>
               </div>
             )}
+
+            {cameraReady && !cameraDenied && (
+              <div className="flex items-center justify-center gap-6 mb-6">
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 rounded-full bg-emerald-400 animate-pulse" />
+                  <span className="text-sm text-gray-700">カメラ OK</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 rounded-full bg-emerald-400 animate-pulse" />
+                  <span className="text-sm text-gray-700">マイク OK</span>
+                </div>
+              </div>
+            )}
+
+            {cameraDenied && (
+              <div className="bg-amber-50 border border-amber-200 rounded-xl p-5 mb-6 max-w-lg mx-auto">
+                <h3 className="text-amber-800 text-sm font-semibold mb-2 flex items-center gap-2">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.072 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                  </svg>
+                  カメラに接続できませんでした
+                </h3>
+                <p className="text-amber-700 text-xs mb-3">カメラを有効にするには：</p>
+                <ol className="text-amber-700 text-xs space-y-1 text-left list-decimal list-inside mb-3">
+                  <li>アドレスバー左の 🔒 アイコンをクリック</li>
+                  <li>「カメラ」と「マイク」を「許可」に変更</li>
+                  <li>ページをリロード</li>
+                </ol>
+                <p className="text-amber-600 text-xs font-medium">※ カメラなしでもテキスト入力で面接できます</p>
+              </div>
+            )}
+
+            <div className="bg-white rounded-xl border border-gray-200 p-5 mb-6 max-w-lg mx-auto">
+              <h3 className="text-gray-900 text-sm font-semibold mb-3">面接の進め方</h3>
+              <ul className="text-gray-600 text-xs space-y-2 text-left">
+                <li className="flex items-start gap-2">
+                  <span className="text-indigo-500 mt-0.5">1.</span>
+                  AIが質問を画面に表示します
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-indigo-500 mt-0.5">2.</span>
+                  {cameraDenied ? "テキストで回答を入力してください" : "「録画開始」を押して声に出して回答、またはテキストで入力"}
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-indigo-500 mt-0.5">3.</span>
+                  回答が終わったら「回答を送信」を押してください
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-indigo-500 mt-0.5">4.</span>
+                  全{maxInterviewQuestions}問で終了、AIが総合評価します
+                </li>
+              </ul>
+            </div>
+
+            <div className="text-center space-y-3 max-w-lg mx-auto">
+              <button
+                onClick={handleStartVideoInterview}
+                className="w-full bg-indigo-600 text-white px-10 py-3.5 rounded-xl font-semibold hover:bg-indigo-700 transition-colors text-lg inline-flex items-center justify-center gap-2"
+              >
+                {cameraDenied ? "テキストモードで面接を始める" : "面接を始める"}
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </button>
+              {cameraDenied && (
+                <button
+                  onClick={() => { setCameraDenied(false); setCameraReady(false); startCamera(); }}
+                  className="text-sm text-gray-500 hover:text-indigo-600 transition-colors"
+                >
+                  カメラ接続を再試行する
+                </button>
+              )}
+            </div>
           </div>
         </div>
       </div>
