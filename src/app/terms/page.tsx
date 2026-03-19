@@ -151,7 +151,7 @@ export default function TermsPage() {
                 <div className="bg-gray-50 rounded-lg p-6 mt-4">
                   <p className="font-medium text-gray-900">Michibiki 導 株式会社</p>
                   <p className="mt-2">〒150-0002 東京都渋谷区渋谷2-24-12</p>
-                  <p>メール：legal@michibiki.jp</p>
+                  <p>メール：legal@michibiki.tech</p>
                   <p>電話：03-6890-XXXX（平日 10:00〜18:00）</p>
                 </div>
               </div>

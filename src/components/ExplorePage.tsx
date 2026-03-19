@@ -188,11 +188,8 @@ export default function ExplorePage() {
           {/* Loading state */}
           {loading ? (
             <div className="flex flex-col items-center justify-center py-24">
-              <div className="relative">
-                <div className="w-10 h-10 rounded-full border-2 border-indigo-100" />
-                <div className="absolute inset-0 w-10 h-10 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin" />
-              </div>
-              <p className="text-sm text-gray-400 mt-4 font-medium">読み込み中...</p>
+              <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-indigo-600 mx-auto mb-4" />
+              <p className="text-sm text-gray-500">読み込み中...</p>
             </div>
           ) : paginatedJobs.length > 0 ? (
             /* Job grid - 3 columns with more gap */

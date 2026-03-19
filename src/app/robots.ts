@@ -9,6 +9,6 @@ export default function robots(): MetadataRoute.Robots {
         disallow: ["/home", "/profile", "/dashboard", "/referrals", "/earnings", "/payment", "/interview"],
       },
     ],
-    sitemap: "https://michibiki-six.vercel.app/sitemap.xml",
+    sitemap: "https://michibiki.tech/sitemap.xml",
   };
 }

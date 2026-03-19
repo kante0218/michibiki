@@ -113,7 +113,7 @@ export default function ReferralsPage() {
   const [activeTab, setActiveTab] = useState<Tab>("connections");
 
   const referralCode = user?.id?.slice(0, 8).toUpperCase() || "XXXXXXXX";
-  const referralLink = `https://michibiki-six.vercel.app/signup?ref=${referralCode}`;
+  const referralLink = `https://michibiki.tech/signup?ref=${referralCode}`;
 
   return (
     <div className="min-h-screen bg-gray-50/50">
@@ -291,7 +291,10 @@ function ConnectionsTab({ userId }: { userId: string | undefined }) {
       <>
         {fileInput}
         <div className="flex justify-center py-20">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600" />
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-indigo-600 mx-auto mb-4" />
+            <p className="text-sm text-gray-500">読み込み中...</p>
+          </div>
         </div>
       </>
     );
@@ -592,7 +595,10 @@ function ReferralsTabContent({
   if (loading) {
     return (
       <div className="flex justify-center py-20">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600" />
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-indigo-600 mx-auto mb-4" />
+          <p className="text-sm text-gray-500">読み込み中...</p>
+        </div>
       </div>
     );
   }

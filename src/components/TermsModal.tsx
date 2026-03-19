@@ -72,7 +72,7 @@ const TERMS_CONTENT = {
       },
       {
         heading: "7. お問い合わせ",
-        body: "個人情報の取り扱いに関するお問い合わせは以下までお願いします。\nメール：privacy@michibiki.jp",
+        body: "個人情報の取り扱いに関するお問い合わせは以下までお願いします。\nメール：privacy@michibiki.tech",
       },
     ],
   },

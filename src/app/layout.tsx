@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { AuthProvider } from "@/lib/AuthContext";
 
-const SITE_URL = "https://michibiki-six.vercel.app";
+const SITE_URL = "https://michibiki.tech";
 const SITE_NAME = "みちびき 導";
 const DESCRIPTION =
   "みちびきは、AIを活用して世界中の優秀な人材と企業を最適にマッチングするプラットフォームです。スキル・経験・志向をAIが分析し、最適な仕事と出会えます。";

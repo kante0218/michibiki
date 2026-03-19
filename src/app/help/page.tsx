@@ -428,8 +428,8 @@ export default function HelpPage() {
               </div>
               <h3 className="font-semibold text-gray-900 mb-1">メールサポート</h3>
               <p className="text-sm text-gray-500 mb-3">24時間以内に返信いたします</p>
-              <a href="mailto:support@michibiki.jp" className="text-sm text-indigo-600 hover:text-indigo-700 font-medium">
-                support@michibiki.jp
+              <a href="mailto:support@michibiki.tech" className="text-sm text-indigo-600 hover:text-indigo-700 font-medium">
+                support@michibiki.tech
               </a>
             </div>
             <div className="p-6 rounded-xl border border-gray-200 hover:border-indigo-200 hover:shadow-md transition-all">
