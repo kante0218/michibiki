@@ -208,7 +208,7 @@ export function Sidebar({ activeItem = "explore" }: SidebarProps) {
   const sidebarContent = (
     <>
       {/* Logo */}
-      <a href="/home" className="mt-5 mb-8 group">
+      <a href="/" className="mt-5 mb-8 group">
         <Logo size="header" iconOnly />
       </a>
 
