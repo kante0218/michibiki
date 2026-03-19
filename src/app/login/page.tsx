@@ -72,17 +72,17 @@ export default function LoginPage() {
       </header>
 
       {/* Main Content */}
-      <main className="flex-1 flex items-center justify-center px-4 py-12">
+      <main className="flex-1 flex items-center justify-center px-4 py-6">
         <div className="w-full max-w-md">
-          <div className="bg-white rounded-2xl shadow-xl shadow-gray-200/50 border border-gray-100 p-8 sm:p-10">
-            <div className="text-center mb-8">
-              <div className="flex justify-center mb-5">
-                <Logo size="lg" iconOnly />
+          <div className="bg-white rounded-2xl shadow-xl shadow-gray-200/50 border border-gray-100 p-6 sm:p-8">
+            <div className="text-center mb-6">
+              <div className="flex justify-center mb-4">
+                <Logo size="md" iconOnly />
               </div>
               <h1 className="text-2xl font-bold text-gray-900 tracking-tight">
                 おかえりなさい
               </h1>
-              <p className="mt-2 text-sm text-gray-500 leading-relaxed">
+              <p className="mt-1.5 text-sm text-gray-500 leading-relaxed">
                 アカウントにログインして、最適な求人を見つけましょう。
               </p>
             </div>
@@ -125,7 +125,7 @@ export default function LoginPage() {
             </button>
 
             {/* Divider */}
-            <div className="relative my-7">
+            <div className="relative my-5">
               <div className="absolute inset-0 flex items-center">
                 <div className="w-full border-t border-gray-100" />
               </div>
@@ -134,7 +134,7 @@ export default function LoginPage() {
               </div>
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-5">
+            <form onSubmit={handleSubmit} className="space-y-4">
               <div>
                 <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1.5">
                   メールアドレス
@@ -168,7 +168,7 @@ export default function LoginPage() {
               </div>
 
               {/* Terms & Privacy - must read before agreeing */}
-              <div className="space-y-3 pt-1">
+              <div className="space-y-2 pt-0.5">
                 <div className="flex items-center gap-3">
                   <button
                     type="button"
@@ -211,7 +211,7 @@ export default function LoginPage() {
                 </div>
 
                 {/* Agreement checkbox — only enabled after reading both */}
-                <div className="flex items-start gap-3 pt-1">
+                <div className="flex items-start gap-3 pt-0.5">
                   <button
                     type="button"
                     onClick={() => termsRead && privacyRead && setAgreedToTerms(!agreedToTerms)}
@@ -245,7 +245,7 @@ export default function LoginPage() {
                 </div>
               </div>
 
-              <div className="flex gap-3 pt-1">
+              <div className="flex gap-3 pt-0.5">
                 <button
                   type="submit"
                   disabled={loading || !agreedToTerms}
