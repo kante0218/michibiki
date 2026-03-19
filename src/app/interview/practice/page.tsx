@@ -46,6 +46,37 @@ interface InterviewQuestion {
   questionNumber: number;
 }
 
+// Header extracted as a top-level component to prevent remount flicker
+const InterviewHeader = ({ subtitle, timerDisplay, showQuestionCount, questionCount, maxQuestions }: {
+  subtitle: string;
+  timerDisplay: string;
+  showQuestionCount: boolean;
+  questionCount: number;
+  maxQuestions: number;
+}) => (
+  <header className="border-b border-gray-200 bg-white sticky top-0 z-40" style={{ isolation: "isolate", transform: "translateZ(0)", backfaceVisibility: "hidden" }}>
+    <div className="flex items-center justify-between px-4 py-3 max-w-screen-2xl mx-auto">
+      <div className="flex items-center gap-3">
+        <a href="/interview" className="flex items-center gap-2 flex-shrink-0">
+          <Logo size="xs" />
+        </a>
+        <span className="text-gray-300">|</span>
+        <span className="text-sm text-gray-500 whitespace-nowrap">{subtitle}</span>
+      </div>
+      <div className="flex items-center gap-3">
+        <span className="text-xs font-mono text-gray-500 bg-gray-100 px-3 py-1.5 rounded-lg">
+          {timerDisplay}
+        </span>
+        {showQuestionCount && (
+          <span className="text-xs text-gray-400">
+            質問 {questionCount}/{maxQuestions}
+          </span>
+        )}
+      </div>
+    </div>
+  </header>
+);
+
 export default function PracticeInterviewPage() {
   return (
     <Suspense
@@ -877,36 +908,14 @@ function PracticeInterviewContent() {
   }
   if (!user) return null;
 
-  // Header component
-  const Header = ({ subtitle }: { subtitle: string }) => (
-    <header className="border-b border-gray-200 bg-white sticky top-0 z-40" style={{ isolation: "isolate", transform: "translateZ(0)", backfaceVisibility: "hidden" }}>
-      <div className="flex items-center justify-between px-4 py-3 max-w-screen-2xl mx-auto">
-        <div className="flex items-center gap-3">
-          <a href="/interview" className="flex items-center gap-2 flex-shrink-0">
-            <Logo size="xs" />
-          </a>
-          <span className="text-gray-300">|</span>
-          <span className="text-sm text-gray-500 whitespace-nowrap">{subtitle}</span>
-        </div>
-        <div className="flex items-center gap-3">
-          <span className="text-xs font-mono text-gray-500 bg-gray-100 px-3 py-1.5 rounded-lg">
-            {formatTime(timerSeconds)}
-          </span>
-          {(phase === "interview") && (
-            <span className="text-xs text-gray-400">
-              質問 {interviewQuestionCount}/{maxInterviewQuestions}
-            </span>
-          )}
-        </div>
-      </div>
-    </header>
-  );
+  // Use top-level InterviewHeader to avoid re-mount flicker
+  const timerDisplay = formatTime(timerSeconds);
 
   // Error display
   if (error) {
     return (
       <div className="min-h-screen bg-gray-50 flex flex-col">
-        <Header subtitle="エラー" />
+        <InterviewHeader subtitle="エラー" timerDisplay={timerDisplay} showQuestionCount={false} questionCount={0} maxQuestions={maxInterviewQuestions} />
         <div className="flex-1 flex items-center justify-center px-4">
           <div className="max-w-md w-full text-center">
             <div className="w-16 h-16 rounded-2xl bg-red-100 text-red-600 flex items-center justify-center mx-auto mb-6">
@@ -940,7 +949,7 @@ function PracticeInterviewContent() {
   if (phase === "loading") {
     return (
       <div className="min-h-screen bg-gray-50 flex flex-col">
-        <Header subtitle={categoryNames[category] || category} />
+        <InterviewHeader subtitle={categoryNames[category] || category} timerDisplay={timerDisplay} showQuestionCount={false} questionCount={0} maxQuestions={maxInterviewQuestions} />
         <div className="flex-1 flex items-center justify-center px-4">
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto mb-6" />
@@ -956,7 +965,7 @@ function PracticeInterviewContent() {
   if (phase === "test_evaluating") {
     return (
       <div className="min-h-screen bg-gray-50 flex flex-col">
-        <Header subtitle="テスト評価中" />
+        <InterviewHeader subtitle="テスト評価中" timerDisplay={timerDisplay} showQuestionCount={false} questionCount={0} maxQuestions={maxInterviewQuestions} />
         <div className="flex-1 flex items-center justify-center px-4">
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto mb-6" />
@@ -978,7 +987,7 @@ function PracticeInterviewContent() {
 
     return (
       <div className="min-h-screen bg-gray-50 flex flex-col">
-        <Header subtitle={`オンラインテスト - ${categoryNames[category] || category}`} />
+        <InterviewHeader subtitle={`オンラインテスト - ${categoryNames[category] || category}`} timerDisplay={timerDisplay} showQuestionCount={false} questionCount={0} maxQuestions={maxInterviewQuestions} />
 
         <div className="bg-white border-b border-gray-100 px-4 py-2">
           <div className="max-w-screen-lg mx-auto flex items-center gap-4">
@@ -1130,7 +1139,7 @@ function PracticeInterviewContent() {
   if (phase === "test_result" && testEvaluation) {
     return (
       <div className="min-h-screen bg-gray-50 flex flex-col">
-        <Header subtitle="テスト結果" />
+        <InterviewHeader subtitle="テスト結果" timerDisplay={timerDisplay} showQuestionCount={false} questionCount={0} maxQuestions={maxInterviewQuestions} />
         <div className="flex-1 flex items-start justify-center px-4 py-8">
           <div className="max-w-2xl w-full">
             <div className="bg-white rounded-2xl border border-gray-200 p-8 mb-6 text-center">
@@ -1205,7 +1214,7 @@ function PracticeInterviewContent() {
   if (phase === "camera_setup") {
     return (
       <div className="min-h-screen bg-gray-50 flex flex-col">
-        <Header subtitle="面接準備" />
+        <InterviewHeader subtitle="面接準備" timerDisplay={timerDisplay} showQuestionCount={false} questionCount={0} maxQuestions={maxInterviewQuestions} />
         <div className="flex-1 flex items-center justify-center px-4 py-8">
           <div className="max-w-2xl w-full">
             {!cameraDenied && (
@@ -1584,7 +1593,7 @@ function PracticeInterviewContent() {
   if (phase === "evaluating") {
     return (
       <div className="min-h-screen bg-gray-50 flex flex-col">
-        <Header subtitle="評価中" />
+        <InterviewHeader subtitle="評価中" timerDisplay={timerDisplay} showQuestionCount={false} questionCount={0} maxQuestions={maxInterviewQuestions} />
         <div className="flex-1 flex items-center justify-center px-4">
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto mb-6" />
@@ -1600,7 +1609,7 @@ function PracticeInterviewContent() {
   if (phase === "result" && evaluation) {
     return (
       <div className="min-h-screen bg-gray-50 flex flex-col">
-        <Header subtitle="評価結果" />
+        <InterviewHeader subtitle="評価結果" timerDisplay={timerDisplay} showQuestionCount={false} questionCount={0} maxQuestions={maxInterviewQuestions} />
         <div className="flex-1 overflow-y-auto px-4 py-8">
           <div className="max-w-3xl mx-auto">
             <div className="bg-white rounded-2xl border border-gray-200 p-8 mb-6 text-center">
