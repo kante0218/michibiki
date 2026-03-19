@@ -576,7 +576,10 @@ function PracticeInterviewContent() {
         body: JSON.stringify({ action: "generate_test", category, jobTitle }),
       });
       const data = await res.json();
-      if (data.error) { setError(data.error); return; }
+      if (data.error) {
+        const msg = data.error.includes("Overloaded") ? "AIサーバーが混雑しています。しばらく待ってから再試行してください。" : data.error;
+        setError(msg); return;
+      }
       setTestQuestions(data.questions || []);
       setPhase("test");
       setIsTimerRunning(true);
@@ -618,11 +621,14 @@ function PracticeInterviewContent() {
         body: JSON.stringify({ action: "evaluate_test", testResults: results }),
       });
       const data = await res.json();
-      if (data.error) { setError(data.error); setPhase("test"); return; }
+      if (data.error) {
+        const msg = data.error.includes("Overloaded") ? "AIサーバーが混雑しています。しばらく待ってから再試行してください。" : data.error;
+        setError(msg); setPhase("test"); return;
+      }
       setTestEvaluation(data);
       setPhase("test_result");
     } catch {
-      setError("テストの評価に失敗しました。");
+      setError("テストの評価に失敗しました。もう一度お試しください。");
       setPhase("test");
     }
   };
@@ -743,14 +749,17 @@ function PracticeInterviewContent() {
         }),
       });
       const data = await res.json();
-      if (data.error) { setError(data.error); setPhase("test_result"); return; }
+      if (data.error) {
+        const msg = data.error.includes("Overloaded") ? "AIサーバーが混雑しています。しばらく待ってから再試行してください。" : data.error;
+        setError(msg); setPhase("test_result"); return;
+      }
       setCurrentQuestion({ question: data.question, questionNumber: 1 });
       setConversationHistory(data.conversationHistory || []);
       setInterviewQuestionCount(1);
       // Auto-read the first question aloud
       speakQuestion(data.question);
     } catch {
-      setError("面接の開始に失敗しました。");
+      setError("面接の開始に失敗しました。もう一度お試しください。");
       setPhase("test_result");
     } finally {
       setAiThinking(false);
@@ -829,7 +838,10 @@ function PracticeInterviewContent() {
         }),
       });
       const data = await res.json();
-      if (data.error) { setError(data.error); return; }
+      if (data.error) {
+        const msg = data.error.includes("Overloaded") ? "AIサーバーが混雑しています。しばらく待ってから再試行してください。" : data.error;
+        setError(msg); return;
+      }
 
       setCurrentQuestion({ question: data.question, questionNumber: newCount });
       setConversationHistory(data.conversationHistory || updatedHistory);

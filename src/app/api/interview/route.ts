@@ -5,6 +5,29 @@ const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY || "",
 });
 
+// Retry wrapper for Anthropic API calls (handles 529 overloaded errors)
+async function callWithRetry<T>(fn: () => Promise<T>, maxRetries = 3): Promise<T> {
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      return await fn();
+    } catch (error: unknown) {
+      const isOverloaded =
+        (error instanceof Error && error.message?.includes("Overloaded")) ||
+        (error instanceof Error && error.message?.includes("529")) ||
+        (typeof error === "object" && error !== null && "status" in error && (error as { status: number }).status === 529);
+
+      if (isOverloaded && attempt < maxRetries) {
+        // Exponential backoff: 2s, 4s, 8s
+        const delay = Math.pow(2, attempt + 1) * 1000;
+        await new Promise((resolve) => setTimeout(resolve, delay));
+        continue;
+      }
+      throw error;
+    }
+  }
+  throw new Error("Max retries exceeded");
+}
+
 // Generate questions based on job category and optional test results
 export async function POST(req: NextRequest) {
   try {
@@ -17,7 +40,7 @@ export async function POST(req: NextRequest) {
 
     if (action === "generate_test") {
       // Generate field-specific online test questions
-      const message = await anthropic.messages.create({
+      const message = await callWithRetry(() => anthropic.messages.create({
         model: "claude-sonnet-4-20250514",
         max_tokens: 4000,
         messages: [
@@ -51,7 +74,7 @@ export async function POST(req: NextRequest) {
 JSONのみを出力してください。`,
           },
         ],
-      });
+      }));
 
       const content = message.content[0];
       if (content.type === "text") {
@@ -70,7 +93,7 @@ JSONのみを出力してください。`,
 
     if (action === "evaluate_test") {
       // Evaluate test answers
-      const message = await anthropic.messages.create({
+      const message = await callWithRetry(() => anthropic.messages.create({
         model: "claude-sonnet-4-20250514",
         max_tokens: 2000,
         messages: [
@@ -101,7 +124,7 @@ ${JSON.stringify(testResults, null, 2)}
 JSONのみを出力してください。`,
           },
         ],
-      });
+      }));
 
       const content = message.content[0];
       if (content.type === "text") {
@@ -152,12 +175,12 @@ ${testResults ? `テスト結果: ${JSON.stringify(testResults)}` : ""}`;
         });
       }
 
-      const message = await anthropic.messages.create({
+      const message = await callWithRetry(() => anthropic.messages.create({
         model: "claude-sonnet-4-20250514",
         max_tokens: 500,
         system: systemPrompt,
         messages,
-      });
+      }));
 
       const content = message.content[0];
       if (content.type === "text") {
@@ -171,7 +194,7 @@ ${testResults ? `テスト結果: ${JSON.stringify(testResults)}` : ""}`;
 
     if (action === "evaluate_interview") {
       // Final evaluation of the entire interview
-      const message = await anthropic.messages.create({
+      const message = await callWithRetry(() => anthropic.messages.create({
         model: "claude-sonnet-4-20250514",
         max_tokens: 2000,
         messages: [
@@ -201,7 +224,7 @@ ${testResults ? `テスト結果: ${JSON.stringify(testResults)}` : ""}
 JSONのみを出力してください。`,
           },
         ],
-      });
+      }));
 
       const content = message.content[0];
       if (content.type === "text") {
@@ -221,7 +244,8 @@ JSONのみを出力してください。`,
     return NextResponse.json({ error: "Invalid action" }, { status: 400 });
   } catch (error) {
     const errMsg = error instanceof Error ? error.message : String(error);
-    console.error("Interview API error:", errMsg);
-    return NextResponse.json({ error: errMsg || "Internal server error" }, { status: 500 });
+    const statusCode = (typeof error === "object" && error !== null && "status" in error) ? (error as { status: number }).status : 500;
+    console.error("Interview API error:", statusCode, errMsg);
+    return NextResponse.json({ error: errMsg || "Internal server error" }, { status: statusCode === 529 ? 529 : 500 });
   }
 }
