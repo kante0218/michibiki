@@ -112,6 +112,13 @@ function PracticeInterviewContent() {
   // Error
   const [error, setError] = useState("");
 
+  // Screen recording state
+  const [isScreenRecording, setIsScreenRecording] = useState(false);
+  const [screenRecordingUrl, setScreenRecordingUrl] = useState<string | null>(null);
+  const screenRecorderRef = useRef<MediaRecorder | null>(null);
+  const screenChunksRef = useRef<Blob[]>([]);
+  const screenStreamRef = useRef<MediaStream | null>(null);
+
   // Refs
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -140,6 +147,7 @@ function PracticeInterviewContent() {
     return () => {
       stopCamera();
       stopRecognition();
+      stopScreenRecording();
       if (recordingTimerRef.current) clearInterval(recordingTimerRef.current);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -269,6 +277,103 @@ function PracticeInterviewContent() {
     }
   };
 
+  // Screen recording functions
+  const startScreenRecording = async () => {
+    try {
+      // Request screen + audio capture
+      const displayStream = await navigator.mediaDevices.getDisplayMedia({
+        video: { width: 1920, height: 1080 },
+        audio: true,
+      });
+
+      // If we have a camera mic stream, mix its audio in
+      let combinedStream = displayStream;
+      if (streamRef.current) {
+        const audioTracks = streamRef.current.getAudioTracks();
+        if (audioTracks.length > 0) {
+          const audioContext = new AudioContext();
+          const destination = audioContext.createMediaStreamDestination();
+
+          // Add microphone audio
+          const micSource = audioContext.createMediaStreamSource(
+            new MediaStream(audioTracks)
+          );
+          micSource.connect(destination);
+
+          // Add display audio if available
+          const displayAudioTracks = displayStream.getAudioTracks();
+          if (displayAudioTracks.length > 0) {
+            const displaySource = audioContext.createMediaStreamSource(
+              new MediaStream(displayAudioTracks)
+            );
+            displaySource.connect(destination);
+          }
+
+          // Combine video from display + mixed audio
+          combinedStream = new MediaStream([
+            ...displayStream.getVideoTracks(),
+            ...destination.stream.getAudioTracks(),
+          ]);
+        }
+      }
+
+      screenStreamRef.current = displayStream; // Keep reference for cleanup
+      screenChunksRef.current = [];
+
+      const recorder = new MediaRecorder(combinedStream, {
+        mimeType: MediaRecorder.isTypeSupported("video/webm;codecs=vp9")
+          ? "video/webm;codecs=vp9"
+          : "video/webm",
+      });
+
+      recorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          screenChunksRef.current.push(event.data);
+        }
+      };
+
+      recorder.onstop = () => {
+        const blob = new Blob(screenChunksRef.current, { type: "video/webm" });
+        const url = URL.createObjectURL(blob);
+        setScreenRecordingUrl(url);
+        setIsScreenRecording(false);
+      };
+
+      // Stop recording if user stops screen share via browser UI
+      displayStream.getVideoTracks()[0].onended = () => {
+        stopScreenRecording();
+      };
+
+      recorder.start(1000); // Collect data every second
+      screenRecorderRef.current = recorder;
+      setIsScreenRecording(true);
+    } catch (err) {
+      console.error("Screen recording error:", err);
+      // User cancelled or permission denied — just ignore
+    }
+  };
+
+  const stopScreenRecording = () => {
+    if (screenRecorderRef.current && screenRecorderRef.current.state !== "inactive") {
+      screenRecorderRef.current.stop();
+    }
+    if (screenStreamRef.current) {
+      screenStreamRef.current.getTracks().forEach((track) => track.stop());
+      screenStreamRef.current = null;
+    }
+    screenRecorderRef.current = null;
+  };
+
+  const downloadScreenRecording = () => {
+    if (!screenRecordingUrl) return;
+    const a = document.createElement("a");
+    a.href = screenRecordingUrl;
+    a.download = `michibiki-interview-${new Date().toISOString().slice(0, 10)}.webm`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  };
+
   // Generate test questions on mount
   useEffect(() => {
     if (user && phase === "loading") {
@@ -396,6 +501,7 @@ function PracticeInterviewContent() {
         setPhase("evaluating");
         setIsTimerRunning(false);
         stopCamera();
+        stopScreenRecording();
 
         const evalRes = await fetch("/api/interview", {
           method: "POST",
@@ -458,6 +564,7 @@ function PracticeInterviewContent() {
 
   const handleEndInterview = async () => {
     handleStopRecording();
+    stopScreenRecording();
     setPhase("evaluating");
     setIsTimerRunning(false);
     stopCamera();
@@ -889,128 +996,111 @@ function PracticeInterviewContent() {
   // PHASE 3: Video Interview
   if (phase === "interview") {
     return (
-      <div className="min-h-screen bg-gray-900 flex flex-col">
-        <header className="border-b border-gray-700 bg-gray-900 sticky top-0 z-40">
-          <div className="flex items-center justify-between px-4 py-3 max-w-screen-2xl mx-auto">
-            <div className="flex items-center gap-3">
-              <a href="/interview" className="flex items-center gap-2">
-                <Logo size="xs" />
-              </a>
-              <span className="text-gray-600">|</span>
-              <span className="text-sm text-gray-400">ビデオ面接</span>
-            </div>
-            <div className="flex items-center gap-4">
-              {isRecording && (
-                <div className="flex items-center gap-2">
-                  <div className="w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse" />
-                  <span className="text-xs text-red-400 font-mono">{formatTime(recordingSeconds)}</span>
-                </div>
-              )}
-              <span className="text-xs font-mono text-gray-400 bg-gray-800 px-3 py-1.5 rounded-lg">
-                {formatTime(timerSeconds)}
-              </span>
-              <span className="text-xs text-gray-500">
-                {interviewQuestionCount}/{maxInterviewQuestions}
-              </span>
-            </div>
-          </div>
-        </header>
+      <div className="min-h-screen bg-gray-50 flex flex-col">
+        <Header subtitle="ビデオ面接" />
 
         {/* Progress bar */}
-        <div className="h-1 bg-gray-800">
-          <div
-            className="h-full bg-indigo-500 transition-all duration-500"
-            style={{ width: `${(interviewQuestionCount / maxInterviewQuestions) * 100}%` }}
-          />
-        </div>
-
-        <div className="flex-1 flex flex-col lg:flex-row">
-          {/* Left: Video feed */}
-          <div className="lg:w-1/2 flex flex-col">
-            <div className="flex-1 relative">
-              <video
-                ref={videoRef}
-                autoPlay
-                playsInline
-                muted
-                className="w-full h-full object-cover"
-                style={{ transform: "scaleX(-1)", minHeight: "300px" }}
+        <div className="bg-white border-b border-gray-100 px-4 py-2">
+          <div className="max-w-screen-lg mx-auto flex items-center gap-4">
+            <span className="text-xs text-gray-500">面接進行</span>
+            <div className="flex-1 h-1.5 bg-gray-100 rounded-full overflow-hidden">
+              <div
+                className="h-full bg-indigo-600 rounded-full transition-all duration-500"
+                style={{ width: `${(interviewQuestionCount / maxInterviewQuestions) * 100}%` }}
               />
-
-              {/* Recording indicator overlay */}
-              {isRecording && (
-                <div className="absolute top-4 left-4 flex items-center gap-2 bg-red-600/90 text-white px-3 py-1.5 rounded-full text-xs font-medium backdrop-blur-sm">
-                  <div className="w-2 h-2 rounded-full bg-white animate-pulse" />
-                  録画中
-                </div>
-              )}
             </div>
-          </div>
-
-          {/* Right: Question & Controls */}
-          <div className="lg:w-1/2 flex flex-col bg-gray-850" style={{ backgroundColor: "#1a1a2e" }}>
-            {/* Question area */}
-            <div className="flex-1 p-6 lg:p-8 flex flex-col">
-              {aiThinking ? (
-                <div className="flex-1 flex items-center justify-center">
-                  <div className="text-center">
-                    <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-indigo-400 mx-auto mb-4" />
-                    <p className="text-gray-300 text-sm">AIが次の質問を準備中...</p>
-                  </div>
-                </div>
+            <span className="text-xs text-gray-500">{interviewQuestionCount}/{maxInterviewQuestions}</span>
+            {isRecording && (
+              <div className="flex items-center gap-1.5">
+                <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
+                <span className="text-xs text-red-500 font-mono">{formatTime(recordingSeconds)}</span>
+              </div>
+            )}
+            {/* Screen recording toggle */}
+            <button
+              onClick={isScreenRecording ? stopScreenRecording : startScreenRecording}
+              className={`flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-medium transition-colors ${
+                isScreenRecording
+                  ? "bg-red-50 text-red-600 border border-red-200 hover:bg-red-100"
+                  : "bg-gray-50 text-gray-600 border border-gray-200 hover:bg-gray-100"
+              }`}
+              title={isScreenRecording ? "画面録画を停止" : "画面録画を開始"}
+            >
+              {isScreenRecording ? (
+                <>
+                  <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
+                  録画中
+                </>
               ) : (
                 <>
-                  <div className="flex items-center gap-2 mb-4">
-                    <span className="bg-indigo-600 text-white text-xs font-bold px-2.5 py-1 rounded-lg">
-                      Q{currentQuestion?.questionNumber || 1}
-                    </span>
-                    <span className="text-gray-400 text-xs">/ {maxInterviewQuestions}</span>
-                  </div>
-
-                  <div className="flex-1">
-                    <p className="text-white text-lg lg:text-xl leading-relaxed font-medium">
-                      {currentQuestion?.question || ""}
-                    </p>
-                  </div>
-
-                  {/* Transcript */}
-                  <div className="mt-4">
-                    <div className="flex items-center gap-2 mb-2">
-                      <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
-                      </svg>
-                      <span className="text-xs text-gray-400">音声認識テキスト</span>
-                    </div>
-                    <div className="bg-gray-800/50 rounded-xl p-4 min-h-[80px] max-h-[150px] overflow-y-auto border border-gray-700">
-                      {transcript ? (
-                        <p className="text-gray-200 text-sm leading-relaxed">{transcript}</p>
-                      ) : isRecording ? (
-                        <p className="text-gray-500 text-sm animate-pulse">話してください...</p>
-                      ) : (
-                        <p className="text-gray-600 text-sm">録画を開始して回答してください</p>
-                      )}
-                    </div>
-
-                    {/* Fallback text input */}
-                    {!isRecording && (
-                      <div className="mt-3">
-                        <textarea
-                          value={fallbackText}
-                          onChange={(e) => setFallbackText(e.target.value)}
-                          placeholder="音声認識がうまくいかない場合はここに入力..."
-                          rows={2}
-                          className="w-full px-4 py-2.5 rounded-xl bg-gray-800 border border-gray-700 text-sm text-gray-200 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500 resize-none"
-                        />
-                      </div>
-                    )}
-                  </div>
+                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                  </svg>
+                  画面録画
                 </>
               )}
-            </div>
+            </button>
+          </div>
+        </div>
 
-            {/* Controls */}
-            {!aiThinking && (
-              <div className="p-4 lg:p-6 border-t border-gray-700/50">
+        <div className="flex-1 flex items-start justify-center px-4 py-8">
+          <div className="max-w-2xl w-full">
+            {aiThinking ? (
+              <div className="flex items-center justify-center py-20">
+                <div className="text-center">
+                  <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-indigo-600 mx-auto mb-4" />
+                  <p className="text-gray-500 text-sm">AIが次の質問を準備中...</p>
+                </div>
+              </div>
+            ) : (
+              <>
+                {/* Question */}
+                <div className="flex items-center gap-2 mb-4">
+                  <span className="bg-indigo-600 text-white text-xs font-bold px-2.5 py-1 rounded-lg">
+                    Q{currentQuestion?.questionNumber || 1}
+                  </span>
+                  <span className="text-gray-400 text-xs">/ {maxInterviewQuestions}</span>
+                </div>
+
+                <div className="bg-white rounded-xl border border-gray-200 p-6 mb-6">
+                  <p className="text-gray-900 text-lg leading-relaxed font-medium">
+                    {currentQuestion?.question || ""}
+                  </p>
+                </div>
+
+                {/* Transcript */}
+                <div className="mb-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+                    </svg>
+                    <span className="text-xs text-gray-500">音声認識テキスト</span>
+                  </div>
+                  <div className="bg-white rounded-xl p-4 min-h-[80px] max-h-[150px] overflow-y-auto border border-gray-200">
+                    {transcript ? (
+                      <p className="text-gray-800 text-sm leading-relaxed">{transcript}</p>
+                    ) : isRecording ? (
+                      <p className="text-gray-400 text-sm animate-pulse">話してください...</p>
+                    ) : (
+                      <p className="text-gray-400 text-sm">録画を開始して回答してください</p>
+                    )}
+                  </div>
+
+                  {/* Fallback text input */}
+                  {!isRecording && (
+                    <div className="mt-3">
+                      <textarea
+                        value={fallbackText}
+                        onChange={(e) => setFallbackText(e.target.value)}
+                        placeholder="音声認識がうまくいかない場合はここに入力..."
+                        rows={2}
+                        className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 resize-none"
+                      />
+                    </div>
+                  )}
+                </div>
+
+                {/* Controls */}
                 <div className="flex items-center gap-3">
                   {!isRecording ? (
                     <button
@@ -1023,7 +1113,7 @@ function PracticeInterviewContent() {
                   ) : (
                     <button
                       onClick={handleStopRecording}
-                      className="flex-1 bg-gray-600 hover:bg-gray-700 text-white py-3.5 rounded-xl font-semibold transition-colors flex items-center justify-center gap-2"
+                      className="flex-1 bg-gray-500 hover:bg-gray-600 text-white py-3.5 rounded-xl font-semibold transition-colors flex items-center justify-center gap-2"
                     >
                       <div className="w-4 h-4 rounded bg-white" />
                       録画停止
@@ -1033,7 +1123,7 @@ function PracticeInterviewContent() {
                   <button
                     onClick={handleSubmitAnswer}
                     disabled={!transcript.trim() && !fallbackText.trim()}
-                    className="flex-1 bg-indigo-600 hover:bg-indigo-700 disabled:bg-gray-700 disabled:text-gray-500 text-white py-3.5 rounded-xl font-semibold transition-colors disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                    className="flex-1 bg-indigo-600 hover:bg-indigo-700 disabled:from-gray-200 disabled:to-gray-200 disabled:text-gray-400 text-white py-3.5 rounded-xl font-semibold transition-colors disabled:cursor-not-allowed disabled:bg-gray-200 flex items-center justify-center gap-2"
                   >
                     回答を送信
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1044,11 +1134,11 @@ function PracticeInterviewContent() {
 
                 <button
                   onClick={handleEndInterview}
-                  className="w-full mt-3 text-gray-500 text-xs hover:text-gray-300 transition-colors py-2"
+                  className="w-full mt-3 text-red-400 text-xs hover:text-red-500 transition-colors py-2"
                 >
                   面接を終了する
                 </button>
-              </div>
+              </>
             )}
           </div>
         </div>
@@ -1142,6 +1232,26 @@ function PracticeInterviewContent() {
                   スコア: {testEvaluation.totalScore}/{testEvaluation.maxScore}点
                   ({testEvaluation.percentage}%)
                 </p>
+              </div>
+            )}
+
+            {screenRecordingUrl && (
+              <div className="bg-indigo-50 rounded-xl border border-indigo-200 p-5 mb-6 text-center">
+                <div className="flex items-center justify-center gap-2 mb-2">
+                  <svg className="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                  </svg>
+                  <h3 className="text-sm font-semibold text-indigo-700">面接の画面録画が利用可能です</h3>
+                </div>
+                <button
+                  onClick={downloadScreenRecording}
+                  className="bg-indigo-600 text-white px-6 py-2.5 rounded-lg text-sm font-medium hover:bg-indigo-700 transition-colors inline-flex items-center gap-2"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                  </svg>
+                  録画をダウンロード
+                </button>
               </div>
             )}
 
