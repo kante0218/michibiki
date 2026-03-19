@@ -218,7 +218,8 @@ JSONのみを出力してください。`,
 
     return NextResponse.json({ error: "Invalid action" }, { status: 400 });
   } catch (error) {
-    console.error("Interview API error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    const errMsg = error instanceof Error ? error.message : String(error);
+    console.error("Interview API error:", errMsg);
+    return NextResponse.json({ error: errMsg || "Internal server error" }, { status: 500 });
   }
 }
