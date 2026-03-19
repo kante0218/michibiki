@@ -40,5 +40,8 @@ Thumbs.db
 # Vercel
 .vercel
 
+# Claude
+.claude/settings.local.json
+
 # Temporary files
 ~$*
