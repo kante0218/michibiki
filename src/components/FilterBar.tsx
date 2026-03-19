@@ -343,8 +343,8 @@ export default function FilterBar({
                 : "bg-white border-2 border-gray-200 text-gray-500 hover:text-gray-700 hover:border-gray-300 hover:shadow-sm"
             }`}
           >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M10 3h4M6 8h12M3 13h18M8 18h8" />
             </svg>
             <span className="hidden sm:inline">フィルター</span>
             {activeFilterCount > 0 && (
