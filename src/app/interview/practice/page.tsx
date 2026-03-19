@@ -169,9 +169,31 @@ function PracticeInterviewContent() {
     healthcare: "ヘルスケア",
   };
 
+  // Permission state for showing specific guidance
+  const [permissionState, setPermissionState] = useState<"prompt" | "denied" | "granted" | "unknown">("unknown");
+
   // Camera functions
   const startCamera = async () => {
     try {
+      // First check permission status (if browser supports it)
+      if (navigator.permissions) {
+        try {
+          const cameraStatus = await navigator.permissions.query({ name: "camera" as PermissionName });
+          setPermissionState(cameraStatus.state as "prompt" | "denied" | "granted");
+
+          // If already denied by browser, skip getUserMedia (it won't prompt again)
+          if (cameraStatus.state === "denied") {
+            console.log("Camera permission permanently denied by browser");
+            setCameraDenied(true);
+            setCameraReady(true);
+            return;
+          }
+        } catch {
+          // permissions.query may not support "camera" in all browsers
+        }
+      }
+
+      // This triggers the browser's permission prompt if state is "prompt"
       const stream = await navigator.mediaDevices.getUserMedia({
         video: { width: 1280, height: 720, facingMode: "user" },
         audio: true,
@@ -180,9 +202,15 @@ function PracticeInterviewContent() {
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
       }
+      setPermissionState("granted");
       setCameraReady(true);
     } catch (err) {
       console.error("Camera error:", err);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const error = err as any;
+      if (error?.name === "NotAllowedError" || error?.name === "PermissionDeniedError") {
+        setPermissionState("denied");
+      }
       setCameraDenied(true);
       setCameraReady(true); // Allow proceeding with text-only mode
     }
@@ -958,19 +986,55 @@ function PracticeInterviewContent() {
 
             {cameraDenied && (
               <div className="bg-amber-50 border border-amber-200 rounded-xl p-5 mb-6 max-w-lg mx-auto">
-                <h3 className="text-amber-800 text-sm font-semibold mb-2 flex items-center gap-2">
+                <h3 className="text-amber-800 text-sm font-semibold mb-3 flex items-center gap-2">
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.072 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
                   </svg>
                   カメラに接続できませんでした
                 </h3>
-                <p className="text-amber-700 text-xs mb-3">カメラを有効にするには：</p>
-                <ol className="text-amber-700 text-xs space-y-1 text-left list-decimal list-inside mb-3">
-                  <li>アドレスバー左の 🔒 アイコンをクリック</li>
-                  <li>「カメラ」と「マイク」を「許可」に変更</li>
-                  <li>ページをリロード</li>
-                </ol>
-                <p className="text-amber-600 text-xs font-medium">※ カメラなしでもテキスト入力で面接できます</p>
+
+                {permissionState === "denied" ? (
+                  <>
+                    <p className="text-amber-800 text-xs font-semibold mb-2">ブラウザでカメラがブロックされています</p>
+                    <p className="text-amber-700 text-xs mb-2">以前「拒否」を選択したため、再度許可するには手動で設定を変更する必要があります：</p>
+                    <div className="bg-white/60 rounded-lg p-3 mb-3">
+                      <p className="text-amber-900 text-xs font-semibold mb-1.5">Chrome の場合：</p>
+                      <ol className="text-amber-800 text-xs space-y-1 text-left list-decimal list-inside">
+                        <li>アドレスバー左の <span className="font-mono bg-amber-100 px-1 rounded">🔒</span> または <span className="font-mono bg-amber-100 px-1 rounded">ⓘ</span> アイコンをクリック</li>
+                        <li>「サイトの設定」をクリック</li>
+                        <li>「カメラ」と「マイク」を「許可」に変更</li>
+                        <li>このページに戻って <strong>リロード</strong>（⌘+R）</li>
+                      </ol>
+                    </div>
+                    <div className="bg-white/60 rounded-lg p-3 mb-3">
+                      <p className="text-amber-900 text-xs font-semibold mb-1.5">Safari の場合：</p>
+                      <ol className="text-amber-800 text-xs space-y-1 text-left list-decimal list-inside">
+                        <li>メニューバー「Safari」→「設定」→「Webサイト」</li>
+                        <li>左側の「カメラ」「マイク」を選択</li>
+                        <li>このサイトの設定を「許可」に変更</li>
+                        <li>ページをリロード</li>
+                      </ol>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <p className="text-amber-700 text-xs mb-2">カメラの接続に問題が発生しました。以下をお試しください：</p>
+                    <ul className="text-amber-700 text-xs space-y-1 text-left mb-3">
+                      <li>• 他のアプリがカメラを使用していないか確認</li>
+                      <li>• ブラウザのカメラ許可ポップアップで「許可」を選択</li>
+                      <li>• ページをリロードして再試行</li>
+                    </ul>
+                  </>
+                )}
+
+                <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-3">
+                  <p className="text-emerald-700 text-xs font-medium flex items-center gap-1.5">
+                    <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                    カメラなしでもテキスト入力で面接を受けられます
+                  </p>
+                </div>
               </div>
             )}
 
