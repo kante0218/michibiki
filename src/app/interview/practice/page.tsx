@@ -1210,10 +1210,10 @@ function PracticeInterviewContent() {
             <div className="flex-1 h-1.5 bg-gray-100 rounded-full overflow-hidden">
               <div
                 className="h-full bg-indigo-600 rounded-full transition-all duration-500"
-                style={{ width: `${(interviewQuestionCount / maxInterviewQuestions) * 100}%` }}
+                style={{ width: `${((interviewQuestionCount - 1) / maxInterviewQuestions) * 100}%` }}
               />
             </div>
-            <span className="text-xs text-gray-500">{interviewQuestionCount}/{maxInterviewQuestions}</span>
+            <span className="text-xs text-gray-500">{interviewQuestionCount - 1}/{maxInterviewQuestions} 回答済み</span>
             {isRecording && (
               <div className="flex items-center gap-1.5">
                 <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
