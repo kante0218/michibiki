@@ -465,10 +465,10 @@ export default function InterviewPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       <Sidebar activeItem="interview" />
-      <TopBar />
 
       {/* Main content */}
-      <main className="ml-0 md:ml-[96px] pt-14">
+      <div className="ml-0 md:ml-[96px]">
+        <TopBar />
         <div className="px-6 py-6 max-w-[1400px]">
           {/* Page header */}
           <div className="mb-8">
@@ -552,7 +552,7 @@ export default function InterviewPage() {
             })}
           </div>
         </div>
-      </main>
+      </div>
     </div>
   );
 }

@@ -194,21 +194,14 @@ export default function EarningsPage() {
       )}
 
       <Sidebar activeItem="earnings" />
-      <TopBar />
 
-      <main className="ml-0 md:ml-[96px] pt-14 min-h-screen">
+      <div className="ml-0 md:ml-[96px] min-h-screen">
+        <TopBar />
         <div className="px-6 py-6 max-w-[1400px]">
           {/* Page Header */}
-          <div className="mb-8">
-            <div className="flex items-center gap-3 mb-1">
-              <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center">
-                <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.25 18L9 11.25l4.306 4.307a11.95 11.95 0 015.814-5.519l2.74-1.22m0 0l-5.94-2.28m5.94 2.28l-2.28 5.941" />
-                </svg>
-              </div>
-              <h1 className="text-2xl font-extrabold text-gray-900 tracking-tight">収益</h1>
-            </div>
-            <p className="text-sm text-gray-500 ml-11">収入の確認と支払い状況を管理します</p>
+          <div className="mb-6">
+            <h1 className="text-2xl font-extrabold text-gray-900 tracking-tight">収益</h1>
+            <p className="text-sm text-gray-500 mt-1">収入の確認と支払い状況を管理します</p>
           </div>
 
           {loading ? (
@@ -504,7 +497,7 @@ export default function EarningsPage() {
             </>
           )}
         </div>
-      </main>
+      </div>
     </div>
   );
 }

@@ -118,9 +118,9 @@ export default function ReferralsPage() {
   return (
     <div className="min-h-screen bg-gray-50/50">
       <Sidebar activeItem="referrals" />
-      <TopBar />
 
-      <main className="ml-0 md:ml-[96px] pt-14">
+      <div className="ml-0 md:ml-[96px]">
+        <TopBar />
         <div className="px-6 py-6 max-w-[1400px]">
           {/* Header */}
           <div className="flex items-center justify-between mb-6">
@@ -172,7 +172,7 @@ export default function ReferralsPage() {
             <ReferralsTabContent userId={user?.id} referralLink={referralLink} />
           )}
         </div>
-      </main>
+      </div>
     </div>
   );
 }

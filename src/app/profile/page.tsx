@@ -761,10 +761,9 @@ export default function ProfilePage() {
         }
       `}</style>
 
-      <TopBar />
-
       {/* Main content area */}
-      <div className="ml-0 md:ml-[96px] pt-14">
+      <div className="ml-0 md:ml-[96px]">
+        <TopBar />
         {/* ── Gradient Banner ── */}
         <div className="relative">
           <div className="h-40 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500" />
