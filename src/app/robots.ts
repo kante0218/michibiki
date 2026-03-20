@@ -6,7 +6,7 @@ export default function robots(): MetadataRoute.Robots {
       {
         userAgent: "*",
         allow: "/",
-        disallow: ["/home", "/profile", "/dashboard", "/referrals", "/earnings", "/payment", "/interview"],
+        disallow: ["/home", "/profile", "/dashboard", "/referrals", "/earnings", "/payment", "/interview/practice", "/interview/live"],
       },
     ],
     sitemap: "https://michibiki.tech/sitemap.xml",

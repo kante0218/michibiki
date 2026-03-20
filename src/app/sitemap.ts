@@ -11,6 +11,18 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 1,
     },
     {
+      url: `${BASE_URL}/explore`,
+      lastModified: new Date(),
+      changeFrequency: "daily",
+      priority: 0.9,
+    },
+    {
+      url: `${BASE_URL}/interview`,
+      lastModified: new Date(),
+      changeFrequency: "weekly",
+      priority: 0.9,
+    },
+    {
       url: `${BASE_URL}/login`,
       lastModified: new Date(),
       changeFrequency: "monthly",
@@ -21,12 +33,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
       lastModified: new Date(),
       changeFrequency: "monthly",
       priority: 0.8,
-    },
-    {
-      url: `${BASE_URL}/explore`,
-      lastModified: new Date(),
-      changeFrequency: "daily",
-      priority: 0.9,
     },
     {
       url: `${BASE_URL}/pricing`,
@@ -51,6 +57,24 @@ export default function sitemap(): MetadataRoute.Sitemap {
       lastModified: new Date(),
       changeFrequency: "weekly",
       priority: 0.6,
+    },
+    {
+      url: `${BASE_URL}/cases`,
+      lastModified: new Date(),
+      changeFrequency: "weekly",
+      priority: 0.6,
+    },
+    {
+      url: `${BASE_URL}/help`,
+      lastModified: new Date(),
+      changeFrequency: "monthly",
+      priority: 0.5,
+    },
+    {
+      url: `${BASE_URL}/security`,
+      lastModified: new Date(),
+      changeFrequency: "monthly",
+      priority: 0.4,
     },
     {
       url: `${BASE_URL}/terms`,
