@@ -393,7 +393,7 @@ export function TopBar() {
   ];
 
   return (
-    <div className="h-14 bg-white border-b border-gray-100 shadow-[0_1px_3px_rgba(0,0,0,0.04)] flex items-center justify-between pl-16 md:pl-6 pr-6">
+    <div className="h-14 bg-white border-b border-gray-100 shadow-[0_1px_3px_rgba(0,0,0,0.04)] flex items-center justify-between pl-16 md:pl-[112px] pr-6">
       {/* Left: Get Instant Work Offers */}
       <div className="flex items-center gap-2 text-sm text-gray-700">
         <span className="font-semibold truncate">ワークオファーを受け取る</span>
