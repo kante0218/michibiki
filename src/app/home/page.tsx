@@ -528,8 +528,8 @@ export default function HomePage() {
         <TopBar />
 
         {/* Important Tasks Section - Mercor style */}
-        <div className="px-6 pt-6 pb-2">
-          <h1 className="text-2xl font-bold text-gray-900 mb-1">
+        <div className="px-6 pt-6 pb-2 max-w-[1400px]">
+          <h1 className="text-2xl font-extrabold text-gray-900 tracking-tight mb-1">
             おかえりなさい{profile?.full_name ? `、${profile.full_name}` : ""}！
           </h1>
           <p className="text-sm text-gray-500 mb-5">重要なタスク ({linkedInConnected === false ? 2 : 1})</p>

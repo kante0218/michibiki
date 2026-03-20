@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { Sidebar } from "@/components/ExploreHeader";
+import { Sidebar, TopBar } from "@/components/ExploreHeader";
 import { useAuth } from "@/lib/AuthContext";
 import { supabase } from "@/lib/supabase";
 import type { Database } from "@/lib/database.types";
@@ -761,8 +761,10 @@ export default function ProfilePage() {
         }
       `}</style>
 
+      <TopBar />
+
       {/* Main content area */}
-      <div className="ml-0 md:ml-[96px]">
+      <div className="ml-0 md:ml-[96px] pt-14">
         {/* ── Gradient Banner ── */}
         <div className="relative">
           <div className="h-40 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500" />
@@ -770,7 +772,7 @@ export default function ProfilePage() {
         </div>
 
         {/* ── Profile header card ── */}
-        <div className="max-w-5xl mx-auto px-6 -mt-20 relative z-10">
+        <div className="max-w-[1400px] px-6 -mt-20 relative z-10">
           <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
             <div className="p-6 sm:p-8">
               <div className="flex flex-col sm:flex-row items-start gap-6">
@@ -920,7 +922,7 @@ export default function ProfilePage() {
         </div>
 
         {/* ── Tab content ── */}
-        <div className="max-w-5xl mx-auto px-6 py-8">
+        <div className="max-w-[1400px] px-6 py-8">
           {/* ===================== RESUME TAB ===================== */}
           {activeTab === "resume" && (
             <div className="space-y-6">

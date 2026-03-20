@@ -120,12 +120,12 @@ export default function ReferralsPage() {
       <Sidebar activeItem="referrals" />
       <TopBar />
 
-      <main className="ml-0 md:ml-[96px] pt-16 px-4 sm:px-8 lg:px-12 py-8">
-        <div className="max-w-6xl mx-auto">
+      <main className="ml-0 md:ml-[96px] pt-14">
+        <div className="px-6 py-6 max-w-[1400px]">
           {/* Header */}
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-2">
-              <h1 className="text-2xl font-bold text-gray-900">紹介</h1>
+              <h1 className="text-2xl font-extrabold text-gray-900 tracking-tight">紹介</h1>
               <button className="text-gray-400 hover:text-gray-600 transition-colors">
                 <FiHelpCircle size={18} />
               </button>

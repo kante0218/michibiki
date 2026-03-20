@@ -468,11 +468,11 @@ export default function InterviewPage() {
       <TopBar />
 
       {/* Main content */}
-      <main className="md:ml-[96px] pt-14">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8">
+      <main className="ml-0 md:ml-[96px] pt-14">
+        <div className="px-6 py-6 max-w-[1400px]">
           {/* Page header */}
           <div className="mb-8">
-            <h1 className="text-2xl font-bold text-gray-900 mb-2">面接練習</h1>
+            <h1 className="text-2xl font-extrabold text-gray-900 tracking-tight mb-2">面接練習</h1>
             <p className="text-sm text-gray-500">
               業界・分野別の面接を練習できます。選択問題5問＋記述問題5問のテストの後、AIビデオ面接を行います。
             </p>
