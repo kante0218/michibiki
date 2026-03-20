@@ -8,9 +8,9 @@ import JobDetail from "@/components/JobDetail";
 import { supabase } from "@/lib/supabase";
 import type { Job } from "@/lib/types";
 
-export default function ExplorePage() {
-  const [jobs, setJobs] = useState<Job[]>([]);
-  const [loading, setLoading] = useState(true);
+export default function ExplorePage({ initialJobs = [] }: { initialJobs?: Job[] }) {
+  const [jobs, setJobs] = useState<Job[]>(initialJobs);
+  const [loading, setLoading] = useState(initialJobs.length === 0);
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState("newest");
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
