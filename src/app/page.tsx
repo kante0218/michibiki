@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
-import Logo from "@/components/Logo";
+import PublicHeader from "@/components/PublicHeader";
+import Footer from "@/components/Footer";
 
 const interviewTypes = [
   {
@@ -171,41 +171,7 @@ export default function RootPage() {
 
   return (
     <div className="min-h-screen bg-white">
-      {/* Header */}
-      <header className="border-b border-gray-200 bg-white">
-        <div className="flex items-center justify-between px-4 py-3 max-w-screen-2xl mx-auto">
-          <div className="flex items-center gap-6">
-            <Link href="/" className="flex items-center gap-2">
-              <Logo size="header" iconOnly showBrandName />
-            </Link>
-            <nav className="hidden md:flex items-center gap-1">
-              <Link href="/for-companies" className="text-sm text-gray-500 hover:text-gray-900 hover:bg-gray-50 px-3 py-1.5 rounded-md transition-colors">
-                企業向け
-              </Link>
-              <Link href="/pricing" className="text-sm text-gray-500 hover:text-gray-900 hover:bg-gray-50 px-3 py-1.5 rounded-md transition-colors">
-                料金プラン
-              </Link>
-              <Link href="/cases" className="text-sm text-gray-500 hover:text-gray-900 hover:bg-gray-50 px-3 py-1.5 rounded-md transition-colors">
-                導入事例
-              </Link>
-              <Link href="/blog" className="text-sm text-gray-500 hover:text-gray-900 hover:bg-gray-50 px-3 py-1.5 rounded-md transition-colors">
-                ブログ
-              </Link>
-              <Link href="/help" className="text-sm text-gray-500 hover:text-gray-900 hover:bg-gray-50 px-3 py-1.5 rounded-md transition-colors">
-                ヘルプ
-              </Link>
-            </nav>
-          </div>
-          <div className="flex items-center gap-3">
-            <Link href="/contact" className="text-sm text-gray-700 hover:text-gray-900 px-3 py-1.5 rounded-md border border-gray-200 hover:border-gray-300 transition-colors">
-              お問い合わせ
-            </Link>
-            <Link href="/login" className="text-sm text-white bg-indigo-600 hover:bg-indigo-700 px-4 py-1.5 rounded-md transition-colors font-medium">
-              ログイン
-            </Link>
-          </div>
-        </div>
-      </header>
+      <PublicHeader />
 
       {/* Hero */}
       <section className="py-20 px-4">
@@ -391,53 +357,7 @@ export default function RootPage() {
       </section>
 
       {/* Footer */}
-      <footer className="border-t border-gray-200 py-10 px-4">
-        <div className="max-w-5xl mx-auto">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-8">
-            <div>
-              <h3 className="text-sm font-semibold text-gray-900 mb-3">求職者向け</h3>
-              <nav className="flex flex-col gap-2">
-                <Link href="/ai-interview" className="text-xs text-gray-500 hover:text-gray-700">AI面接練習</Link>
-                <Link href="/explore" className="text-xs text-gray-500 hover:text-gray-700">求人を探す</Link>
-                <Link href="/engineer-jobs" className="text-xs text-gray-500 hover:text-gray-700">エンジニア求人</Link>
-                <Link href="/remote-jobs" className="text-xs text-gray-500 hover:text-gray-700">リモート求人</Link>
-                <Link href="/career-change" className="text-xs text-gray-500 hover:text-gray-700">転職サポート</Link>
-              </nav>
-            </div>
-            <div>
-              <h3 className="text-sm font-semibold text-gray-900 mb-3">企業向け</h3>
-              <nav className="flex flex-col gap-2">
-                <Link href="/for-companies" className="text-xs text-gray-500 hover:text-gray-700">AI採用支援</Link>
-                <Link href="/pricing" className="text-xs text-gray-500 hover:text-gray-700">料金プラン</Link>
-                <Link href="/cases" className="text-xs text-gray-500 hover:text-gray-700">導入事例</Link>
-              </nav>
-            </div>
-            <div>
-              <h3 className="text-sm font-semibold text-gray-900 mb-3">サポート</h3>
-              <nav className="flex flex-col gap-2">
-                <Link href="/help" className="text-xs text-gray-500 hover:text-gray-700">ヘルプ</Link>
-                <Link href="/blog" className="text-xs text-gray-500 hover:text-gray-700">ブログ</Link>
-                <Link href="/careers" className="text-xs text-gray-500 hover:text-gray-700">採用情報</Link>
-                <Link href="/security" className="text-xs text-gray-500 hover:text-gray-700">セキュリティ</Link>
-              </nav>
-            </div>
-            <div>
-              <h3 className="text-sm font-semibold text-gray-900 mb-3">法的情報</h3>
-              <nav className="flex flex-col gap-2">
-                <Link href="/terms" className="text-xs text-gray-500 hover:text-gray-700">利用規約</Link>
-                <Link href="/privacy" className="text-xs text-gray-500 hover:text-gray-700">プライバシーポリシー</Link>
-                <Link href="/legal" className="text-xs text-gray-500 hover:text-gray-700">特定商取引法</Link>
-              </nav>
-            </div>
-          </div>
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-6 border-t border-gray-100">
-            <div className="flex items-center gap-2">
-              <Logo size="header" iconOnly showBrandName />
-            </div>
-            <p className="text-xs text-gray-400">&copy; 2026 Michibiki. All rights reserved.</p>
-          </div>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 }

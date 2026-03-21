@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { Sidebar } from "@/components/ExploreHeader";
+import PublicHeader from "@/components/PublicHeader";
+import Footer from "@/components/Footer";
 import Link from "next/link";
 
 const plans = [
@@ -107,17 +108,9 @@ export default function PricingPage() {
   const [openFaq, setOpenFaq] = useState<number | null>(null);
 
   return (
-    <>
-      <Sidebar />
-      <main className="ml-[96px] min-h-screen bg-gray-50">
-        {/* Breadcrumb */}
-        <div className="bg-white border-b border-gray-200 px-8 py-4">
-          <div className="flex items-center gap-2 text-sm text-gray-500">
-            <Link href="/" className="hover:text-indigo-600 transition-colors">ホーム</Link>
-            <span>/</span>
-            <span className="text-gray-900 font-medium">料金プラン</span>
-          </div>
-        </div>
+    <div className="min-h-screen bg-gray-50">
+      <PublicHeader />
+      <main>
 
         <div className="max-w-5xl mx-auto px-8 py-12">
           {/* Header */}
@@ -238,6 +231,7 @@ export default function PricingPage() {
           </section>
         </div>
       </main>
-    </>
+      <Footer />
+    </div>
   );
 }

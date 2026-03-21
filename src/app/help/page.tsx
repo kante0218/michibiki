@@ -4,7 +4,8 @@ import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useAuth } from "@/lib/AuthContext";
 import { supabase } from "@/lib/supabase";
-import Logo from "@/components/Logo";
+import PublicHeader from "@/components/PublicHeader";
+import Footer from "@/components/Footer";
 
 const categories = [
   {
@@ -285,32 +286,7 @@ export default function HelpPage() {
         </div>
       )}
 
-      {/* Header */}
-      <header className="border-b border-gray-200 bg-white sticky top-0 z-50">
-        <div className="flex items-center justify-between px-4 py-3 max-w-screen-2xl mx-auto">
-          <div className="flex items-center gap-6">
-            <Link href="/" className="flex items-center gap-2">
-              <Logo size="xs" />
-              <span className="font-semibold text-gray-900 text-sm hidden sm:inline">Michibiki</span>
-            </Link>
-            <nav className="hidden md:flex items-center gap-1">
-              <Link href="/" className="text-sm text-gray-500 hover:text-gray-900 hover:bg-gray-50 px-3 py-1.5 rounded-md transition-colors">ホーム</Link>
-              <Link href="/explore" className="text-sm text-gray-500 hover:text-gray-900 hover:bg-gray-50 px-3 py-1.5 rounded-md transition-colors">求人を探す</Link>
-              <Link href="/help" className="text-sm text-indigo-600 bg-indigo-50 px-3 py-1.5 rounded-md font-medium">ヘルプ</Link>
-            </nav>
-          </div>
-          <div className="flex items-center gap-3">
-            {user ? (
-              <Link href="/home" className="text-sm text-gray-700 hover:text-gray-900 px-3 py-1.5 rounded-md border border-gray-200 hover:border-gray-300 transition-colors">ダッシュボード</Link>
-            ) : (
-              <>
-                <Link href="/login" className="text-sm text-gray-700 hover:text-gray-900 px-3 py-1.5 rounded-md border border-gray-200 hover:border-gray-300 transition-colors">ログイン</Link>
-                <Link href="/signup" className="text-sm text-white bg-indigo-600 hover:bg-indigo-700 px-4 py-1.5 rounded-md transition-colors font-medium">登録する</Link>
-              </>
-            )}
-          </div>
-        </div>
-      </header>
+      <PublicHeader />
 
       {/* Hero with search */}
       <section className="bg-gradient-to-b from-indigo-50 to-white py-16">
@@ -451,17 +427,7 @@ export default function HelpPage() {
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="border-t border-gray-200 py-8">
-        <div className="max-w-6xl mx-auto px-4 flex flex-col md:flex-row items-center justify-between gap-4">
-          <p className="text-sm text-gray-500">&copy; 2026 Michibiki 導 株式会社</p>
-          <div className="flex items-center gap-6">
-            <Link href="/security" className="text-sm text-gray-500 hover:text-gray-700 transition-colors">セキュリティ</Link>
-            <Link href="/privacy" className="text-sm text-gray-500 hover:text-gray-700 transition-colors">プライバシーポリシー</Link>
-            <Link href="/terms" className="text-sm text-gray-500 hover:text-gray-700 transition-colors">利用規約</Link>
-          </div>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 }

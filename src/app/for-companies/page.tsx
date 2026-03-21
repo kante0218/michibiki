@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import Logo from "@/components/Logo";
+import PublicHeader from "@/components/PublicHeader";
+import Footer from "@/components/Footer";
 
 export const metadata: Metadata = {
   title: "企業向けAI採用支援 - 採用コスト削減・ミスマッチ防止",
@@ -44,21 +45,7 @@ const benefits = [
 export default function ForCompaniesPage() {
   return (
     <div className="min-h-screen bg-white">
-      <header className="border-b border-gray-200 bg-white sticky top-0 z-50">
-        <div className="flex items-center justify-between px-4 py-3 max-w-screen-2xl mx-auto">
-          <Link href="/" className="flex items-center gap-2">
-            <Logo size="header" iconOnly showBrandName />
-          </Link>
-          <div className="flex items-center gap-3">
-            <Link href="/login" className="text-sm text-gray-600 hover:text-gray-900 px-3 py-1.5 rounded-md transition-colors">
-              ログイン
-            </Link>
-            <Link href="/signup" className="text-sm text-white bg-indigo-600 hover:bg-indigo-700 px-4 py-2 rounded-lg transition-colors font-medium">
-              無料で始める
-            </Link>
-          </div>
-        </div>
-      </header>
+      <PublicHeader />
 
       <section className="py-16 md:py-24 px-4 bg-gradient-to-b from-indigo-50/50 to-white">
         <div className="max-w-4xl mx-auto text-center">
@@ -145,20 +132,7 @@ export default function ForCompaniesPage() {
         </div>
       </section>
 
-      <footer className="border-t border-gray-200 py-8 px-4">
-        <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
-          <Logo size="header" iconOnly showBrandName />
-          <nav className="flex flex-wrap justify-center gap-4 text-xs text-gray-400">
-            <Link href="/explore" className="hover:text-gray-600">求人を探す</Link>
-            <Link href="/ai-interview" className="hover:text-gray-600">AI面接練習</Link>
-            <Link href="/pricing" className="hover:text-gray-600">料金</Link>
-            <Link href="/cases" className="hover:text-gray-600">導入事例</Link>
-            <Link href="/terms" className="hover:text-gray-600">利用規約</Link>
-            <Link href="/privacy" className="hover:text-gray-600">プライバシー</Link>
-          </nav>
-          <p className="text-xs text-gray-400">&copy; 2026 Michibiki</p>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 }

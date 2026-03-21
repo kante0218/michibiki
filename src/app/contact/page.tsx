@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import Logo from "@/components/Logo";
+import PublicHeader from "@/components/PublicHeader";
+import Footer from "@/components/Footer";
 
 export default function ContactPage() {
   const [form, setForm] = useState({
@@ -61,15 +62,7 @@ export default function ContactPage() {
 
   return (
     <div className="min-h-screen bg-white">
-      <header className="border-b border-gray-200 bg-white sticky top-0 z-50">
-        <div className="flex items-center justify-between px-4 py-3 max-w-screen-2xl mx-auto">
-          <Link href="/" className="flex items-center gap-2"><Logo size="header" iconOnly showBrandName /></Link>
-          <div className="flex items-center gap-3">
-            <Link href="/pricing" className="text-sm text-gray-600 hover:text-gray-900 px-3 py-1.5 rounded-md transition-colors">料金プラン</Link>
-            <Link href="/signup" className="text-sm text-white bg-indigo-600 hover:bg-indigo-700 px-4 py-2 rounded-lg transition-colors font-medium">無料で始める</Link>
-          </div>
-        </div>
-      </header>
+      <PublicHeader />
 
       <div className="max-w-5xl mx-auto px-4 py-12">
         <div className="grid md:grid-cols-2 gap-12">
@@ -185,6 +178,7 @@ export default function ContactPage() {
           </div>
         </div>
       </div>
+      <Footer />
     </div>
   );
 }
