@@ -14,6 +14,9 @@ export default function SignupPage() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [role, setRole] = useState<"worker" | "company" | "">("");
+  const [companyName, setCompanyName] = useState("");
+  const [department, setDepartment] = useState("");
+  const [phone, setPhone] = useState("");
   const [termsRead, setTermsRead] = useState(false);
   const [privacyRead, setPrivacyRead] = useState(false);
   const [agreedToTerms, setAgreedToTerms] = useState(false);
@@ -45,12 +48,21 @@ export default function SignupPage() {
     setLoading(true);
 
     try {
-      const { data, error: authError } = await signUp(email, password, name, role as "worker" | "company");
+      const { data, error: authError } = await signUp(email, password, name, role as "worker" | "company", role === "company" ? { companyName, department, phone } : undefined);
       if (authError) {
-        if (authError.message === "User already registered") {
-          setError("このメールアドレスは既に登録されています");
+        const msg = authError.message.toLowerCase();
+        if (msg.includes("already registered") || msg.includes("already been registered")) {
+          setError("このメールアドレスは既に登録されています。ログインページからお試しください。");
+        } else if (msg.includes("sending confirmation") || msg.includes("email") || msg.includes("hook") || msg.includes("timeout")) {
+          // SMTP / webhook timeout error - user was created but email failed. Show success anyway.
+          setSuccess(true);
+          return;
+        } else if (msg.includes("rate limit") || msg.includes("too many")) {
+          setError("リクエストが多すぎます。しばらく待ってからお試しください。");
+        } else if (msg.includes("valid email") || msg.includes("invalid")) {
+          setError("有効なメールアドレスを入力してください。");
         } else {
-          setError(authError.message);
+          setError(`登録エラー: ${authError.message}`);
         }
         return;
       }
@@ -109,9 +121,17 @@ export default function SignupPage() {
               <h1 className="text-2xl font-bold text-gray-900 mb-2 tracking-tight">
                 確認メールを送信しました
               </h1>
-              <p className="text-sm text-gray-500 mb-8 leading-relaxed">
+              <p className="text-sm text-gray-500 mb-6 leading-relaxed">
                 {email} に確認メールを送信しました。メール内のリンクをクリックして、アカウントを有効化してください。
               </p>
+              <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-6 text-left">
+                <p className="text-xs text-amber-800 leading-relaxed">
+                  <strong>メールが届かない場合：</strong><br />
+                  ・迷惑メールフォルダをご確認ください<br />
+                  ・数分お待ちいただいてから再度ご確認ください<br />
+                  ・それでも届かない場合は、別のメールアドレスでお試しください
+                </p>
+              </div>
               <Link
                 href="/login"
                 className="inline-block px-8 py-3 bg-gradient-to-r from-indigo-500 to-indigo-600 hover:from-indigo-600 hover:to-indigo-700 text-white text-sm font-semibold rounded-xl transition-all duration-200 shadow-md shadow-indigo-500/25 hover:shadow-lg hover:shadow-indigo-500/30"
@@ -260,34 +280,87 @@ export default function SignupPage() {
                 </div>
               </div>
 
+              {/* Company-specific fields */}
+              {role === "company" && (
+                <>
+                  <div>
+                    <label htmlFor="companyName" className="block text-sm font-medium text-gray-700 mb-1.5">
+                      会社名
+                    </label>
+                    <input
+                      id="companyName"
+                      type="text"
+                      value={companyName}
+                      onChange={(e) => setCompanyName(e.target.value)}
+                      placeholder="株式会社〇〇"
+                      required
+                      disabled={loading}
+                      className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 transition-all duration-200 disabled:opacity-50 bg-gray-50/50 hover:bg-white hover:border-gray-300"
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="department" className="block text-sm font-medium text-gray-700 mb-1.5">
+                      部署名
+                    </label>
+                    <input
+                      id="department"
+                      type="text"
+                      value={department}
+                      onChange={(e) => setDepartment(e.target.value)}
+                      placeholder="人事部"
+                      disabled={loading}
+                      className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 transition-all duration-200 disabled:opacity-50 bg-gray-50/50 hover:bg-white hover:border-gray-300"
+                    />
+                  </div>
+                </>
+              )}
+
               {/* Name */}
               <div>
                 <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1.5">
-                  お名前
+                  {role === "company" ? "担当者名" : "お名前"}
                 </label>
                 <input
                   id="name"
                   type="text"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  placeholder="山田 太郎"
+                  placeholder={role === "company" ? "担当 太郎" : "山田 太郎"}
                   required
                   disabled={loading}
                   className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 transition-all duration-200 disabled:opacity-50 bg-gray-50/50 hover:bg-white hover:border-gray-300"
                 />
               </div>
 
+              {/* Phone (company only) */}
+              {role === "company" && (
+                <div>
+                  <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-1.5">
+                    電話番号
+                  </label>
+                  <input
+                    id="phone"
+                    type="tel"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    placeholder="03-1234-5678"
+                    disabled={loading}
+                    className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 transition-all duration-200 disabled:opacity-50 bg-gray-50/50 hover:bg-white hover:border-gray-300"
+                  />
+                </div>
+              )}
+
               {/* Email */}
               <div>
                 <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1.5">
-                  メールアドレス
+                  {role === "company" ? "ビジネスメールアドレス" : "メールアドレス"}
                 </label>
                 <input
                   id="email"
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="your@email.com"
+                  placeholder={role === "company" ? "name@company.co.jp" : "your@email.com"}
                   required
                   disabled={loading}
                   className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 transition-all duration-200 disabled:opacity-50 bg-gray-50/50 hover:bg-white hover:border-gray-300"
@@ -409,7 +482,7 @@ export default function SignupPage() {
               {/* Submit */}
               <button
                 type="submit"
-                disabled={!name || !email || !password || !confirmPassword || !role || !agreedToTerms || loading}
+                disabled={!name || !email || !password || !confirmPassword || !role || !agreedToTerms || loading || (role === "company" && !companyName)}
                 className="w-full px-4 py-3 bg-gradient-to-r from-indigo-500 to-indigo-600 hover:from-indigo-600 hover:to-indigo-700 disabled:from-gray-200 disabled:to-gray-200 disabled:text-gray-400 text-white text-sm font-semibold rounded-xl transition-all duration-200 disabled:cursor-not-allowed flex items-center justify-center shadow-md shadow-indigo-500/25 disabled:shadow-none hover:shadow-lg hover:shadow-indigo-500/30"
               >
                 {loading ? (

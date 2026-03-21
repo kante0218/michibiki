@@ -1,14 +1,21 @@
 import { supabase } from "./supabase";
 
-export async function signUp(email: string, password: string, fullName: string, role: "worker" | "company") {
+export async function signUp(email: string, password: string, fullName: string, role: "worker" | "company", companyData?: { companyName: string; department: string; phone: string }) {
+  const metadata: Record<string, string> = {
+    full_name: fullName,
+    role,
+  };
+  if (role === "company" && companyData) {
+    metadata.company_name = companyData.companyName;
+    metadata.department = companyData.department;
+    metadata.phone = companyData.phone;
+  }
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
     options: {
-      data: {
-        full_name: fullName,
-        role,
-      },
+      data: metadata,
+      emailRedirectTo: `${window.location.origin}/auth/callback`,
     },
   });
   return { data, error };
