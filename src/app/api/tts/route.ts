@@ -8,12 +8,21 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "text is required" }, { status: 400 });
     }
 
+    // Limit text length to prevent resource exhaustion
+    if (text.length > 2000) {
+      return NextResponse.json({ error: "Text too long (max 2000 chars)" }, { status: 400 });
+    }
+
+    // Whitelist allowed voices
+    const allowedVoices = ["ja-JP-NanamiNeural", "ja-JP-KeitaNeural"];
+    const safeVoice = allowedVoices.includes(voice) ? voice : "ja-JP-NanamiNeural";
+
     // Dynamic import to use the compiled JS output (avoids TS stripping issues)
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     const { tts } = require("edge-tts/out/index.js");
 
     const audioBuffer: Buffer = await tts(text, {
-      voice: voice || "ja-JP-NanamiNeural", // Natural female Japanese voice
+      voice: safeVoice,
       rate: "-5%",  // Slightly slower for clarity
       pitch: "+0Hz",
     });

@@ -35,9 +35,21 @@ export default function SignupPage() {
       return;
     }
 
-    if (password.length < 6) {
-      setError("パスワードは6文字以上で入力してください");
+    if (password.length < 10) {
+      setError("パスワードは10文字以上で入力してください");
       return;
+    }
+
+    {
+      let kinds = 0;
+      if (/[a-z]/.test(password)) kinds++;
+      if (/[A-Z]/.test(password)) kinds++;
+      if (/[0-9]/.test(password)) kinds++;
+      if (/[^a-zA-Z0-9]/.test(password)) kinds++;
+      if (kinds < 2) {
+        setError("パスワードには英小文字・英大文字・数字・記号のうち2種類以上を含めてください");
+        return;
+      }
     }
 
     if (!role) {
@@ -377,7 +389,7 @@ export default function SignupPage() {
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder="6文字以上"
+                  placeholder="10文字以上（英大文字・小文字・数字・記号のうち2種類以上）"
                   required
                   disabled={loading}
                   className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 transition-all duration-200 disabled:opacity-50 bg-gray-50/50 hover:bg-white hover:border-gray-300"

@@ -64,8 +64,9 @@ export async function POST(req: NextRequest) {
         .single();
 
       if (interviewError || !interview) {
+        console.error("Interview fetch error:", interviewError?.message);
         return NextResponse.json(
-          { error: interviewError?.message || "Interview not found" },
+          { error: "Interview not found" },
           { status: 404 }
         );
       }

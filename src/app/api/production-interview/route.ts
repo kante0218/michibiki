@@ -142,7 +142,8 @@ JSONのみを出力してください。`,
         .single();
 
       if (updateError) {
-        return NextResponse.json({ error: updateError.message }, { status: 500 });
+        console.error("DB update error:", updateError.message);
+        return NextResponse.json({ error: "Internal server error" }, { status: 500 });
       }
 
       return NextResponse.json({
@@ -177,7 +178,8 @@ JSONのみを出力してください。`,
         .single();
 
       if (updateError) {
-        return NextResponse.json({ error: updateError.message }, { status: 500 });
+        console.error("DB update error:", updateError.message);
+        return NextResponse.json({ error: "Internal server error" }, { status: 500 });
       }
 
       return NextResponse.json({ interview });
