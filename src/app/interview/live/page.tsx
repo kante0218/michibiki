@@ -188,6 +188,11 @@ function LiveInterviewContent() {
   const ttsAudioRef = useRef<HTMLAudioElement | null>(null);
   const [isSpeaking, setIsSpeaking] = useState(false);
 
+  // Voice settings (default to tuned Edge TTS interviewer voice)
+  const [voiceProvider] = useState<"edge" | "voicevox">("edge");
+  const [edgePreset] = useState("keita-interviewer");
+  const [voicevoxSpeaker] = useState("ryusei");
+
   // Fallback text input
   const [fallbackText, setFallbackText] = useState("");
 
@@ -367,11 +372,21 @@ function LiveInterviewContent() {
       }
       setIsSpeaking(true);
 
-      const res = await fetch("/api/tts", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text }),
-      });
+      let res: Response;
+
+      if (voiceProvider === "voicevox") {
+        res = await fetch("/api/tts/voicevox", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ text, speaker: voicevoxSpeaker }),
+        });
+      } else {
+        res = await fetch("/api/tts", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ text, preset: edgePreset }),
+        });
+      }
 
       if (!res.ok) {
         if (window.speechSynthesis) {
@@ -412,7 +427,7 @@ function LiveInterviewContent() {
         }
       } catch { /* ignore */ }
     }
-  }, []);
+  }, [voiceProvider, edgePreset, voicevoxSpeaker]);
 
   const stopSpeaking = useCallback(() => {
     if (ttsAudioRef.current) {

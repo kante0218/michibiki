@@ -143,6 +143,12 @@ function PracticeInterviewContent() {
   // Error
   const [error, setError] = useState("");
 
+  // Voice settings
+  const [voiceProvider, setVoiceProvider] = useState<"edge" | "voicevox">("edge");
+  const [edgePreset, setEdgePreset] = useState("keita-interviewer");
+  const [voicevoxSpeaker, setVoicevoxSpeaker] = useState("ryusei");
+  const [isTestingVoice, setIsTestingVoice] = useState(false);
+
 
 
   // Screen recording state
@@ -745,7 +751,7 @@ function PracticeInterviewContent() {
     }
   };
 
-  // Text-to-Speech: Edge TTS (natural neural voice)
+  // Text-to-Speech with provider selection
   const ttsAudioRef = useRef<HTMLAudioElement | null>(null);
   const [isSpeaking, setIsSpeaking] = useState(false);
 
@@ -758,11 +764,21 @@ function PracticeInterviewContent() {
       }
       setIsSpeaking(true);
 
-      const res = await fetch("/api/tts", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text }),
-      });
+      let res: Response;
+
+      if (voiceProvider === "voicevox") {
+        res = await fetch("/api/tts/voicevox", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ text, speaker: voicevoxSpeaker }),
+        });
+      } else {
+        res = await fetch("/api/tts", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ text, preset: edgePreset }),
+        });
+      }
 
       if (!res.ok) {
         // Fallback to browser TTS
@@ -805,7 +821,7 @@ function PracticeInterviewContent() {
         }
       } catch {}
     }
-  }, []);
+  }, [voiceProvider, edgePreset, voicevoxSpeaker]);
 
   const stopSpeaking = useCallback(() => {
     if (ttsAudioRef.current) {
@@ -1545,6 +1561,141 @@ function PracticeInterviewContent() {
                 </div>
               </div>
             )}
+
+            {/* Voice Selection */}
+            <div className="bg-white rounded-xl border border-gray-200 p-5 mb-6 max-w-lg mx-auto">
+              <h3 className="text-gray-900 text-sm font-semibold mb-3 flex items-center gap-2">
+                <svg className="w-4 h-4 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+                </svg>
+                面接官の声を選択
+              </h3>
+
+              {/* Provider toggle */}
+              <div className="flex gap-2 mb-4">
+                <button
+                  onClick={() => setVoiceProvider("edge")}
+                  className={`flex-1 text-xs py-2 px-3 rounded-lg border transition-colors ${
+                    voiceProvider === "edge"
+                      ? "bg-indigo-50 border-indigo-300 text-indigo-700 font-medium"
+                      : "bg-gray-50 border-gray-200 text-gray-500 hover:bg-gray-100"
+                  }`}
+                >
+                  Edge TTS（高速）
+                </button>
+                <button
+                  onClick={() => setVoiceProvider("voicevox")}
+                  className={`flex-1 text-xs py-2 px-3 rounded-lg border transition-colors ${
+                    voiceProvider === "voicevox"
+                      ? "bg-indigo-50 border-indigo-300 text-indigo-700 font-medium"
+                      : "bg-gray-50 border-gray-200 text-gray-500 hover:bg-gray-100"
+                  }`}
+                >
+                  VOICEVOX（自然な声）
+                </button>
+              </div>
+
+              {/* Voice selection */}
+              {voiceProvider === "edge" ? (
+                <div className="space-y-2">
+                  {[
+                    { id: "keita-interviewer", label: "男性面接官（落ち着いた声）", desc: "低めのトーン・ゆっくりペース" },
+                    { id: "nanami-interviewer", label: "女性面接官（丁寧な声）", desc: "落ち着いたトーン・丁寧な話し方" },
+                    { id: "keita-casual", label: "男性（カジュアル）", desc: "標準的な男性の声" },
+                    { id: "nanami-casual", label: "女性（カジュアル）", desc: "標準的な女性の声" },
+                  ].map((v) => (
+                    <label
+                      key={v.id}
+                      className={`flex items-center gap-3 p-2.5 rounded-lg border cursor-pointer transition-colors ${
+                        edgePreset === v.id
+                          ? "bg-indigo-50 border-indigo-200"
+                          : "bg-gray-50 border-gray-100 hover:bg-gray-100"
+                      }`}
+                    >
+                      <input
+                        type="radio"
+                        name="edgePreset"
+                        value={v.id}
+                        checked={edgePreset === v.id}
+                        onChange={() => setEdgePreset(v.id)}
+                        className="text-indigo-600 focus:ring-indigo-500"
+                      />
+                      <div>
+                        <span className="text-xs font-medium text-gray-800">{v.label}</span>
+                        <p className="text-[10px] text-gray-500">{v.desc}</p>
+                      </div>
+                    </label>
+                  ))}
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  <p className="text-[10px] text-gray-500 mb-2">
+                    VOICEVOXは日本製の高品質音声合成エンジンです。より自然で表情豊かな声が特徴です。
+                    <br />※ 生成に数秒かかる場合があります
+                  </p>
+                  {[
+                    { id: "ryusei", label: "青山龍星", desc: "落ち着いた男性の声・面接官向き", gender: "male" },
+                    { id: "takehiro", label: "玄野武宏", desc: "穏やかな男性の声", gender: "male" },
+                    { id: "shikoku-normal", label: "四国めたん", desc: "はっきりした女性の声", gender: "female" },
+                    { id: "tsumugi", label: "春日部つむぎ", desc: "明るい女性の声", gender: "female" },
+                    { id: "himari", label: "冥鳴ひまり", desc: "柔らかい女性の声", gender: "female" },
+                  ].map((v) => (
+                    <label
+                      key={v.id}
+                      className={`flex items-center gap-3 p-2.5 rounded-lg border cursor-pointer transition-colors ${
+                        voicevoxSpeaker === v.id
+                          ? "bg-indigo-50 border-indigo-200"
+                          : "bg-gray-50 border-gray-100 hover:bg-gray-100"
+                      }`}
+                    >
+                      <input
+                        type="radio"
+                        name="voicevoxSpeaker"
+                        value={v.id}
+                        checked={voicevoxSpeaker === v.id}
+                        onChange={() => setVoicevoxSpeaker(v.id)}
+                        className="text-indigo-600 focus:ring-indigo-500"
+                      />
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-medium text-gray-800">{v.label}</span>
+                        <span className={`text-[9px] px-1.5 py-0.5 rounded-full ${
+                          v.gender === "male" ? "bg-blue-100 text-blue-600" : "bg-pink-100 text-pink-600"
+                        }`}>
+                          {v.gender === "male" ? "男性" : "女性"}
+                        </span>
+                      </div>
+                      <p className="text-[10px] text-gray-500 ml-auto">{v.desc}</p>
+                    </label>
+                  ))}
+                </div>
+              )}
+
+              {/* Test voice button */}
+              <button
+                onClick={async () => {
+                  setIsTestingVoice(true);
+                  await speakQuestion("こんにちは。本日は面接にお越しいただきありがとうございます。リラックスしてお答えください。");
+                  setIsTestingVoice(false);
+                }}
+                disabled={isTestingVoice || isSpeaking}
+                className="mt-3 w-full text-xs py-2 px-4 rounded-lg border border-indigo-200 text-indigo-600 hover:bg-indigo-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              >
+                {isTestingVoice || isSpeaking ? (
+                  <>
+                    <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-indigo-600" />
+                    再生中...
+                  </>
+                ) : (
+                  <>
+                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    声をテスト再生
+                  </>
+                )}
+              </button>
+            </div>
 
             <div className="bg-white rounded-xl border border-gray-200 p-5 mb-6 max-w-lg mx-auto">
               <h3 className="text-gray-900 text-sm font-semibold mb-3">面接の進め方</h3>
