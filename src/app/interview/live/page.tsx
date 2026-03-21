@@ -189,9 +189,10 @@ function LiveInterviewContent() {
   const [isSpeaking, setIsSpeaking] = useState(false);
 
   // Voice settings (default to tuned Edge TTS interviewer voice)
-  const [voiceProvider] = useState<"edge" | "voicevox">("edge");
+  const [voiceProvider] = useState<"edge" | "voicevox" | "google">("edge");
   const [edgePreset] = useState("keita-interviewer");
   const [voicevoxSpeaker] = useState("ryusei");
+  const [googleVoice] = useState("wavenet-male-d");
 
   // Fallback text input
   const [fallbackText, setFallbackText] = useState("");
@@ -374,7 +375,13 @@ function LiveInterviewContent() {
 
       let res: Response;
 
-      if (voiceProvider === "voicevox") {
+      if (voiceProvider === "google") {
+        res = await fetch("/api/tts/google", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ text, voice: googleVoice }),
+        });
+      } else if (voiceProvider === "voicevox") {
         res = await fetch("/api/tts/voicevox", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -427,7 +434,7 @@ function LiveInterviewContent() {
         }
       } catch { /* ignore */ }
     }
-  }, [voiceProvider, edgePreset, voicevoxSpeaker]);
+  }, [voiceProvider, edgePreset, voicevoxSpeaker, googleVoice]);
 
   const stopSpeaking = useCallback(() => {
     if (ttsAudioRef.current) {

@@ -144,9 +144,11 @@ function PracticeInterviewContent() {
   const [error, setError] = useState("");
 
   // Voice settings
-  const [voiceProvider, setVoiceProvider] = useState<"edge" | "voicevox">("edge");
+  const [voiceProvider, setVoiceProvider] = useState<"edge" | "voicevox" | "google">("edge");
   const [edgePreset, setEdgePreset] = useState("keita-interviewer");
   const [voicevoxSpeaker, setVoicevoxSpeaker] = useState("ryusei");
+  const [googleVoice, setGoogleVoice] = useState("wavenet-male-d");
+  const [googleTtsAvailable, setGoogleTtsAvailable] = useState(false);
   const [isTestingVoice, setIsTestingVoice] = useState(false);
 
 
@@ -179,6 +181,14 @@ function PracticeInterviewContent() {
       router.push("/login");
     }
   }, [authLoading, user, router]);
+
+  // Check Google TTS availability
+  useEffect(() => {
+    fetch("/api/tts/google")
+      .then(res => res.json())
+      .then(data => { if (data.isConfigured) setGoogleTtsAvailable(true); })
+      .catch(() => {});
+  }, []);
 
   // Timer
   useEffect(() => {
@@ -766,7 +776,13 @@ function PracticeInterviewContent() {
 
       let res: Response;
 
-      if (voiceProvider === "voicevox") {
+      if (voiceProvider === "google") {
+        res = await fetch("/api/tts/google", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ text, voice: googleVoice }),
+        });
+      } else if (voiceProvider === "voicevox") {
         res = await fetch("/api/tts/voicevox", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -821,7 +837,7 @@ function PracticeInterviewContent() {
         }
       } catch {}
     }
-  }, [voiceProvider, edgePreset, voicevoxSpeaker]);
+  }, [voiceProvider, edgePreset, voicevoxSpeaker, googleVoice]);
 
   const stopSpeaking = useCallback(() => {
     if (ttsAudioRef.current) {
@@ -942,8 +958,10 @@ function PracticeInterviewContent() {
       if (videoRef.current && streamRef.current) {
         videoRef.current.srcObject = streamRef.current;
       }
-      // Start automatic interview recording
+      // Start automatic interview recording from the very beginning
       startInterviewRecording();
+      // Auto-start speech recognition so user doesn't need to press anything
+      handleStartRecording();
     }, 200);
 
     try {
@@ -1059,8 +1077,11 @@ function PracticeInterviewContent() {
       setConversationHistory(data.conversationHistory || updatedHistory);
       setInterviewQuestionCount(newCount);
       setTranscript("");
+      setFallbackText("");
       // Auto-read the next question aloud
       speakQuestion(data.question);
+      // Auto-restart speech recognition for continuous recording
+      handleStartRecording();
     } catch {
       setError("AIからの応答に失敗しました。");
     } finally {
@@ -1394,72 +1415,122 @@ function PracticeInterviewContent() {
 
   // PHASE 2: Test Results
   if (phase === "test_result" && testEvaluation) {
+    const pct = testEvaluation.percentage;
+    const gradeColor = pct >= 80 ? "emerald" : pct >= 60 ? "indigo" : pct >= 40 ? "amber" : "red";
+    const gradeLabel = pct >= 80 ? "優秀" : pct >= 60 ? "良好" : pct >= 40 ? "平均" : "要改善";
+    const circumference = 2 * Math.PI * 54;
+    const strokeDashoffset = circumference - (pct / 100) * circumference;
+
     return (
-      <div className="min-h-screen bg-gray-50 flex flex-col">
+      <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white flex flex-col">
         <InterviewHeader subtitle="テスト結果" timerDisplay={timerDisplay} showQuestionCount={false} questionCount={0} maxQuestions={maxInterviewQuestions} />
         <div className="flex-1 flex items-start justify-center px-4 py-8">
           <div className="max-w-2xl w-full">
-            <div className="bg-white rounded-2xl border border-gray-200 p-8 mb-6 text-center">
-              <div className="w-24 h-24 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 text-white flex items-center justify-center mx-auto mb-4">
-                <span className="text-3xl font-bold">{testEvaluation.percentage}%</span>
+            {/* Score Hero Section */}
+            <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-8 mb-6">
+              <div className="flex items-center justify-center gap-8">
+                {/* Circular Progress */}
+                <div className="relative w-32 h-32 flex-shrink-0">
+                  <svg className="w-32 h-32 -rotate-90" viewBox="0 0 120 120">
+                    <circle cx="60" cy="60" r="54" fill="none" stroke="#f3f4f6" strokeWidth="8" />
+                    <circle
+                      cx="60" cy="60" r="54" fill="none"
+                      stroke={gradeColor === "emerald" ? "#10b981" : gradeColor === "indigo" ? "#6366f1" : gradeColor === "amber" ? "#f59e0b" : "#ef4444"}
+                      strokeWidth="8" strokeLinecap="round"
+                      strokeDasharray={circumference}
+                      strokeDashoffset={strokeDashoffset}
+                      className="transition-all duration-1000 ease-out"
+                    />
+                  </svg>
+                  <div className="absolute inset-0 flex flex-col items-center justify-center">
+                    <span className="text-3xl font-bold text-gray-900">{pct}%</span>
+                    <span className={`text-xs font-semibold text-${gradeColor}-600`}>{gradeLabel}</span>
+                  </div>
+                </div>
+
+                {/* Score Details */}
+                <div className="text-left">
+                  <h2 className="text-xl font-bold text-gray-900 mb-1">テスト完了</h2>
+                  <p className="text-sm text-gray-500 mb-3">
+                    {testEvaluation.totalScore}/{testEvaluation.maxScore}点 獲得
+                  </p>
+                  <div className="bg-gray-50 rounded-lg p-3">
+                    <p className="text-sm text-gray-700 leading-relaxed">{testEvaluation.evaluation}</p>
+                  </div>
+                </div>
               </div>
-              <h2 className="text-xl font-bold text-gray-900 mb-2">テスト完了！</h2>
-              <p className="text-gray-500 text-sm mb-4">
-                {testEvaluation.totalScore}/{testEvaluation.maxScore}点
-              </p>
-              <p className="text-gray-600 text-sm leading-relaxed">{testEvaluation.evaluation}</p>
             </div>
 
+            {/* Strengths & Weaknesses Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-              <div className="bg-white rounded-xl border border-gray-200 p-5">
-                <h3 className="text-sm font-semibold text-emerald-700 mb-3 flex items-center gap-2">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                  </svg>
-                  強み
-                </h3>
-                <ul className="space-y-2">
+              <div className="bg-white rounded-xl border border-emerald-100 shadow-sm overflow-hidden">
+                <div className="bg-emerald-50 px-5 py-3 border-b border-emerald-100">
+                  <h3 className="text-sm font-semibold text-emerald-800 flex items-center gap-2">
+                    <div className="w-5 h-5 rounded-full bg-emerald-500 flex items-center justify-center">
+                      <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                      </svg>
+                    </div>
+                    あなたの強み
+                  </h3>
+                </div>
+                <ul className="p-5 space-y-3">
                   {testEvaluation.strengths?.map((s, i) => (
-                    <li key={i} className="text-sm text-gray-600 flex items-start gap-2">
-                      <span className="text-emerald-400 mt-0.5">•</span> {s}
+                    <li key={i} className="text-sm text-gray-700 flex items-start gap-3">
+                      <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 mt-1.5 flex-shrink-0" />
+                      {s}
                     </li>
                   ))}
                 </ul>
               </div>
-              <div className="bg-white rounded-xl border border-gray-200 p-5">
-                <h3 className="text-sm font-semibold text-amber-700 mb-3 flex items-center gap-2">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01" />
-                  </svg>
-                  改善点
-                </h3>
-                <ul className="space-y-2">
+              <div className="bg-white rounded-xl border border-amber-100 shadow-sm overflow-hidden">
+                <div className="bg-amber-50 px-5 py-3 border-b border-amber-100">
+                  <h3 className="text-sm font-semibold text-amber-800 flex items-center gap-2">
+                    <div className="w-5 h-5 rounded-full bg-amber-500 flex items-center justify-center">
+                      <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 10l7-7m0 0l7 7m-7-7v18" />
+                      </svg>
+                    </div>
+                    改善ポイント
+                  </h3>
+                </div>
+                <ul className="p-5 space-y-3">
                   {testEvaluation.weaknesses?.map((w, i) => (
-                    <li key={i} className="text-sm text-gray-600 flex items-start gap-2">
-                      <span className="text-amber-400 mt-0.5">•</span> {w}
+                    <li key={i} className="text-sm text-gray-700 flex items-start gap-3">
+                      <div className="w-1.5 h-1.5 rounded-full bg-amber-400 mt-1.5 flex-shrink-0" />
+                      {w}
                     </li>
                   ))}
                 </ul>
               </div>
             </div>
 
-            <div className="bg-indigo-50 border border-indigo-200 rounded-xl p-6 text-center">
-              <h3 className="text-base font-semibold text-indigo-900 mb-2">次のステップ：ビデオ面接</h3>
-              <p className="text-sm text-indigo-700 mb-2">
-                テスト結果を踏まえて、AIがビデオ面接を行います。
-              </p>
-              <p className="text-xs text-indigo-500 mb-4">
-                カメラとマイクを使用します。質問が画面に表示されたら、声に出して回答してください。
-              </p>
-              <button
-                onClick={handleStartCameraSetup}
-                className="bg-indigo-600 text-white px-8 py-3 rounded-lg font-medium hover:bg-indigo-700 transition-colors inline-flex items-center gap-2"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                </svg>
-                ビデオ面接を開始する
-              </button>
+            {/* Next Step CTA */}
+            <div className="relative bg-gradient-to-r from-indigo-600 to-purple-600 rounded-2xl p-8 text-center text-white shadow-lg overflow-hidden">
+              <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48Y2lyY2xlIGN4PSIyMCIgY3k9IjIwIiByPSIxIiBmaWxsPSJyZ2JhKDI1NSwyNTUsMjU1LDAuMSkiLz48L3N2Zz4=')] opacity-50" />
+              <div className="relative">
+                <div className="w-12 h-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center mx-auto mb-4">
+                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                  </svg>
+                </div>
+                <h3 className="text-lg font-bold mb-2">次のステップ：ビデオ面接</h3>
+                <p className="text-sm text-white/80 mb-1">
+                  テスト結果を踏まえて、AIがあなたに合わせた面接を行います
+                </p>
+                <p className="text-xs text-white/60 mb-5">
+                  カメラ・マイクを使用 / 全{maxInterviewQuestions}問 / 録画は自動で開始されます
+                </p>
+                <button
+                  onClick={handleStartCameraSetup}
+                  className="bg-white text-indigo-700 px-10 py-3 rounded-xl font-bold hover:bg-indigo-50 transition-colors inline-flex items-center gap-2 shadow-md"
+                >
+                  ビデオ面接に進む
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                  </svg>
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -1572,35 +1643,47 @@ function PracticeInterviewContent() {
               </h3>
 
               {/* Provider toggle */}
-              <div className="flex gap-2 mb-4">
+              <div className="flex gap-1.5 mb-4">
                 <button
                   onClick={() => setVoiceProvider("edge")}
-                  className={`flex-1 text-xs py-2 px-3 rounded-lg border transition-colors ${
+                  className={`flex-1 text-[11px] py-2 px-2 rounded-lg border transition-colors ${
                     voiceProvider === "edge"
                       ? "bg-indigo-50 border-indigo-300 text-indigo-700 font-medium"
                       : "bg-gray-50 border-gray-200 text-gray-500 hover:bg-gray-100"
                   }`}
                 >
-                  Edge TTS（高速）
+                  Edge TTS
                 </button>
                 <button
                   onClick={() => setVoiceProvider("voicevox")}
-                  className={`flex-1 text-xs py-2 px-3 rounded-lg border transition-colors ${
+                  className={`flex-1 text-[11px] py-2 px-2 rounded-lg border transition-colors ${
                     voiceProvider === "voicevox"
                       ? "bg-indigo-50 border-indigo-300 text-indigo-700 font-medium"
                       : "bg-gray-50 border-gray-200 text-gray-500 hover:bg-gray-100"
                   }`}
                 >
-                  VOICEVOX（自然な声）
+                  VOICEVOX
                 </button>
+                {googleTtsAvailable && (
+                  <button
+                    onClick={() => setVoiceProvider("google")}
+                    className={`flex-1 text-[11px] py-2 px-2 rounded-lg border transition-colors ${
+                      voiceProvider === "google"
+                        ? "bg-indigo-50 border-indigo-300 text-indigo-700 font-medium"
+                        : "bg-gray-50 border-gray-200 text-gray-500 hover:bg-gray-100"
+                    }`}
+                  >
+                    Google HD
+                  </button>
+                )}
               </div>
 
               {/* Voice selection */}
               {voiceProvider === "edge" ? (
                 <div className="space-y-2">
                   {[
-                    { id: "keita-interviewer", label: "男性面接官（落ち着いた声）", desc: "低めのトーン・ゆっくりペース" },
-                    { id: "nanami-interviewer", label: "女性面接官（丁寧な声）", desc: "落ち着いたトーン・丁寧な話し方" },
+                    { id: "keita-interviewer", label: "男性面接官（落ち着いた声）", desc: "低めのトーン・ゆっくり" },
+                    { id: "nanami-interviewer", label: "女性面接官（丁寧な声）", desc: "落ち着いたトーン" },
                     { id: "keita-casual", label: "男性（カジュアル）", desc: "標準的な男性の声" },
                     { id: "nanami-casual", label: "女性（カジュアル）", desc: "標準的な女性の声" },
                   ].map((v) => (
@@ -1627,7 +1710,7 @@ function PracticeInterviewContent() {
                     </label>
                   ))}
                 </div>
-              ) : (
+              ) : voiceProvider === "voicevox" ? (
                 <div className="space-y-2">
                   <p className="text-[10px] text-gray-500 mb-2">
                     VOICEVOXは日本製の高品質音声合成エンジンです。より自然で表情豊かな声が特徴です。
@@ -1668,7 +1751,48 @@ function PracticeInterviewContent() {
                     </label>
                   ))}
                 </div>
-              )}
+              ) : voiceProvider === "google" ? (
+                <div className="space-y-2">
+                  <p className="text-[10px] text-gray-500 mb-2">
+                    Google Cloud TTSは最高品質の音声合成エンジンです。WaveNet・Neural2音声が利用できます。
+                  </p>
+                  {[
+                    { id: "wavenet-male-d", label: "男性B（落ち着いた声）", desc: "面接官向き", gender: "male" },
+                    { id: "wavenet-male-c", label: "男性A（深みのある声）", desc: "重厚なトーン", gender: "male" },
+                    { id: "neural2-male", label: "男性（Neural2）", desc: "最高品質", gender: "male" },
+                    { id: "wavenet-female-a", label: "女性A（落ち着いた声）", desc: "プロフェッショナル", gender: "female" },
+                    { id: "wavenet-female-b", label: "女性B（ハキハキした声）", desc: "明るいトーン", gender: "female" },
+                    { id: "neural2-female", label: "女性（Neural2）", desc: "最高品質", gender: "female" },
+                  ].map((v) => (
+                    <label
+                      key={v.id}
+                      className={`flex items-center gap-3 p-2.5 rounded-lg border cursor-pointer transition-colors ${
+                        googleVoice === v.id
+                          ? "bg-indigo-50 border-indigo-200"
+                          : "bg-gray-50 border-gray-100 hover:bg-gray-100"
+                      }`}
+                    >
+                      <input
+                        type="radio"
+                        name="googleVoice"
+                        value={v.id}
+                        checked={googleVoice === v.id}
+                        onChange={() => setGoogleVoice(v.id)}
+                        className="text-indigo-600 focus:ring-indigo-500"
+                      />
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-medium text-gray-800">{v.label}</span>
+                        <span className={`text-[9px] px-1.5 py-0.5 rounded-full ${
+                          v.gender === "male" ? "bg-blue-100 text-blue-600" : "bg-pink-100 text-pink-600"
+                        }`}>
+                          {v.gender === "male" ? "男性" : "女性"}
+                        </span>
+                      </div>
+                      <p className="text-[10px] text-gray-500 ml-auto">{v.desc}</p>
+                    </label>
+                  ))}
+                </div>
+              ) : null}
 
               {/* Test voice button */}
               <button
@@ -1702,11 +1826,11 @@ function PracticeInterviewContent() {
               <ul className="text-gray-600 text-xs space-y-2 text-left">
                 <li className="flex items-start gap-2">
                   <span className="text-indigo-500 mt-0.5">1.</span>
-                  AIが質問を画面に表示します
+                  面接開始と同時に録画・音声認識が自動で始まります
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-indigo-500 mt-0.5">2.</span>
-                  {cameraDenied ? "テキストで回答を入力してください" : "「録画開始」を押して声に出して回答、またはテキストで入力"}
+                  {cameraDenied ? "テキストで回答を入力してください" : "AIの質問に声で回答、またはテキストで入力"}
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-indigo-500 mt-0.5">3.</span>
@@ -1717,6 +1841,22 @@ function PracticeInterviewContent() {
                   全{maxInterviewQuestions}問で終了、AIが総合評価します
                 </li>
               </ul>
+            </div>
+
+            {/* Data sharing notice */}
+            <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6 max-w-lg mx-auto">
+              <div className="flex items-start gap-2">
+                <svg className="w-4 h-4 text-blue-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <div>
+                  <p className="text-xs font-medium text-blue-800 mb-1">録画データについて</p>
+                  <p className="text-[11px] text-blue-700 leading-relaxed">
+                    面接中の映像・音声・回答内容は全て記録され、応募先企業の採用判断に使用されます。
+                    面接開始後は最初から最後まで継続的に録画されます。
+                  </p>
+                </div>
+              </div>
             </div>
 
             <div className="text-center space-y-3 max-w-lg mx-auto">
@@ -1772,19 +1912,12 @@ function PracticeInterviewContent() {
               </div>
             </div>
             <div className="flex items-center gap-3">
-              {/* Always-on interview recording indicator */}
-              {interviewRecorderRef.current && (
-                <div className="flex items-center gap-1 px-2 py-0.5 bg-red-50 border border-red-200 rounded-md">
-                  <div className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
-                  <span className="text-[10px] text-red-600 font-medium">REC</span>
-                </div>
-              )}
-              {isRecording && (
-                <div className="flex items-center gap-1.5">
-                  <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
-                  <span className="text-xs text-red-500 font-mono">{formatTime(recordingSeconds)}</span>
-                </div>
-              )}
+              {/* Always-on recording indicator */}
+              <div className="flex items-center gap-1.5 px-2.5 py-1 bg-red-50 border border-red-200 rounded-lg">
+                <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
+                <span className="text-[10px] text-red-600 font-semibold">REC</span>
+                <span className="text-[10px] text-red-500 font-mono">{formatTime(timerSeconds)}</span>
+              </div>
               <span className="text-xs font-mono text-gray-500 bg-gray-100 px-2.5 py-1 rounded-lg">
                 {formatTime(timerSeconds)}
               </span>
@@ -1832,12 +1965,18 @@ function PracticeInterviewContent() {
                   className="w-full h-full object-cover"
                   style={{ transform: "scaleX(-1)" }}
                 />
-                {isRecording && (
-                  <div className="absolute top-4 left-4 flex items-center gap-2 bg-red-600/90 px-3 py-1.5 rounded-full">
-                    <div className="w-2.5 h-2.5 rounded-full bg-white animate-pulse" />
-                    <span className="text-xs text-white font-medium">REC {formatTime(recordingSeconds)}</span>
-                  </div>
-                )}
+                {/* Continuous recording indicator */}
+                <div className="absolute top-4 left-4 flex items-center gap-2 bg-red-600/90 px-3 py-1.5 rounded-full">
+                  <div className="w-2.5 h-2.5 rounded-full bg-white animate-pulse" />
+                  <span className="text-xs text-white font-medium">録画中</span>
+                </div>
+                {/* Data notice */}
+                <div className="absolute bottom-4 left-4 right-4 flex items-center gap-2 bg-black/60 backdrop-blur-sm px-3 py-2 rounded-lg">
+                  <svg className="w-3.5 h-3.5 text-white/80 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <span className="text-[10px] text-white/80">面接の全録画データは応募先企業に提供されます</span>
+                </div>
               </>
             ) : (
               <div className="text-center">
@@ -1919,60 +2058,43 @@ function PracticeInterviewContent() {
                     <div className="bg-gray-50 rounded-lg p-3 min-h-[60px] max-h-[120px] overflow-y-auto border border-gray-100">
                       {transcript ? (
                         <p className="text-gray-800 text-xs leading-relaxed">{transcript}</p>
-                      ) : isRecording ? (
-                        <p className="text-gray-400 text-xs animate-pulse">話してください...</p>
                       ) : (
-                        <p className="text-gray-400 text-xs">録画を開始して回答してください</p>
+                        <div className="flex items-center gap-2">
+                          <div className="flex gap-0.5">
+                            <div className="w-1 h-3 bg-indigo-400 rounded-full animate-pulse" style={{ animationDelay: "0ms" }} />
+                            <div className="w-1 h-4 bg-indigo-500 rounded-full animate-pulse" style={{ animationDelay: "150ms" }} />
+                            <div className="w-1 h-2 bg-indigo-400 rounded-full animate-pulse" style={{ animationDelay: "300ms" }} />
+                          </div>
+                          <p className="text-gray-400 text-xs">音声を聞き取っています...</p>
+                        </div>
                       )}
                     </div>
 
-                    {/* Fallback text input */}
-                    {!isRecording && (
-                      <div className="mt-2">
-                        <textarea
-                          value={fallbackText}
-                          onChange={(e) => setFallbackText(e.target.value)}
-                          placeholder="テキストで入力..."
-                          rows={2}
-                          className="w-full px-3 py-2 rounded-lg border border-gray-200 text-xs text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 resize-none"
-                        />
-                      </div>
-                    )}
+                    {/* Fallback text input - always available */}
+                    <div className="mt-2">
+                      <textarea
+                        value={fallbackText}
+                        onChange={(e) => setFallbackText(e.target.value)}
+                        placeholder="テキストでも入力できます..."
+                        rows={2}
+                        className="w-full px-3 py-2 rounded-lg border border-gray-200 text-xs text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 resize-none"
+                      />
+                    </div>
                   </div>
                 </div>
 
                 {/* Controls - fixed at bottom */}
                 <div className="p-4 border-t border-gray-100 flex-shrink-0">
-                  <div className="flex items-center gap-2 mb-2">
-                    {!isRecording ? (
-                      <button
-                        onClick={handleStartRecording}
-                        className="flex-1 bg-red-500 hover:bg-red-600 text-white py-2.5 rounded-xl text-xs font-semibold transition-colors flex items-center justify-center gap-1.5"
-                      >
-                        <div className="w-3 h-3 rounded-full bg-white" />
-                        録画開始
-                      </button>
-                    ) : (
-                      <button
-                        onClick={handleStopRecording}
-                        className="flex-1 bg-gray-500 hover:bg-gray-600 text-white py-2.5 rounded-xl text-xs font-semibold transition-colors flex items-center justify-center gap-1.5"
-                      >
-                        <div className="w-3 h-3 rounded bg-white" />
-                        録画停止
-                      </button>
-                    )}
-
-                    <button
-                      onClick={handleSubmitAnswer}
-                      disabled={!transcript.trim() && !fallbackText.trim()}
-                      className="flex-1 bg-indigo-600 hover:bg-indigo-700 disabled:bg-gray-200 disabled:text-gray-400 text-white py-2.5 rounded-xl text-xs font-semibold transition-colors disabled:cursor-not-allowed flex items-center justify-center gap-1.5"
-                    >
-                      回答を送信
-                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                      </svg>
-                    </button>
-                  </div>
+                  <button
+                    onClick={handleSubmitAnswer}
+                    disabled={!transcript.trim() && !fallbackText.trim()}
+                    className="w-full bg-indigo-600 hover:bg-indigo-700 disabled:bg-gray-200 disabled:text-gray-400 text-white py-3 rounded-xl text-sm font-semibold transition-colors disabled:cursor-not-allowed flex items-center justify-center gap-2 mb-2"
+                  >
+                    回答を送信
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                    </svg>
+                  </button>
                   <button
                     onClick={handleEndInterview}
                     className="w-full text-red-400 text-[10px] hover:text-red-500 transition-colors py-1"
@@ -2006,32 +2128,66 @@ function PracticeInterviewContent() {
 
   // PHASE 4: Final Results
   if (phase === "result" && evaluation) {
+    const overallScore = evaluation.overallScore;
+    const resultCircumference = 2 * Math.PI * 54;
+    const resultStrokeDashoffset = resultCircumference - (overallScore / 100) * resultCircumference;
+    const resultColor = overallScore >= 80 ? "#10b981" : overallScore >= 60 ? "#6366f1" : overallScore >= 40 ? "#f59e0b" : "#ef4444";
+
     return (
-      <div className="min-h-screen bg-gray-50 flex flex-col">
+      <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white flex flex-col">
         <InterviewHeader subtitle="評価結果" timerDisplay={timerDisplay} showQuestionCount={false} questionCount={0} maxQuestions={maxInterviewQuestions} />
         <div className="flex-1 overflow-y-auto px-4 py-8">
           <div className="max-w-3xl mx-auto">
-            <div className="bg-white rounded-2xl border border-gray-200 p-8 mb-6 text-center">
-              <h2 className="text-sm font-medium text-gray-500 mb-4">総合評価</h2>
-              <div className="w-28 h-28 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 text-white flex items-center justify-center mx-auto mb-4">
-                <span className="text-4xl font-bold">{evaluation.overallScore}</span>
+            {/* Hero Score Card */}
+            <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-8 mb-6">
+              <div className="flex flex-col md:flex-row items-center gap-8">
+                {/* Score Circle */}
+                <div className="relative w-36 h-36 flex-shrink-0">
+                  <svg className="w-36 h-36 -rotate-90" viewBox="0 0 120 120">
+                    <circle cx="60" cy="60" r="54" fill="none" stroke="#f3f4f6" strokeWidth="8" />
+                    <circle
+                      cx="60" cy="60" r="54" fill="none"
+                      stroke={resultColor}
+                      strokeWidth="8" strokeLinecap="round"
+                      strokeDasharray={resultCircumference}
+                      strokeDashoffset={resultStrokeDashoffset}
+                      className="transition-all duration-1000 ease-out"
+                    />
+                  </svg>
+                  <div className="absolute inset-0 flex flex-col items-center justify-center">
+                    <span className="text-4xl font-bold text-gray-900">{overallScore}</span>
+                    <span className="text-xs text-gray-500">/ 100</span>
+                  </div>
+                </div>
+
+                {/* Summary */}
+                <div className="text-center md:text-left flex-1">
+                  <div className="inline-block px-3 py-1 rounded-full text-xs font-semibold mb-3" style={{ backgroundColor: `${resultColor}20`, color: resultColor }}>
+                    {evaluation.recommendation}
+                  </div>
+                  <p className="text-gray-600 text-sm leading-relaxed">{evaluation.summary}</p>
+                </div>
               </div>
-              <p className="text-lg font-semibold text-gray-900 mb-1">{evaluation.recommendation}</p>
-              <p className="text-gray-500 text-sm leading-relaxed max-w-md mx-auto">{evaluation.summary}</p>
             </div>
 
+            {/* Category Scores */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
               {[
-                { label: "技術力", score: evaluation.technicalScore, color: "indigo" },
-                { label: "コミュニケーション", score: evaluation.communicationScore, color: "emerald" },
-                { label: "問題解決力", score: evaluation.problemSolvingScore, color: "amber" },
-              ].map(({ label, score, color }) => (
-                <div key={label} className="bg-white rounded-xl border border-gray-200 p-5 text-center">
-                  <p className="text-xs text-gray-500 mb-2">{label}</p>
-                  <p className={`text-3xl font-bold text-${color}-600`}>{score}</p>
-                  <div className="mt-3 h-2 bg-gray-100 rounded-full overflow-hidden">
+                { label: "技術力", score: evaluation.technicalScore, icon: "M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4", bg: "from-indigo-500 to-blue-500" },
+                { label: "コミュニケーション", score: evaluation.communicationScore, icon: "M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z", bg: "from-emerald-500 to-teal-500" },
+                { label: "問題解決力", score: evaluation.problemSolvingScore, icon: "M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z", bg: "from-amber-500 to-orange-500" },
+              ].map(({ label, score, icon, bg }) => (
+                <div key={label} className="bg-white rounded-xl border border-gray-200 shadow-sm p-5 text-center hover:shadow-md transition-shadow">
+                  <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${bg} flex items-center justify-center mx-auto mb-3`}>
+                    <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={icon} />
+                    </svg>
+                  </div>
+                  <p className="text-xs text-gray-500 mb-1">{label}</p>
+                  <p className="text-2xl font-bold text-gray-900 mb-3">{score}<span className="text-sm text-gray-400 font-normal">/100</span></p>
+                  <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
                     <div
-                      className={`h-full bg-${color}-500 rounded-full transition-all duration-1000`}
+                      className={`h-full bg-gradient-to-r ${bg} rounded-full transition-all duration-1000`}
                       style={{ width: `${score}%` }}
                     />
                   </div>
@@ -2039,74 +2195,139 @@ function PracticeInterviewContent() {
               ))}
             </div>
 
+            {/* Strengths & Improvements */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-              <div className="bg-white rounded-xl border border-gray-200 p-5">
-                <h3 className="text-sm font-semibold text-emerald-700 mb-3">✨ あなたの強み</h3>
-                <ul className="space-y-2">
+              <div className="bg-white rounded-xl border border-emerald-100 shadow-sm overflow-hidden">
+                <div className="bg-emerald-50 px-5 py-3 border-b border-emerald-100">
+                  <h3 className="text-sm font-semibold text-emerald-800 flex items-center gap-2">
+                    <div className="w-5 h-5 rounded-full bg-emerald-500 flex items-center justify-center">
+                      <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                      </svg>
+                    </div>
+                    あなたの強み
+                  </h3>
+                </div>
+                <ul className="p-5 space-y-3">
                   {evaluation.strengths?.map((s, i) => (
-                    <li key={i} className="text-sm text-gray-600 flex items-start gap-2">
-                      <span className="text-emerald-400 mt-0.5">•</span> {s}
+                    <li key={i} className="text-sm text-gray-700 flex items-start gap-3">
+                      <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 mt-1.5 flex-shrink-0" />
+                      {s}
                     </li>
                   ))}
                 </ul>
               </div>
-              <div className="bg-white rounded-xl border border-gray-200 p-5">
-                <h3 className="text-sm font-semibold text-amber-700 mb-3">📈 改善ポイント</h3>
-                <ul className="space-y-2">
+              <div className="bg-white rounded-xl border border-amber-100 shadow-sm overflow-hidden">
+                <div className="bg-amber-50 px-5 py-3 border-b border-amber-100">
+                  <h3 className="text-sm font-semibold text-amber-800 flex items-center gap-2">
+                    <div className="w-5 h-5 rounded-full bg-amber-500 flex items-center justify-center">
+                      <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 10l7-7m0 0l7 7m-7-7v18" />
+                      </svg>
+                    </div>
+                    改善ポイント
+                  </h3>
+                </div>
+                <ul className="p-5 space-y-3">
                   {evaluation.improvements?.map((w, i) => (
-                    <li key={i} className="text-sm text-gray-600 flex items-start gap-2">
-                      <span className="text-amber-400 mt-0.5">•</span> {w}
+                    <li key={i} className="text-sm text-gray-700 flex items-start gap-3">
+                      <div className="w-1.5 h-1.5 rounded-full bg-amber-400 mt-1.5 flex-shrink-0" />
+                      {w}
                     </li>
                   ))}
                 </ul>
               </div>
             </div>
 
-            <div className="bg-white rounded-xl border border-gray-200 p-6 mb-6">
-              <h3 className="text-sm font-semibold text-gray-900 mb-3">詳細フィードバック</h3>
-              <p className="text-sm text-gray-600 leading-relaxed">{evaluation.detailedFeedback}</p>
+            {/* Detailed Feedback */}
+            <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden mb-6">
+              <div className="bg-gray-50 px-5 py-3 border-b border-gray-200">
+                <h3 className="text-sm font-semibold text-gray-800 flex items-center gap-2">
+                  <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                  詳細フィードバック
+                </h3>
+              </div>
+              <div className="p-5">
+                <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-line">{evaluation.detailedFeedback}</p>
+              </div>
             </div>
 
+            {/* Test Results Summary */}
             {testEvaluation && (
-              <div className="bg-gray-50 rounded-xl border border-gray-200 p-5 mb-6">
-                <h3 className="text-sm font-semibold text-gray-700 mb-2">オンラインテスト結果</h3>
-                <p className="text-sm text-gray-500">
-                  スコア: {testEvaluation.totalScore}/{testEvaluation.maxScore}点
-                  ({testEvaluation.percentage}%)
+              <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-5 mb-6">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-gray-600 to-gray-800 flex items-center justify-center">
+                      <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                      </svg>
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-semibold text-gray-800">オンラインテスト結果</h3>
+                      <p className="text-xs text-gray-500">{testEvaluation.totalScore}/{testEvaluation.maxScore}点 獲得</p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <span className="text-2xl font-bold text-gray-900">{testEvaluation.percentage}%</span>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Recording Download */}
+            {screenRecordingUrl && (
+              <div className="bg-white rounded-xl border border-indigo-200 shadow-sm p-5 mb-6">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center">
+                      <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                      </svg>
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-semibold text-gray-800">面接の画面録画</h3>
+                      <p className="text-xs text-gray-500">ダウンロードして復習できます</p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={downloadScreenRecording}
+                    className="bg-indigo-600 text-white px-5 py-2 rounded-lg text-xs font-medium hover:bg-indigo-700 transition-colors inline-flex items-center gap-2"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                    </svg>
+                    ダウンロード
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Data Sharing Notice */}
+            <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6">
+              <div className="flex items-start gap-2">
+                <svg className="w-4 h-4 text-blue-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <p className="text-xs text-blue-700">
+                  この面接結果（評価スコア・録画データ・回答内容）は応募先企業に提供されます。
+                  企業はこのデータを採用判断の参考として使用します。
                 </p>
               </div>
-            )}
+            </div>
 
-            {screenRecordingUrl && (
-              <div className="bg-indigo-50 rounded-xl border border-indigo-200 p-5 mb-6 text-center">
-                <div className="flex items-center justify-center gap-2 mb-2">
-                  <svg className="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                  </svg>
-                  <h3 className="text-sm font-semibold text-indigo-700">面接の画面録画が利用可能です</h3>
-                </div>
-                <button
-                  onClick={downloadScreenRecording}
-                  className="bg-indigo-600 text-white px-6 py-2.5 rounded-lg text-sm font-medium hover:bg-indigo-700 transition-colors inline-flex items-center gap-2"
-                >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                  </svg>
-                  録画をダウンロード
-                </button>
-              </div>
-            )}
-
+            {/* Action Buttons */}
             <div className="flex gap-3 justify-center">
               <button
                 onClick={() => router.push("/home")}
-                className="bg-indigo-600 text-white px-8 py-3 rounded-lg font-medium hover:bg-indigo-700 transition-colors"
+                className="bg-indigo-600 text-white px-8 py-3 rounded-xl font-medium hover:bg-indigo-700 transition-colors shadow-sm"
               >
                 ホームに戻る
               </button>
               <button
                 onClick={() => router.push("/interview")}
-                className="bg-white text-gray-700 px-8 py-3 rounded-lg font-medium border border-gray-200 hover:bg-gray-50 transition-colors"
+                className="bg-white text-gray-700 px-8 py-3 rounded-xl font-medium border border-gray-200 hover:bg-gray-50 transition-colors shadow-sm"
               >
                 別の面接を受ける
               </button>
