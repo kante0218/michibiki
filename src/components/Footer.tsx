@@ -28,10 +28,10 @@ export default function Footer() {
           <div>
             <h4 className="text-white font-medium text-sm mb-4">企業向け</h4>
             <ul className="space-y-2.5">
-              <li><a href="/explore" className="text-gray-500 hover:text-gray-300 text-sm transition-colors">人材を探す</a></li>
-              <li><a href="/company/post" className="text-gray-500 hover:text-gray-300 text-sm transition-colors">エンタープライズ</a></li>
+              <li><a href="/for-companies" className="text-gray-500 hover:text-gray-300 text-sm transition-colors">AI採用支援</a></li>
               <li><a href="/pricing" className="text-gray-500 hover:text-gray-300 text-sm transition-colors">料金プラン</a></li>
               <li><a href="/cases" className="text-gray-500 hover:text-gray-300 text-sm transition-colors">導入事例</a></li>
+              <li><a href="/roi-calculator" className="text-gray-500 hover:text-gray-300 text-sm transition-colors">ROI計算ツール</a></li>
             </ul>
           </div>
 
