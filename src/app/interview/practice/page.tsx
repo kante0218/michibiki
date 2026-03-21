@@ -1679,7 +1679,7 @@ function PracticeInterviewContent() {
               </div>
 
               {/* Voice selection */}
-              {voiceProvider === "edge" ? (
+              {voiceProvider === "edge" && (
                 <div className="space-y-2">
                   {[
                     { id: "keita-interviewer", label: "男性面接官（落ち着いた声）", desc: "低めのトーン・ゆっくり" },
@@ -1710,7 +1710,8 @@ function PracticeInterviewContent() {
                     </label>
                   ))}
                 </div>
-              ) : voiceProvider === "voicevox" ? (
+              )}
+              {voiceProvider === "voicevox" && (
                 <div className="space-y-2">
                   <p className="text-[10px] text-gray-500 mb-2">
                     VOICEVOXは日本製の高品質音声合成エンジンです。より自然で表情豊かな声が特徴です。
@@ -1751,7 +1752,8 @@ function PracticeInterviewContent() {
                     </label>
                   ))}
                 </div>
-              ) : voiceProvider === "google" ? (
+              )}
+              {voiceProvider === "google" && (
                 <div className="space-y-2">
                   <p className="text-[10px] text-gray-500 mb-2">
                     Google Cloud TTSは最高品質の音声合成エンジンです。WaveNet・Neural2音声が利用できます。
@@ -1792,7 +1794,7 @@ function PracticeInterviewContent() {
                     </label>
                   ))}
                 </div>
-              ) : null}
+              )}
 
               {/* Test voice button */}
               <button
