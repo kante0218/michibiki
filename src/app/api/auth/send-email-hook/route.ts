@@ -157,7 +157,7 @@ export async function POST(request: Request) {
     const subject = subjectMap[emailType] || subjectMap.confirmation;
 
     const { error } = await resend.emails.send({
-      from: "Michibiki <onboarding@resend.dev>",
+      from: "Michibiki <noreply@michibiki.tech>",
       to: toEmail,
       subject,
       html,
