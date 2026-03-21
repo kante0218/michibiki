@@ -332,23 +332,23 @@ export default function FilterBar({
 
   return (
     <>
-      <div className="flex items-center gap-3 mb-6">
-        {/* Filter pill button */}
+      <div className="flex items-center gap-2.5 mb-6">
+        {/* Filter button */}
         <div ref={filterRef} className="relative flex-shrink-0">
           <button
             onClick={() => setFilterOpen(!filterOpen)}
-            className={`relative flex items-center gap-2 h-11 px-4 rounded-full text-sm font-medium transition-all duration-200 ${
+            className={`group relative flex items-center gap-2 h-11 px-5 rounded-xl text-sm font-semibold transition-all duration-200 ${
               filterOpen || activeFilterCount > 0
-                ? "bg-indigo-50 border-2 border-indigo-200 text-indigo-700 shadow-sm"
-                : "bg-white border-2 border-gray-200 text-gray-500 hover:text-gray-700 hover:border-gray-300 hover:shadow-sm"
+                ? "bg-indigo-700 text-white shadow-md shadow-indigo-300/50"
+                : "bg-indigo-600 text-white hover:bg-indigo-700 shadow-sm shadow-indigo-200/40"
             }`}
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 3c2.755 0 5.455.232 8.083.678.533.09.917.556.917 1.096v1.044a2.25 2.25 0 01-.659 1.591l-5.432 5.432a2.25 2.25 0 00-.659 1.591v2.927a2.25 2.25 0 01-1.244 2.013L9.75 21v-6.568a2.25 2.25 0 00-.659-1.591L3.659 7.409A2.25 2.25 0 013 5.818V4.774c0-.54.384-1.006.917-1.096A48.32 48.32 0 0112 3z" />
+              <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 6h9.75M10.5 6a1.5 1.5 0 11-3 0m3 0a1.5 1.5 0 10-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-9.75 0h9.75" />
             </svg>
             <span className="hidden sm:inline">フィルター</span>
             {activeFilterCount > 0 && (
-              <span className="flex items-center justify-center w-5 h-5 bg-indigo-600 text-white text-[10px] font-bold rounded-full">
+              <span className="flex items-center justify-center min-w-[20px] h-5 px-1 bg-white text-indigo-700 text-[10px] font-bold rounded-full">
                 {activeFilterCount}
               </span>
             )}
@@ -460,10 +460,10 @@ export default function FilterBar({
           )}
         </div>
 
-        {/* Search input - larger, modern */}
+        {/* Search input */}
         <div className="relative flex-1">
           <svg
-            className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400"
+            className="absolute left-3.5 top-1/2 -translate-y-1/2 w-[18px] h-[18px] text-gray-400"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -480,15 +480,15 @@ export default function FilterBar({
             placeholder="求人タイトルで検索..."
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
-            className="w-full h-11 pl-11 pr-4 text-sm border-2 border-gray-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 bg-white transition-all duration-200 placeholder:text-gray-400"
+            className="w-full h-11 pl-10 pr-4 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 bg-gray-50 hover:bg-white focus:bg-white transition-all duration-200 placeholder:text-gray-400"
           />
         </div>
 
-        {/* Sort dropdown - modern */}
+        {/* Sort dropdown */}
         <div ref={sortRef} className="relative flex-shrink-0">
           <button
             onClick={() => setSortOpen(!sortOpen)}
-            className="flex items-center gap-2 h-11 px-4 text-sm bg-white border-2 border-gray-200 rounded-full hover:border-gray-300 text-gray-600 transition-all duration-200 whitespace-nowrap font-medium hover:shadow-sm"
+            className="flex items-center gap-2 h-11 px-4 text-sm bg-white border border-gray-200 rounded-xl hover:border-gray-300 text-gray-600 transition-all duration-200 whitespace-nowrap font-medium hover:shadow-sm"
           >
             <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4h13M3 8h9m-9 4h6m4 0l4 4m0 0l4-4m-4 4V4" />

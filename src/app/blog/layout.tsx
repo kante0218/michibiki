@@ -1,12 +1,15 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "ブログ | AI採用・面接・キャリアの最新情報",
+  title: "ブログ - AI面接・採用の最新情報",
   description:
-    "導（みちびき）のブログ。AI面接、人材マッチング、キャリアアップ、転職活動のヒントなど、最新の採用トレンド情報をお届けします。",
+    "導（みちびき）公式ブログ。AI面接のコツ、転職・就職活動のアドバイス、AI採用の最新トレンドなど、キャリアに役立つ情報を発信しています。",
   openGraph: {
-    title: "ブログ | AI採用・面接・キャリアの最新情報",
-    description: "AI面接、人材マッチング、キャリアアップの最新情報をお届け。",
+    title: "ブログ - AI面接・採用の最新情報 | みちびき 導",
+    description: "AI面接のコツ、転職活動のアドバイス、AI採用トレンドをお届け。",
+  },
+  alternates: {
+    canonical: "https://michibiki.tech/blog",
   },
 };
 

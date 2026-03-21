@@ -110,17 +110,12 @@ export default function CareersPage() {
           </div>
         </div>
 
-        {/* Hero */}
-        <div className="bg-gradient-to-br from-indigo-600 to-indigo-800 text-white px-8 py-16">
-          <div className="max-w-4xl mx-auto text-center">
-            <h1 className="text-4xl font-bold mb-4">AIで、採用の未来をつくる仲間を募集</h1>
-            <p className="text-lg text-indigo-100 max-w-2xl mx-auto">
-              Michibikiは、AI技術を活用して世界中の人材と企業をつなぐプラットフォームです。急成長するチームで、あなたの力を発揮しませんか。
-            </p>
-          </div>
-        </div>
-
         <div className="max-w-5xl mx-auto px-8 py-12">
+          {/* Header */}
+          <div className="mb-8">
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">採用情報</h1>
+            <p className="text-gray-600">Michibikiは、AI技術を活用して世界中の人材と企業をつなぐプラットフォームです。急成長するチームで、あなたの力を発揮しませんか。</p>
+          </div>
           {/* Values */}
           <section className="mb-16">
             <h2 className="text-2xl font-bold text-gray-900 mb-2">私たちの価値観</h2>

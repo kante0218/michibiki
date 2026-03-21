@@ -375,13 +375,74 @@ export default function RootPage() {
         </div>
       </section>
 
+      {/* SEO Content - visually hidden but crawlable */}
+      <section className="sr-only" aria-label="導（みちびき）について">
+        <h2>導（みちびき）- AI面接練習・AI人材マッチングプラットフォーム</h2>
+        <p>
+          導（みちびき / Michibiki）は、AIを活用した面接練習と人材マッチングのプラットフォームです。
+          ソフトウェアエンジニアリング、データサイエンス、プロダクトマネジメント、デザイン、マーケティングなど
+          33分野のAI面接練習を無料で提供しています。
+        </p>
+        <h3>AI面接練習の特徴</h3>
+        <p>
+          技術テスト（選択問題5問＋記述問題5問）とAIビデオ面接を組み合わせた実践的な模擬面接です。
+          AIがあなたの弱点を分析し、的確なフィードバックを提供します。
+          オンライン面接対策、転職面接準備、就職活動の面接練習に最適です。
+        </p>
+        <h3>企業向けAI採用支援</h3>
+        <p>
+          AIが候補者のスキルを客観的に評価し、企業の求める人材像と自動マッチングします。
+          採用コストの削減、選考時間の短縮、ミスマッチの防止を実現します。
+          エンジニア採用、グローバル人材採用、リモートワーク人材の採用に対応しています。
+        </p>
+      </section>
+
       {/* Footer */}
-      <footer className="border-t border-gray-200 py-8 px-4">
-        <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-2">
-            <Logo size="header" iconOnly showBrandName />
+      <footer className="border-t border-gray-200 py-10 px-4">
+        <div className="max-w-5xl mx-auto">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-8">
+            <div>
+              <h3 className="text-sm font-semibold text-gray-900 mb-3">求職者向け</h3>
+              <nav className="flex flex-col gap-2">
+                <Link href="/ai-interview" className="text-xs text-gray-500 hover:text-gray-700">AI面接練習</Link>
+                <Link href="/explore" className="text-xs text-gray-500 hover:text-gray-700">求人を探す</Link>
+                <Link href="/engineer-jobs" className="text-xs text-gray-500 hover:text-gray-700">エンジニア求人</Link>
+                <Link href="/remote-jobs" className="text-xs text-gray-500 hover:text-gray-700">リモート求人</Link>
+                <Link href="/career-change" className="text-xs text-gray-500 hover:text-gray-700">転職サポート</Link>
+              </nav>
+            </div>
+            <div>
+              <h3 className="text-sm font-semibold text-gray-900 mb-3">企業向け</h3>
+              <nav className="flex flex-col gap-2">
+                <Link href="/for-companies" className="text-xs text-gray-500 hover:text-gray-700">AI採用支援</Link>
+                <Link href="/pricing" className="text-xs text-gray-500 hover:text-gray-700">料金プラン</Link>
+                <Link href="/cases" className="text-xs text-gray-500 hover:text-gray-700">導入事例</Link>
+              </nav>
+            </div>
+            <div>
+              <h3 className="text-sm font-semibold text-gray-900 mb-3">サポート</h3>
+              <nav className="flex flex-col gap-2">
+                <Link href="/help" className="text-xs text-gray-500 hover:text-gray-700">ヘルプ</Link>
+                <Link href="/blog" className="text-xs text-gray-500 hover:text-gray-700">ブログ</Link>
+                <Link href="/careers" className="text-xs text-gray-500 hover:text-gray-700">採用情報</Link>
+                <Link href="/security" className="text-xs text-gray-500 hover:text-gray-700">セキュリティ</Link>
+              </nav>
+            </div>
+            <div>
+              <h3 className="text-sm font-semibold text-gray-900 mb-3">法的情報</h3>
+              <nav className="flex flex-col gap-2">
+                <Link href="/terms" className="text-xs text-gray-500 hover:text-gray-700">利用規約</Link>
+                <Link href="/privacy" className="text-xs text-gray-500 hover:text-gray-700">プライバシーポリシー</Link>
+                <Link href="/legal" className="text-xs text-gray-500 hover:text-gray-700">特定商取引法</Link>
+              </nav>
+            </div>
           </div>
-          <p className="text-xs text-gray-400">&copy; 2026 Michibiki. All rights reserved.</p>
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-6 border-t border-gray-100">
+            <div className="flex items-center gap-2">
+              <Logo size="header" iconOnly showBrandName />
+            </div>
+            <p className="text-xs text-gray-400">&copy; 2026 Michibiki. All rights reserved.</p>
+          </div>
         </div>
       </footer>
     </div>

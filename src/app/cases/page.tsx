@@ -104,9 +104,9 @@ export default function CasesPage() {
 
         <div className="max-w-5xl mx-auto px-8 py-12">
           {/* Header */}
-          <div className="text-center mb-12">
-            <h1 className="text-3xl font-bold text-gray-900 mb-3">導入事例</h1>
-            <p className="text-gray-600 max-w-xl mx-auto">
+          <div className="mb-8">
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">導入事例</h1>
+            <p className="text-gray-600">
               Michibikiを導入いただいた企業の成果をご紹介します。業界を問わず、AI人材マッチングが採用課題を解決しています。
             </p>
           </div>

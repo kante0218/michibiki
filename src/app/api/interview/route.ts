@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
+import { generateTestFromBank, hasQuestionBank } from "@/lib/questionBank";
 
 const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY || "",
@@ -39,7 +40,26 @@ export async function POST(req: NextRequest) {
     }
 
     if (action === "generate_test") {
-      // Generate field-specific online test questions: 5 multiple choice + 5 written = 10 total
+      // Try question bank first (randomized from large pool to prevent cheating)
+      if (hasQuestionBank(category)) {
+        const bankQuestions = generateTestFromBank(category);
+        if (bankQuestions && bankQuestions.length === 10) {
+          const questions = bankQuestions.map((q, i) => ({
+            id: i + 1,
+            type: q.type,
+            question: q.question,
+            options: q.options,
+            correctAnswer: q.correctAnswer,
+            hint: q.hint,
+            difficulty: q.difficulty,
+            timeLimit: q.timeLimit,
+            points: q.points,
+          }));
+          return NextResponse.json({ questions });
+        }
+      }
+
+      // Fallback: AI generation for categories without question bank
       const message = await callWithRetry(() => anthropic.messages.create({
         model: "claude-sonnet-4-20250514",
         max_tokens: 6000,

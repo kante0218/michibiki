@@ -18,7 +18,7 @@ export default function TermsPage() {
   return (
     <>
       <Sidebar />
-      <main className="ml-0 md:ml-[96px] min-h-screen bg-gray-50">
+      <main className="ml-[96px] min-h-screen bg-gray-50">
         {/* Breadcrumb */}
         <div className="bg-white border-b border-gray-200 px-8 py-4">
           <div className="flex items-center gap-2 text-sm text-gray-500">
@@ -28,7 +28,7 @@ export default function TermsPage() {
           </div>
         </div>
 
-        <div className="max-w-4xl mx-auto px-8 py-12">
+        <div className="max-w-5xl mx-auto px-8 py-12">
           {/* Header */}
           <div className="mb-10">
             <h1 className="text-3xl font-bold text-gray-900 mb-3">利用規約</h1>
