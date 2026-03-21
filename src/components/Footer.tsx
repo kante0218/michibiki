@@ -41,7 +41,7 @@ export default function Footer() {
               <li><a href="/about" className="text-gray-500 hover:text-gray-300 text-sm transition-colors">私たちについて</a></li>
               <li><a href="/blog" className="text-gray-500 hover:text-gray-300 text-sm transition-colors">ブログ</a></li>
               <li><a href="/careers" className="text-gray-500 hover:text-gray-300 text-sm transition-colors">採用情報</a></li>
-              <li><a href="/help" className="text-gray-500 hover:text-gray-300 text-sm transition-colors">お問い合わせ</a></li>
+              <li><a href="/contact" className="text-gray-500 hover:text-gray-300 text-sm transition-colors">お問い合わせ</a></li>
             </ul>
           </div>
         </div>
@@ -57,7 +57,7 @@ export default function Footer() {
             <a href="/privacy" className="text-gray-600 hover:text-gray-400 text-sm transition-colors">
               プライバシーポリシー
             </a>
-            <a href="/terms" className="text-gray-600 hover:text-gray-400 text-sm transition-colors">
+            <a href="/legal" className="text-gray-600 hover:text-gray-400 text-sm transition-colors">
               特定商取引法
             </a>
             <a href="/security" className="text-gray-600 hover:text-gray-400 text-sm transition-colors">

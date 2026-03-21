@@ -37,6 +37,8 @@ export default function EarningsPage() {
   const [toast, setToast] = useState<string | null>(null);
   const [hoveredBar, setHoveredBar] = useState<number | null>(null);
   const [selectedPeriod, setSelectedPeriod] = useState("all");
+  const [linkedInConnected, setLinkedInConnected] = useState<boolean | null>(null);
+  const [linkedInLinking, setLinkedInLinking] = useState(false);
 
   const showToast = (message: string) => {
     setToast(message);
@@ -69,6 +71,39 @@ export default function EarningsPage() {
       fetchEarnings();
     }
   }, [user, fetchEarnings]);
+
+  // Check LinkedIn connection
+  useEffect(() => {
+    if (!user) return;
+    async function checkLinkedIn() {
+      try {
+        const { getLinkedIdentities } = await import("@/lib/auth");
+        const result = await getLinkedIdentities();
+        const hasLinkedIn = result.identities.some(
+          (id: { provider: string }) => id.provider === "linkedin_oidc"
+        );
+        setLinkedInConnected(hasLinkedIn);
+      } catch {
+        setLinkedInConnected(false);
+      }
+    }
+    checkLinkedIn();
+  }, [user]);
+
+  const handleLinkLinkedIn = async () => {
+    setLinkedInLinking(true);
+    try {
+      const { linkLinkedInAccount } = await import("@/lib/auth");
+      const { error } = await linkLinkedInAccount();
+      if (error) {
+        showToast("LinkedIn連携に失敗しました");
+        setLinkedInLinking(false);
+      }
+    } catch {
+      showToast("LinkedIn連携中にエラーが発生しました");
+      setLinkedInLinking(false);
+    }
+  };
 
   // Summary calculations
   const totalPaid = earnings
@@ -221,7 +256,10 @@ export default function EarningsPage() {
               </div>
               <h3 className="text-lg font-semibold text-gray-900 mb-2">収益データはまだありません</h3>
               <p className="text-sm text-gray-500 mb-6 max-w-sm mx-auto">プロジェクトを開始して収益を獲得しましょう。データが蓄積されるとここに表示されます。</p>
-              <button className="px-6 py-2.5 bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white text-sm font-medium rounded-xl transition-all shadow-md shadow-indigo-500/25 hover:shadow-lg hover:shadow-indigo-500/30">
+              <button
+                onClick={() => router.push("/explore")}
+                className="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-xl transition-all shadow-md shadow-indigo-500/25 hover:shadow-lg hover:shadow-indigo-500/30"
+              >
                 求人を探す
               </button>
             </div>
@@ -495,6 +533,49 @@ export default function EarningsPage() {
                 </div>
               </div>
             </>
+          )}
+
+          {/* LinkedIn連携 */}
+          {linkedInConnected === false && (
+            <div className="mt-6 bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all duration-200 p-6">
+              <div className="flex items-start justify-between mb-3">
+                <h3 className="text-base font-semibold text-gray-900">LinkedIn連携</h3>
+                <div className="w-8 h-8 rounded-lg bg-[#0A66C2]/10 flex items-center justify-center flex-shrink-0">
+                  <svg className="w-4 h-4 text-[#0A66C2]" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+                  </svg>
+                </div>
+              </div>
+              <p className="text-sm text-gray-500 mb-4">LinkedInアカウントをみちびきアカウントに連携しましょう</p>
+              <button
+                onClick={handleLinkLinkedIn}
+                disabled={linkedInLinking}
+                className="flex items-center gap-2 px-5 py-2.5 bg-[#0A66C2] hover:bg-[#004182] disabled:opacity-50 text-white text-sm font-semibold rounded-xl transition-all shadow-sm hover:shadow-md disabled:cursor-not-allowed"
+              >
+                {linkedInLinking ? (
+                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                ) : (
+                  <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+                  </svg>
+                )}
+                今すぐ連携
+              </button>
+            </div>
+          )}
+
+          {linkedInConnected === true && (
+            <div className="mt-6 bg-white rounded-2xl border border-emerald-100 shadow-sm p-6">
+              <div className="flex items-start justify-between mb-3">
+                <h3 className="text-base font-semibold text-gray-900">LinkedIn連携</h3>
+                <div className="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center flex-shrink-0">
+                  <svg className="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
+              </div>
+              <p className="text-sm text-emerald-600 font-medium">✓ LinkedIn連携済み</p>
+            </div>
           )}
         </div>
       </div>

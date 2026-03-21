@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
 import { createClient } from "@supabase/supabase-js";
+import { rateLimit } from "@/lib/rate-limit";
+
+const limiter = rateLimit({ maxRequests: 15, windowMs: 60_000 });
 
 const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY || "",
@@ -36,6 +39,12 @@ async function callWithRetry<T>(fn: () => Promise<T>, maxRetries = 3): Promise<T
 }
 
 export async function POST(req: NextRequest) {
+  const ip = req.headers.get("x-forwarded-for")?.split(",")[0] ?? "anonymous";
+  const { success } = limiter(ip);
+  if (!success) {
+    return NextResponse.json({ error: "リクエストが多すぎます。しばらくしてからもう一度お試しください。" }, { status: 429 });
+  }
+
   try {
     const body = await req.json();
     const { action } = body;

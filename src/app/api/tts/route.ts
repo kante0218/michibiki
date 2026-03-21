@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { EdgeTTS } from "edge-tts-universal";
+import { rateLimit } from "@/lib/rate-limit";
+
+const limiter = rateLimit({ maxRequests: 30, windowMs: 60_000 });
 
 // Voice presets optimized for interview context
 const VOICE_PRESETS: Record<string, { voice: string; rate: string; pitch: string; label: string }> = {
@@ -32,6 +35,12 @@ const VOICE_PRESETS: Record<string, { voice: string; rate: string; pitch: string
 const DEFAULT_PRESET = "keita-interviewer";
 
 export async function POST(req: NextRequest) {
+  const ip = req.headers.get("x-forwarded-for")?.split(",")[0] ?? "anonymous";
+  const { success } = limiter(ip);
+  if (!success) {
+    return NextResponse.json({ error: "リクエストが多すぎます。" }, { status: 429 });
+  }
+
   try {
     const { text, voice, preset } = await req.json();
 

@@ -15,16 +15,29 @@ export default function ContactPage() {
     message: "",
   });
   const [submitted, setSubmitted] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // For now, open mailto with pre-filled info
-    const subject = encodeURIComponent(`【導】${form.plan || "お問い合わせ"}: ${form.companyName}`);
-    const body = encodeURIComponent(
-      `会社名: ${form.companyName}\n担当者名: ${form.name}\nメール: ${form.email}\n電話番号: ${form.phone}\n従業員数: ${form.employees}\nご希望プラン: ${form.plan}\n\nお問い合わせ内容:\n${form.message}`
-    );
-    window.open(`mailto:t.kante@michibiki.tech?subject=${subject}&body=${body}`);
-    setSubmitted(true);
+    setSubmitting(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "送信に失敗しました");
+      }
+      setSubmitted(true);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "送信に失敗しました。しばらくしてからもう一度お試しください。");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   if (submitted) {
@@ -148,8 +161,24 @@ export default function ContactPage() {
                 <label className="block text-sm font-medium text-gray-700 mb-1.5">お問い合わせ内容</label>
                 <textarea rows={4} value={form.message} onChange={(e) => setForm({ ...form, message: e.target.value })} placeholder="ご質問やご要望をお聞かせください" className={inputClass} />
               </div>
-              <button type="submit" className="w-full bg-indigo-600 text-white py-3 rounded-xl font-medium text-sm hover:bg-indigo-700 transition-colors">
-                送信する
+              {error && (
+                <div className="p-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-600">
+                  {error}
+                </div>
+              )}
+              <button
+                type="submit"
+                disabled={submitting}
+                className="w-full bg-indigo-600 text-white py-3 rounded-xl font-medium text-sm hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              >
+                {submitting ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    送信中...
+                  </>
+                ) : (
+                  "送信する"
+                )}
               </button>
               <p className="text-xs text-gray-400 text-center">1営業日以内にご連絡いたします</p>
             </form>
