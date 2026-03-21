@@ -9,54 +9,57 @@ const plans = [
     name: "フリー",
     price: "¥0",
     period: "永年無料",
-    description: "まずは気軽に始めたい方に",
+    description: "求職者の方・お試し利用に",
     features: [
-      { label: "AI面接（月1回）", included: true },
-      { label: "APEXスコア表示", included: true },
-      { label: "求人検索・応募（月5件まで）", included: true },
-      { label: "基本プロフィール", included: true },
-      { label: "優先マッチング", included: false },
-      { label: "スキルレポート詳細", included: false },
+      { label: "AI面接練習（無制限）", included: true },
+      { label: "33分野対応", included: true },
+      { label: "スキル評価レポート", included: true },
+      { label: "求人検索・閲覧", included: true },
+      { label: "企業向けAI面接（月5件）", included: true },
+      { label: "候補者スクリーニング", included: false },
+      { label: "採用分析ダッシュボード", included: false },
       { label: "専任サポート", included: false },
-      { label: "カスタムAPI連携", included: false },
     ],
     cta: "無料で始める",
+    ctaLink: "/signup",
     highlighted: false,
   },
   {
-    name: "プロ",
-    price: "¥4,980",
-    period: "月額（税込）",
-    description: "本格的にキャリアアップしたい方に",
+    name: "ビジネス",
+    price: "¥150,000",
+    period: "月額（税抜）",
+    description: "採用を効率化したい企業に",
     features: [
-      { label: "AI面接（無制限）", included: true },
-      { label: "APEXスコア表示", included: true },
-      { label: "求人検索・応募（無制限）", included: true },
-      { label: "拡張プロフィール", included: true },
-      { label: "優先マッチング", included: true },
-      { label: "スキルレポート詳細", included: true },
+      { label: "AI面接（月100件）", included: true },
+      { label: "33分野の専門面接", included: true },
+      { label: "候補者スキルレポート", included: true },
+      { label: "候補者プールへのアクセス", included: true },
+      { label: "候補者スクリーニング", included: true },
+      { label: "採用分析ダッシュボード", included: true },
       { label: "チャットサポート", included: true },
-      { label: "カスタムAPI連携", included: false },
+      { label: "API連携", included: false },
     ],
-    cta: "プロプランを始める",
+    cta: "14日間無料で試す",
+    ctaLink: "/contact",
     highlighted: true,
   },
   {
     name: "エンタープライズ",
-    price: "要相談",
-    period: "カスタム見積もり",
-    description: "企業向けの包括的なソリューション",
+    price: "¥300,000〜",
+    period: "月額（税抜）",
+    description: "大規模採用・カスタム対応が必要な企業に",
     features: [
       { label: "AI面接（無制限）", included: true },
-      { label: "APEXスコア表示", included: true },
-      { label: "求人掲載・候補者検索（無制限）", included: true },
-      { label: "企業ブランディングページ", included: true },
-      { label: "優先マッチング", included: true },
-      { label: "採用分析ダッシュボード", included: true },
+      { label: "カスタム面接テンプレート", included: true },
+      { label: "候補者プール優先アクセス", included: true },
+      { label: "高度な採用分析・レポート", included: true },
+      { label: "ATS/HRIS連携", included: true },
       { label: "専任サクセスマネージャー", included: true },
+      { label: "SLA 99.9%保証", included: true },
       { label: "カスタムAPI連携", included: true },
     ],
     cta: "お問い合わせ",
+    ctaLink: "/contact",
     highlighted: false,
   },
 ];
@@ -89,14 +92,15 @@ const faqs = [
 ];
 
 const comparisonFeatures = [
-  { name: "AI面接", free: "月1回", pro: "無制限", enterprise: "無制限" },
-  { name: "求人応募数", free: "月5件", pro: "無制限", enterprise: "無制限" },
-  { name: "APEXスコア", free: "基本", pro: "詳細レポート付き", enterprise: "詳細レポート付き" },
-  { name: "マッチング", free: "標準", pro: "優先", enterprise: "優先＋専任" },
+  { name: "AI面接件数", free: "月5件", pro: "月100件", enterprise: "無制限" },
+  { name: "対応分野", free: "33分野", pro: "33分野", enterprise: "33分野+カスタム" },
+  { name: "候補者スキルレポート", free: "基本", pro: "詳細", enterprise: "詳細+カスタム" },
+  { name: "候補者プール", free: "---", pro: "アクセス可", enterprise: "優先アクセス" },
+  { name: "採用分析", free: "---", pro: "基本ダッシュボード", enterprise: "高度な分析+エクスポート" },
   { name: "サポート", free: "FAQ", pro: "チャット", enterprise: "専任マネージャー" },
-  { name: "API連携", free: "---", pro: "---", enterprise: "カスタム対応" },
-  { name: "採用分析", free: "---", pro: "基本", enterprise: "高度な分析" },
+  { name: "API/ATS連携", free: "---", pro: "---", enterprise: "カスタム対応" },
   { name: "SLA", free: "---", pro: "---", enterprise: "99.9%保証" },
+  { name: "初期導入費", free: "なし", pro: "¥500,000", enterprise: "個別見積もり" },
 ];
 
 export default function PricingPage() {
@@ -115,11 +119,11 @@ export default function PricingPage() {
           </div>
         </div>
 
-        <div className="max-w-6xl mx-auto px-8 py-12">
+        <div className="max-w-5xl mx-auto px-8 py-12">
           {/* Header */}
-          <div className="text-center mb-12">
-            <h1 className="text-3xl font-bold text-gray-900 mb-3">料金プラン</h1>
-            <p className="text-gray-600 max-w-xl mx-auto">
+          <div className="mb-8">
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">料金プラン</h1>
+            <p className="text-gray-600">
               あなたのニーズに合ったプランをお選びください。すべてのプランに基本的なAI機能が含まれています。
             </p>
           </div>
@@ -162,15 +166,16 @@ export default function PricingPage() {
                     </li>
                   ))}
                 </ul>
-                <button
-                  className={`w-full py-3 rounded-lg font-medium text-sm transition-colors ${
+                <Link
+                  href={plan.ctaLink}
+                  className={`w-full py-3 rounded-lg font-medium text-sm transition-colors text-center block ${
                     plan.highlighted
                       ? "bg-indigo-600 text-white hover:bg-indigo-700"
                       : "bg-white text-indigo-600 border border-indigo-200 hover:bg-indigo-50"
                   }`}
                 >
                   {plan.cta}
-                </button>
+                </Link>
               </div>
             ))}
           </div>

@@ -5,9 +5,9 @@ import Link from "next/link";
 
 const rows = [
   { label: "事業者名", value: "Michibiki 導 株式会社" },
-  { label: "代表者", value: "（代表取締役名を記載）" },
+  { label: "代表者", value: "カンテ 敬輝" },
   { label: "所在地", value: "〒150-0002 東京都渋谷区渋谷2-24-12" },
-  { label: "電話番号", value: "03-6890-XXXX（平日 10:00〜18:00）" },
+  { label: "電話番号", value: "お問い合わせフォームよりご連絡ください" },
   { label: "メールアドレス", value: "support@michibiki.tech" },
   { label: "URL", value: "https://michibiki.tech" },
   { label: "サービス内容", value: "AI人材マッチングプラットフォームの運営、求職者と企業のマッチング支援、紹介報酬の仲介" },
@@ -26,7 +26,7 @@ export default function LegalPage() {
   return (
     <>
       <Sidebar />
-      <main className="ml-0 md:ml-[96px] min-h-screen bg-gray-50">
+      <main className="ml-[96px] min-h-screen bg-gray-50">
         {/* Breadcrumb */}
         <div className="bg-white border-b border-gray-200 px-8 py-4">
           <div className="flex items-center gap-2 text-sm text-gray-500">
@@ -36,7 +36,7 @@ export default function LegalPage() {
           </div>
         </div>
 
-        <div className="max-w-4xl mx-auto px-8 py-12">
+        <div className="max-w-5xl mx-auto px-8 py-12">
           {/* Header */}
           <div className="mb-10">
             <h1 className="text-3xl font-bold text-gray-900 mb-3">特定商取引法に基づく表記</h1>
