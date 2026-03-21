@@ -73,6 +73,9 @@ export default function JobPostPage() {
     interview_question_count: 5,
     interview_duration_minutes: 20,
     interview_custom_instructions: "",
+    is_expert: false,
+    required_experience_years: "",
+    minimum_assessment_score: "",
   });
   const [skillInput, setSkillInput] = useState("");
   const [topicInput, setTopicInput] = useState("");
@@ -698,6 +701,54 @@ export default function JobPostPage() {
               <p className="text-sm text-gray-500 mb-5 ml-8">この求人に応募した候補者へのAI面接の内容を設定します。</p>
 
               <div className="space-y-5">
+                {/* Expert Toggle */}
+                <div className="bg-gradient-to-r from-indigo-50 to-purple-50 rounded-xl p-4 border border-indigo-100">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center">
+                        <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
+                        </svg>
+                      </div>
+                      <div>
+                        <p className="text-sm font-semibold text-gray-900">エキスパート求人</p>
+                        <p className="text-xs text-gray-500">思考プロセス（CoT）評価付きのAI面接を実施します</p>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => handleChange("is_expert", !form.is_expert)}
+                      className={`relative w-11 h-6 rounded-full transition-colors ${form.is_expert ? "bg-indigo-600" : "bg-gray-300"}`}
+                    >
+                      <div className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${form.is_expert ? "translate-x-5.5 left-0.5" : "left-0.5"}`} />
+                    </button>
+                  </div>
+                  {form.is_expert && (
+                    <div className="mt-4 grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-xs font-medium text-gray-700 mb-1">必要経験年数</label>
+                        <select value={form.required_experience_years} onChange={(e) => handleChange("required_experience_years", e.target.value)} className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm bg-white">
+                          <option value="">指定なし</option>
+                          <option value="3">3年以上</option>
+                          <option value="5">5年以上</option>
+                          <option value="7">7年以上</option>
+                          <option value="10">10年以上</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-gray-700 mb-1">最低評価スコア</label>
+                        <select value={form.minimum_assessment_score} onChange={(e) => handleChange("minimum_assessment_score", e.target.value)} className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm bg-white">
+                          <option value="">指定なし</option>
+                          <option value="60">60点以上</option>
+                          <option value="70">70点以上</option>
+                          <option value="80">80点以上</option>
+                          <option value="90">90点以上</option>
+                        </select>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
                 {/* Difficulty Level */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">

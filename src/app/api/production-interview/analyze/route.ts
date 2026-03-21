@@ -93,15 +93,12 @@ export async function POST(req: NextRequest) {
       }
       const correctRate = totalGradable > 0 ? Math.round((correctCount / totalGradable) * 100) : null;
 
-      // Use Claude to perform comprehensive analysis
-      const message = await callWithRetry(() =>
-        anthropic.messages.create({
-          model: "claude-sonnet-4-20250514",
-          max_tokens: 3000,
-          messages: [
-            {
-              role: "user",
-              content: `あなたは日本の採用プラットフォーム「みちびき」の面接評価AIです。
+      // Detect expert interview
+      const interviewCategory = (interview as Record<string, unknown>).category as string || "";
+      const isExpert = interviewCategory.includes("expert") || (body.expert === true);
+
+      // Build analysis prompt (extended for expert with CoT evaluation)
+      const basePrompt = `あなたは日本の採用プラットフォーム「みちびき」の面接評価AIです。
 以下の面接データを総合的に分析し、評価してください。
 
 ## 求人情報
@@ -118,25 +115,57 @@ ${JSON.stringify(answers, null, 2)}
 ## 面接会話ログ
 ${JSON.stringify(conversationLog, null, 2)}
 
-${correctRate !== null ? `## 選択問題正答率: ${correctRate}%` : ""}
+${correctRate !== null ? `## 選択問題正答率: ${correctRate}%` : ""}`;
 
-以下のJSON形式で詳細な評価を返してください:
-{
+      const standardOutput = `{
   "technicalScore": 0-100の技術スコア,
   "communicationScore": 0-100のコミュニケーションスコア,
   "problemSolvingScore": 0-100の問題解決スコア,
   "appearanceScore": 0-100の面接態度・印象スコア,
   "correctRate": ${correctRate !== null ? correctRate : "null"},
   "overallMatchingScore": 0-100の求人要件との適合度,
-  "aiAnalysis": "詳細なAI分析テキスト（日本語で5-8文程度。候補者の総合的な印象、技術力の評価、コミュニケーション力、求人への適合度を含めてください）",
+  "aiAnalysis": "詳細なAI分析テキスト（日本語で5-8文程度）",
   "strengths": ["強み1", "強み2", "強み3"],
   "weaknesses": ["改善点1", "改善点2"],
-  "recommendation": "採用推奨に関するコメント（日本語で2-3文。強く推奨/推奨/条件付き推奨/非推奨のいずれかを明記してください）"
+  "recommendation": "採用推奨コメント（強く推奨/推奨/条件付き推奨/非推奨を明記）"`;
+
+      const expertExtension = isExpert ? `,
+  "expertAnalysis": {
+    "domainExpertiseScore": 0-100のドメイン専門性スコア,
+    "thinkingDepth": "surface" | "moderate" | "deep" から1つ選択,
+    "chainOfThought": [
+      {"step": 1, "description": "候補者の思考ステップ1の説明", "quality": "good" | "adequate" | "weak"},
+      {"step": 2, "description": "候補者の思考ステップ2の説明", "quality": "good" | "adequate" | "weak"}
+    ],
+    "uniqueInsights": ["候補者が示したユニークな洞察1", "洞察2"],
+    "readinessLevel": "intermediate_expert" | "advanced_expert" | "thought_leader" から1つ選択,
+    "cotSummary": "候補者の思考プロセス全体の評価（日本語3-5文。問題理解→アプローチ選定→代替案検討→リスク評価のプロセスを評価）"
+  }` : "";
+
+      const expertInstructions = isExpert ? `
+
+## エキスパート面接 追加評価指示
+この面接はエキスパート（専門家）向けの面接です。通常の評価に加え、以下を重点的に評価してください：
+1. **思考プロセスの可視化**: 候補者が「なぜその判断に至ったか」を論理的に説明できているか
+2. **代替案の検討**: 複数のアプローチを比較検討し、トレードオフを理解しているか
+3. **リスク認識**: 潜在的なリスクや限界を適切に認識しているか
+4. **独自の洞察**: 他にないユニークな視点や深い専門知識を示しているか
+5. **思考の深さ**: 表面的な回答か、深い分析に基づく回答か` : "";
+
+      const analysisPrompt = `${basePrompt}${expertInstructions}
+
+以下のJSON形式で詳細な評価を返してください:
+${standardOutput}${expertExtension}
 }
 
-JSONのみを出力してください。`,
-            },
-          ],
+JSONのみを出力してください。`;
+
+      // Use Claude to perform comprehensive analysis
+      const message = await callWithRetry(() =>
+        anthropic.messages.create({
+          model: "claude-sonnet-4-20250514",
+          max_tokens: isExpert ? 4000 : 3000,
+          messages: [{ role: "user", content: analysisPrompt }],
         })
       );
 
@@ -157,25 +186,29 @@ JSONのみを出力してください。`,
       }
 
       // Save results to interview_results table
+      const upsertData: Record<string, unknown> = {
+        production_interview_id: productionInterviewId,
+        technical_score: analysisResult.technicalScore,
+        communication_score: analysisResult.communicationScore,
+        problem_solving_score: analysisResult.problemSolvingScore,
+        appearance_score: analysisResult.appearanceScore,
+        correct_rate: analysisResult.correctRate,
+        overall_matching_score: analysisResult.overallMatchingScore,
+        ai_analysis: analysisResult.aiAnalysis,
+        strengths: analysisResult.strengths,
+        weaknesses: analysisResult.weaknesses,
+        recommendation: analysisResult.recommendation,
+        analyzed_at: new Date().toISOString(),
+      };
+
+      // Include expert CoT analysis if available
+      if (isExpert && analysisResult.expertAnalysis) {
+        upsertData.expert_analysis = analysisResult.expertAnalysis;
+      }
+
       const { data: result, error: insertError } = await supabase
         .from("interview_results")
-        .upsert(
-          {
-            production_interview_id: productionInterviewId,
-            technical_score: analysisResult.technicalScore,
-            communication_score: analysisResult.communicationScore,
-            problem_solving_score: analysisResult.problemSolvingScore,
-            appearance_score: analysisResult.appearanceScore,
-            correct_rate: analysisResult.correctRate,
-            overall_matching_score: analysisResult.overallMatchingScore,
-            ai_analysis: analysisResult.aiAnalysis,
-            strengths: analysisResult.strengths,
-            weaknesses: analysisResult.weaknesses,
-            recommendation: analysisResult.recommendation,
-            analyzed_at: new Date().toISOString(),
-          },
-          { onConflict: "production_interview_id" }
-        )
+        .upsert(upsertData, { onConflict: "production_interview_id" })
         .select()
         .single();
 

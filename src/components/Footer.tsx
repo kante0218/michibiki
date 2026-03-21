@@ -21,6 +21,7 @@ export default function Footer() {
               <li><a href="/explore" className="text-gray-500 hover:text-gray-300 text-sm transition-colors">求人を探す</a></li>
               <li><a href="/interview" className="text-gray-500 hover:text-gray-300 text-sm transition-colors">スキル評価を受ける</a></li>
               <li><a href="/interview" className="text-gray-500 hover:text-gray-300 text-sm transition-colors">APEX スコア</a></li>
+              <li><a href="/expert" className="text-gray-500 hover:text-gray-300 text-sm transition-colors">エキスパート面接</a></li>
               <li><a href="/help" className="text-gray-500 hover:text-gray-300 text-sm transition-colors">ヘルプセンター</a></li>
             </ul>
           </div>

@@ -67,46 +67,59 @@ export async function POST(req: NextRequest) {
         customInstructions,
         jobTitle,
         jobDescription,
+        expert,
       } = body;
 
+      const isExpert = expert === true || (typeof category === "string" && category.includes("expert"));
       const topicsText = Array.isArray(topics) && topics.length > 0
         ? topics.join("、")
         : "一般的なトピック";
 
+      const expertInstructions = isExpert ? `
+
+## エキスパート面接モード
+この面接はエキスパート（専門家）向けです。以下の特別な要件に従ってください：
+1. ケーススタディ形式の問題を中心に出題してください（case_study型を多く）
+2. 「正解が一つではない」オープンエンドな問題を含めてください
+3. 候補者の思考プロセスを引き出す質問にしてください
+4. 各問題に「思考プロセスガイド」を含めてください（例：「判断の根拠」「検討した代替案」「リスク評価」を求める指示）
+5. 難易度は「expert」レベルにしてください
+6. type に "case_study" と "open_ended" を積極的に使用してください` : "";
+
       const message = await callWithRetry(() =>
         anthropic.messages.create({
           model: "claude-sonnet-4-20250514",
-          max_tokens: 4000,
+          max_tokens: isExpert ? 5000 : 4000,
           messages: [
             {
               role: "user",
               content: `あなたは日本の採用プラットフォーム「みちびき」のAI面接官です。
-以下の企業設定に基づいて、カスタム面接問題を${questionCount || 5}問生成してください。
+以下の企業設定に基づいて、カスタム面接問題を${questionCount || (isExpert ? 4 : 5)}問生成してください。
 
 カテゴリ: ${category || "一般"}
-難易度: ${difficulty || "medium"}
+難易度: ${isExpert ? "expert" : (difficulty || "medium")}
 トピック: ${topicsText}
 求人タイトル: ${jobTitle || "一般"}
 求人内容: ${jobDescription || "なし"}
-${customInstructions ? `企業からの追加指示: ${customInstructions}` : ""}
+${customInstructions ? `企業からの追加指示: ${customInstructions}` : ""}${expertInstructions}
 
 各問題は以下のJSON形式で出力してください:
 {
   "questions": [
     {
       "id": 1,
-      "type": "multiple_choice" | "coding" | "short_answer" | "case_study",
+      "type": "multiple_choice" | "coding" | "short_answer" | "case_study"${isExpert ? ' | "open_ended"' : ""},
       "question": "問題文",
       "options": ["選択肢A", "選択肢B", "選択肢C", "選択肢D"] (multiple_choiceの場合のみ),
-      "correctAnswer": "正解",
+      "correctAnswer": "正解"${isExpert ? ',\n      "thinkingGuide": "この問題で候補者に言語化してほしい思考プロセスのガイド"' : ""},
       "points": 配点,
-      "difficulty": "${difficulty || "medium"}",
+      "difficulty": "${isExpert ? "expert" : (difficulty || "medium")}",
       "timeLimit": 秒数
     }
   ]
 }
 
-難易度「${difficulty || "medium"}」に合わせた問題を作成してください。
+難易度「${isExpert ? "expert" : (difficulty || "medium")}」に合わせた問題を作成してください。
 トピック（${topicsText}）に関連する内容を含めてください。
 JSONのみを出力してください。`,
             },
