@@ -13,8 +13,10 @@ const ALLOWED_SPEAKERS: Record<string, { id: number; name: string; gender: strin
   "kotarou": { id: 21, name: "小夜/SAYO", gender: "female" },
 };
 
-const DEFAULT_SPEAKER = "ryusei"; // Professional male voice for interviewer
+const DEFAULT_SPEAKER = "ryusei";
 
+// Returns a streaming URL for the client to play directly
+// This avoids server-side polling/timeout issues on Vercel
 export async function POST(req: NextRequest) {
   try {
     const { text, speaker } = await req.json();
@@ -30,9 +32,8 @@ export async function POST(req: NextRequest) {
     const speakerKey = speaker && speaker in ALLOWED_SPEAKERS ? speaker : DEFAULT_SPEAKER;
     const speakerId = ALLOWED_SPEAKERS[speakerKey].id;
 
-    // Use tts.quest v3 API (free, no API key required)
+    // Request synthesis from tts.quest v3 API
     const synthesisUrl = `https://api.tts.quest/v3/voicevox/synthesis?speaker=${speakerId}&text=${encodeURIComponent(text)}`;
-
     const synthesisRes = await fetch(synthesisUrl, { signal: AbortSignal.timeout(10000) });
 
     if (!synthesisRes.ok) {
@@ -40,32 +41,19 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "VOICEVOX synthesis failed" }, { status: 502 });
     }
 
-    const synthesisData = await synthesisRes.json();
+    const data = await synthesisRes.json();
 
-    if (!synthesisData.mp3DownloadUrl) {
-      // If the result isn't ready yet, poll the status URL
-      if (synthesisData.audioStatusUrl) {
-        const audioUrl = await pollForAudio(synthesisData.audioStatusUrl, synthesisData.mp3DownloadUrl);
-        if (audioUrl) {
-          return await fetchAndReturnAudio(audioUrl);
-        }
-      }
-      console.error("VOICEVOX: no download URL in response", synthesisData);
+    if (!data.success || !data.mp3StreamingUrl) {
+      console.error("VOICEVOX: unexpected response", data);
       return NextResponse.json({ error: "VOICEVOX synthesis failed" }, { status: 502 });
     }
 
-    // Check if audio is immediately ready
-    if (synthesisData.isAudioReady) {
-      return await fetchAndReturnAudio(synthesisData.mp3DownloadUrl);
-    }
-
-    // Poll for audio readiness
-    const audioUrl = await pollForAudio(synthesisData.audioStatusUrl, synthesisData.mp3DownloadUrl);
-    if (audioUrl) {
-      return await fetchAndReturnAudio(audioUrl);
-    }
-
-    return NextResponse.json({ error: "VOICEVOX audio generation timed out" }, { status: 504 });
+    // Return the streaming URL for the client to play directly
+    // The mp3StreamingUrl waits for audio generation and streams the result
+    return NextResponse.json({
+      audioUrl: data.mp3StreamingUrl,
+      speakerName: data.speakerName,
+    });
   } catch (err) {
     console.error("VOICEVOX TTS error:", err);
     return NextResponse.json({ error: "VOICEVOX TTS generation failed" }, { status: 500 });
@@ -80,45 +68,4 @@ export async function GET() {
     gender: value.gender,
   }));
   return NextResponse.json({ speakers });
-}
-
-async function pollForAudio(statusUrl: string, downloadUrl: string): Promise<string | null> {
-  const maxAttempts = 15;
-  const delay = 1000; // 1 second between polls
-
-  for (let i = 0; i < maxAttempts; i++) {
-    await new Promise(resolve => setTimeout(resolve, delay));
-
-    try {
-      const statusRes = await fetch(statusUrl, { signal: AbortSignal.timeout(5000) });
-      if (statusRes.ok) {
-        const status = await statusRes.json();
-        if (status.isAudioReady) {
-          return downloadUrl;
-        }
-      }
-    } catch {
-      // Continue polling
-    }
-  }
-
-  return null;
-}
-
-async function fetchAndReturnAudio(url: string): Promise<NextResponse> {
-  const audioRes = await fetch(url, { signal: AbortSignal.timeout(15000) });
-
-  if (!audioRes.ok) {
-    return NextResponse.json({ error: "Failed to download audio" }, { status: 502 });
-  }
-
-  const audioBuffer = await audioRes.arrayBuffer();
-
-  return new NextResponse(new Uint8Array(audioBuffer), {
-    status: 200,
-    headers: {
-      "Content-Type": "audio/mpeg",
-      "Cache-Control": "public, max-age=3600",
-    },
-  });
 }

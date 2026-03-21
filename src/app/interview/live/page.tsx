@@ -373,19 +373,32 @@ function LiveInterviewContent() {
       }
       setIsSpeaking(true);
 
-      let res: Response;
+      // VOICEVOX: returns a streaming URL that the browser plays directly
+      if (voiceProvider === "voicevox") {
+        const res = await fetch("/api/tts/voicevox", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ text, speaker: voicevoxSpeaker }),
+        });
+        if (!res.ok) throw new Error("VOICEVOX API failed");
+        const data = await res.json();
+        if (!data.audioUrl) throw new Error("No audio URL");
 
+        const audio = new Audio(data.audioUrl);
+        ttsAudioRef.current = audio;
+        audio.onended = () => { setIsSpeaking(false); ttsAudioRef.current = null; };
+        audio.onerror = () => { setIsSpeaking(false); ttsAudioRef.current = null; };
+        await audio.play();
+        return;
+      }
+
+      // Edge TTS and Google TTS: return audio blob directly
+      let res: Response;
       if (voiceProvider === "google") {
         res = await fetch("/api/tts/google", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ text, voice: googleVoice }),
-        });
-      } else if (voiceProvider === "voicevox") {
-        res = await fetch("/api/tts/voicevox", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ text, speaker: voicevoxSpeaker }),
         });
       } else {
         res = await fetch("/api/tts", {
