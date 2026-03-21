@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { useAuth } from "@/lib/AuthContext";
 import Logo from "@/components/Logo";
 
 const interviewTypes = [
@@ -164,7 +163,6 @@ const faqs = [
 
 export default function RootPage() {
   const [openFaq, setOpenFaq] = useState<number | null>(null);
-  const { user } = useAuth();
   const router = useRouter();
 
   const handlePractice = (category?: string) => {
@@ -181,35 +179,30 @@ export default function RootPage() {
               <Logo size="header" iconOnly showBrandName />
             </Link>
             <nav className="hidden md:flex items-center gap-1">
-              <Link href="/" className="text-sm text-indigo-600 bg-indigo-50 px-3 py-1.5 rounded-md font-medium">
-                ホーム
+              <Link href="/for-companies" className="text-sm text-gray-500 hover:text-gray-900 hover:bg-gray-50 px-3 py-1.5 rounded-md transition-colors">
+                企業向け
               </Link>
-              <Link href="/explore" className="text-sm text-gray-500 hover:text-gray-900 hover:bg-gray-50 px-3 py-1.5 rounded-md transition-colors">
-                求人を探す
+              <Link href="/pricing" className="text-sm text-gray-500 hover:text-gray-900 hover:bg-gray-50 px-3 py-1.5 rounded-md transition-colors">
+                料金プラン
               </Link>
-              <Link href="/interview" className="text-sm text-gray-500 hover:text-gray-900 hover:bg-gray-50 px-3 py-1.5 rounded-md transition-colors">
-                面接練習
+              <Link href="/cases" className="text-sm text-gray-500 hover:text-gray-900 hover:bg-gray-50 px-3 py-1.5 rounded-md transition-colors">
+                導入事例
               </Link>
-              <Link href="/profile" className="text-sm text-gray-500 hover:text-gray-900 hover:bg-gray-50 px-3 py-1.5 rounded-md transition-colors">
-                プロフィール
+              <Link href="/blog" className="text-sm text-gray-500 hover:text-gray-900 hover:bg-gray-50 px-3 py-1.5 rounded-md transition-colors">
+                ブログ
+              </Link>
+              <Link href="/help" className="text-sm text-gray-500 hover:text-gray-900 hover:bg-gray-50 px-3 py-1.5 rounded-md transition-colors">
+                ヘルプ
               </Link>
             </nav>
           </div>
           <div className="flex items-center gap-3">
-            {user ? (
-              <Link href="/home" className="text-sm text-gray-700 hover:text-gray-900 px-3 py-1.5 rounded-md border border-gray-200 hover:border-gray-300 transition-colors">
-                ダッシュボード
-              </Link>
-            ) : (
-              <>
-                <Link href="/login" className="text-sm text-gray-700 hover:text-gray-900 px-3 py-1.5 rounded-md border border-gray-200 hover:border-gray-300 transition-colors">
-                  ログイン
-                </Link>
-                <Link href="/signup" className="text-sm text-white bg-indigo-600 hover:bg-indigo-700 px-4 py-1.5 rounded-md transition-colors font-medium">
-                  登録する
-                </Link>
-              </>
-            )}
+            <Link href="/contact" className="text-sm text-gray-700 hover:text-gray-900 px-3 py-1.5 rounded-md border border-gray-200 hover:border-gray-300 transition-colors">
+              お問い合わせ
+            </Link>
+            <Link href="/login" className="text-sm text-white bg-indigo-600 hover:bg-indigo-700 px-4 py-1.5 rounded-md transition-colors font-medium">
+              ログイン
+            </Link>
           </div>
         </div>
       </header>
