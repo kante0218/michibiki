@@ -39,25 +39,58 @@ function MouseGlow({ className = "" }: { className?: string }) {
     style={{ background: "radial-gradient(500px circle at var(--mx, 50%) var(--my, 50%), rgba(99,102,241,0.04), transparent 60%)" }} />;
 }
 
-const interviewTypes = [
-  { title: "ソフトウェアエンジニアリング", category: "software_engineering", duration: "20分", format: ["ビデオ", "コーディング"],
-    icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />,
-    description: "アルゴリズム、システム設計、コーディング実技を含む総合的な技術面接です。" },
-  { title: "データサイエンス", category: "data_science", duration: "25分", format: ["ビデオ", "ケーススタディ"],
-    icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />,
-    description: "統計分析、機械学習、データ可視化に関するケーススタディ形式の面接です。" },
-  { title: "プロダクトマネジメント", category: "product_management", duration: "20分", format: ["ビデオ", "ケーススタディ"],
-    icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />,
-    description: "プロダクト戦略、優先順位付け、ユーザー理解力を評価する面接です。" },
-  { title: "デザイン", category: "design", duration: "15分", format: ["ビデオ", "ポートフォリオレビュー"],
-    icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />,
-    description: "UI/UXデザインの思考プロセスとポートフォリオについて議論する面接です。" },
-  { title: "ビジネス・コンサルティング", category: "business_consulting", duration: "20分", format: ["ビデオ", "ケーススタディ"],
-    icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />,
-    description: "ビジネス分析、問題解決力、コミュニケーション力を評価する面接です。" },
-  { title: "医療・ヘルスケア", category: "healthcare", duration: "25分", format: ["ビデオ", "専門知識テスト"],
-    icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />,
-    description: "医療知識、臨床判断力、ヘルスケア業界の理解を評価する面接です。" },
+const interviewGroups = [
+  { group: "IT・エンジニアリング", categories: [
+    { title: "ソフトウェアエンジニアリング", category: "software_engineering", description: "アルゴリズム、システム設計、コーディング実技を含む総合的な技術面接です。" },
+    { title: "データサイエンス", category: "data_science", description: "統計分析、機械学習、データ可視化に関する実践的な面接です。" },
+    { title: "AI・機械学習エンジニア", category: "ai_ml_engineer", description: "深層学習、NLP、LLMの知識と実装力を評価する面接です。" },
+    { title: "インフラ・DevOps", category: "infra_devops", description: "クラウド、CI/CD、コンテナ技術の知識を評価する面接です。" },
+    { title: "セキュリティエンジニア", category: "security_engineer", description: "脆弱性分析、ネットワークセキュリティの専門面接です。" },
+    { title: "モバイルアプリ開発", category: "mobile_development", description: "iOS/Android開発、React Native、Flutterの実践面接です。" },
+  ]},
+  { group: "デザイン・クリエイティブ", categories: [
+    { title: "UI/UXデザイン", category: "design", description: "デザイン思考、ユーザーリサーチ、プロトタイピング力を評価します。" },
+    { title: "グラフィックデザイン", category: "graphic_design", description: "ビジュアルデザイン、タイポグラフィ、ブランディングの面接です。" },
+    { title: "動画制作・映像", category: "video_production", description: "映像編集、企画力、ストーリーテリングを評価する面接です。" },
+  ]},
+  { group: "ビジネス・マネジメント", categories: [
+    { title: "プロダクトマネジメント", category: "product_management", description: "プロダクト戦略、優先順位付け、ユーザー理解力を評価します。" },
+    { title: "ビジネスコンサルティング", category: "business_consulting", description: "ケーススタディ、問題解決力、コミュニケーション力を評価します。" },
+    { title: "営業・セールス", category: "sales", description: "提案力、交渉力、顧客対応スキルを評価する面接です。" },
+    { title: "マーケティング", category: "marketing", description: "デジタルマーケティング、分析、戦略立案の面接です。" },
+  ]},
+  { group: "金融・ファイナンス", categories: [
+    { title: "金融アナリスト", category: "financial_analyst", description: "財務分析、バリュエーション、リスク管理の専門面接です。" },
+    { title: "投資・ファンドマネジメント", category: "investment_fund", description: "ポートフォリオ理論、投資戦略、市場分析の面接です。" },
+    { title: "フィンテック", category: "fintech", description: "決済技術、ブロックチェーン、金融規制の面接です。" },
+    { title: "会計・税務", category: "accounting_tax", description: "簿記、税法、監査手法の知識を評価する面接です。" },
+  ]},
+  { group: "医療・ヘルスケア", categories: [
+    { title: "医療・臨床", category: "healthcare", description: "臨床知識、診断力、患者対応スキルを評価する面接です。" },
+    { title: "看護・介護", category: "nursing_care", description: "ケアプランニング、患者観察、チーム連携の面接です。" },
+    { title: "薬剤師・製薬", category: "pharmacy", description: "調剤、薬理学、服薬指導の専門面接です。" },
+    { title: "医療IT・ヘルステック", category: "health_tech", description: "電子カルテ、遠隔医療、医療データ分析の面接です。" },
+  ]},
+  { group: "教育・研究", categories: [
+    { title: "教育・講師", category: "education", description: "教育理論、授業設計、生徒指導力を評価する面接です。" },
+    { title: "EdTech", category: "edtech", description: "教育テクノロジー、LMS、オンライン教材開発の面接です。" },
+    { title: "研究員・アカデミア", category: "research_academia", description: "研究計画、論文作成、学術発表の能力を評価する面接です。" },
+  ]},
+  { group: "クリエイター・インフルエンサー", categories: [
+    { title: "インフルエンサー・SNS", category: "influencer_sns", description: "コンテンツ企画、エンゲージメント、ブランド構築の面接です。" },
+    { title: "YouTuber・配信者", category: "youtuber_streamer", description: "動画企画、視聴者分析、収益化戦略の面接です。" },
+    { title: "コンテンツクリエイター", category: "content_creator", description: "ライティング、編集、マルチメディア制作の面接です。" },
+  ]},
+  { group: "コーポレート・管理", categories: [
+    { title: "人事・採用", category: "hr_recruitment", description: "採用戦略、労務管理、組織開発の面接です。" },
+    { title: "経理・財務", category: "accounting_finance", description: "財務諸表、予算管理、資金調達の面接です。" },
+    { title: "法務・コンプライアンス", category: "legal_compliance", description: "契約法、知的財産、コンプライアンス管理の面接です。" },
+  ]},
+  { group: "新領域・先端技術", categories: [
+    { title: "ブロックチェーン・Web3", category: "blockchain_web3", description: "スマートコントラクト、DeFi、NFTの専門面接です。" },
+    { title: "ゲーム開発", category: "game_development", description: "Unity/Unreal、ゲームデザイン、3Dモデリングの面接です。" },
+    { title: "DX推進・コンサルタント", category: "dx_consultant", description: "デジタル変革、業務改善、テクノロジー導入の面接です。" },
+  ]},
 ];
 
 const steps = [
@@ -107,7 +140,7 @@ export default function RootPage() {
       <PublicHeader />
 
       {/* ═══ HERO ═══ */}
-      <section className="relative pt-24 pb-20 px-4 overflow-hidden">
+      <section className="relative pt-24 pb-10 px-4 overflow-hidden">
         <MouseGlow />
         {/* Parallax gradient orbs */}
         <div className="absolute inset-0 pointer-events-none">
@@ -165,12 +198,6 @@ export default function RootPage() {
           </div>
         </div>
 
-        {/* Scroll indicator */}
-        <div className="flex justify-center mt-16 transition-all duration-700" style={{ opacity: heroLoaded ? 1 : 0, transitionDelay: "1200ms" }}>
-          <div className="w-6 h-10 border-2 border-gray-300 rounded-full flex items-start justify-center p-1.5">
-            <div className="w-1.5 h-3 bg-gray-400 rounded-full animate-bounce" />
-          </div>
-        </div>
       </section>
 
       {/* ═══ HOW IT WORKS ═══ */}
