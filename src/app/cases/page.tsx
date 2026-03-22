@@ -1,191 +1,148 @@
 "use client";
 
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import PublicHeader from "@/components/PublicHeader";
 import Footer from "@/components/Footer";
 import Link from "next/link";
 
-const caseStudies = [
-  {
-    company: "株式会社テックフォワード",
-    industry: "IT・SaaS",
-    logo: "T",
-    logoColor: "bg-blue-500",
-    summary: "急成長SaaS企業がMichibikiを活用し、エンジニア採用を劇的に効率化。採用コストと期間の大幅削減を実現しました。",
-    quote: "Michibiki導入後、候補者の質が明らかに向上しました。APEXスコアのおかげで、書類選考にかかる時間がほぼゼロになり、面接の段階からミスマッチが激減しました。",
-    quotePerson: "田中 誠一",
-    quoteRole: "CTO",
-    stats: [
-      { label: "採用コスト削減", value: "40%", icon: "down" },
-      { label: "採用期間短縮", value: "平均45日→22日", icon: "clock" },
-      { label: "定着率", value: "95%", icon: "up" },
-    ],
-  },
-  {
-    company: "グローバルファイナンス株式会社",
-    industry: "金融・フィンテック",
-    logo: "G",
-    logoColor: "bg-emerald-500",
-    summary: "金融業界特有の高い専門性が求められるポジションにおいて、AI面接とスキル評価を活用した精度の高いマッチングを実現しました。",
-    quote: "金融ドメインの知識と技術力の両方を兼ね備えた人材を見つけるのは非常に困難でしたが、MichibikiのAI評価により、適切なスキルセットを持つ候補者に効率的にアクセスできるようになりました。",
-    quotePerson: "佐藤 美咲",
-    quoteRole: "人事部長",
-    stats: [
-      { label: "採用成功率", value: "3.5倍", icon: "up" },
-      { label: "候補者スクリーニング時間", value: "70%削減", icon: "down" },
-      { label: "年間採用数", value: "48名", icon: "up" },
-    ],
-  },
-  {
-    company: "ヘルステック・イノベーションズ合同会社",
-    industry: "ヘルスケア・医療IT",
-    logo: "H",
-    logoColor: "bg-purple-500",
-    summary: "医療×ITの希少な人材採用において、Michibikiのグローバルネットワークを活用。海外拠点のエンジニア採用にも成功しました。",
-    quote: "医療ITの経験を持つエンジニアは日本国内だけでは見つけにくいですが、Michibikiのグローバルなプラットフォームにより、アジア各国から優秀な人材を採用できました。",
-    quotePerson: "鈴木 健太郎",
-    quoteRole: "CEO",
-    stats: [
-      { label: "グローバル採用比率", value: "60%", icon: "up" },
-      { label: "オファー承諾率", value: "92%", icon: "up" },
-      { label: "採用単価", value: "55%削減", icon: "down" },
-    ],
-  },
-  {
-    company: "リテイルDX株式会社",
-    industry: "小売・EC",
-    logo: "R",
-    logoColor: "bg-orange-500",
-    summary: "DX推進に必要なエンジニア・データサイエンティストをスピーディーに採用。プロジェクトの立ち上げからわずか2ヶ月でチーム構築を完了しました。",
-    quote: "DXプロジェクトの納期が迫る中、チームマッチング機能で必要なスキルセットを持つチームを一括で提案してもらえたのは非常に助かりました。個別採用では絶対に間に合いませんでした。",
-    quotePerson: "山本 亜希子",
-    quoteRole: "DX推進室長",
-    stats: [
-      { label: "チーム構築期間", value: "2ヶ月", icon: "clock" },
-      { label: "プロジェクト達成率", value: "100%", icon: "up" },
-      { label: "エンジニア満足度", value: "4.8/5.0", icon: "up" },
-    ],
-  },
-];
-
-function StatIcon({ type }: { type: string }) {
-  if (type === "up") {
-    return (
-      <svg className="w-5 h-5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-      </svg>
-    );
-  }
-  if (type === "down") {
-    return (
-      <svg className="w-5 h-5 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6" />
-      </svg>
-    );
-  }
+function Reveal({ children, className = "", delay = 0 }: { children: ReactNode; className?: string; delay?: number }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [visible, setVisible] = useState(false);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const obs = new IntersectionObserver(([e]) => { if (e.isIntersecting) { setVisible(true); obs.unobserve(el); } }, { threshold: 0.1, rootMargin: "0px 0px -60px 0px" });
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, []);
   return (
-    <svg className="w-5 h-5 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-    </svg>
+    <div ref={ref} className={className} style={{
+      opacity: visible ? 1 : 0, transform: visible ? "none" : "translateY(30px)",
+      transition: `opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1) ${delay}ms, transform 0.7s cubic-bezier(0.16, 1, 0.3, 1) ${delay}ms`,
+    }}>{children}</div>
   );
 }
 
+const visionItems = [
+  {
+    title: "採用コストを半分以下に",
+    description: "面接官の人件費、エージェント手数料、工数 ── AI面接によって採用にかかるコストを大幅に削減し、より多くの候補者と出会える環境を実現します。",
+    target: "目標: 導入企業の採用コスト50%削減",
+    icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M2.25 18.75a60.07 60.07 0 0 1 15.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 0 1 3 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 0 0-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 0 1-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 0 0 3 15h-.75M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm3 0h.008v.008H18V10.5Zm-12 0h.008v.008H6V10.5Z" />,
+  },
+  {
+    title: "採用のミスマッチをなくす",
+    description: "AIが候補者のスキルを客観的に評価し、企業の求める人材像と精密にマッチング。入社後のギャップを最小限にし、定着率の向上を目指します。",
+    target: "目標: マッチング精度90%以上",
+    icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 19.128a9.38 9.38 0 0 0 2.625.372 9.337 9.337 0 0 0 4.121-.952 4.125 4.125 0 0 0-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 0 1 8.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0 1 11.964-3.07M12 6.375a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0Zm8.25 2.25a2.625 2.625 0 1 1-5.25 0 2.625 2.625 0 0 1 5.25 0Z" />,
+  },
+  {
+    title: "面接プロセスの完全自動化",
+    description: "一次面接をAIが完全に代行。録画・評価・レポートまで自動で完了するため、人事担当者はより重要な判断に集中できるようになります。",
+    target: "目標: 一次面接の100%自動化",
+    icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09ZM18.259 8.715 18 9.75l-.259-1.035a3.375 3.375 0 0 0-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 0 0 2.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 0 0 2.455 2.456L21.75 6l-1.036.259a3.375 3.375 0 0 0-2.455 2.456ZM16.894 20.567 16.5 21.75l-.394-1.183a2.25 2.25 0 0 0-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 0 0 1.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 0 0 1.423 1.423l1.183.394-1.183.394a2.25 2.25 0 0 0-1.423 1.423Z" />,
+  },
+  {
+    title: "グローバル人材へのアクセス",
+    description: "言語・時差・地理的制約を超えて、世界中の優秀な人材とつながる。多言語AI面接により、国境を越えた採用を可能にします。",
+    target: "目標: 5カ国以上からの人材マッチング",
+    icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 21a9.004 9.004 0 0 0 8.716-6.747M12 21a9.004 9.004 0 0 1-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S9.515 3 12 3m0 0a8.997 8.997 0 0 1 7.843 4.582M12 3a8.997 8.997 0 0 0-7.843 4.582m15.686 0A11.953 11.953 0 0 1 12 10.5c-2.998 0-5.74-1.1-7.843-2.918m15.686 0A8.959 8.959 0 0 1 21 12c0 .778-.099 1.533-.284 2.253m0 0A17.919 17.919 0 0 1 12 16.5c-3.162 0-6.133-.815-8.716-2.247m0 0A9.015 9.015 0 0 1 3 12c0-1.605.42-3.113 1.157-4.418" />,
+  },
+];
+
 export default function CasesPage() {
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-white">
       <PublicHeader />
       <main>
-
-        <div className="max-w-5xl mx-auto px-8 py-12">
+        <div className="max-w-5xl mx-auto px-6 py-16">
           {/* Header */}
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">導入事例</h1>
-            <p className="text-gray-600">
-              Michibikiを導入いただいた企業の成果をご紹介します。業界を問わず、AI人材マッチングが採用課題を解決しています。
-            </p>
-          </div>
-
-          {/* Summary stats */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-12">
-            {[
-              { label: "導入企業数", value: "500+" },
-              { label: "平均採用コスト削減", value: "45%" },
-              { label: "平均採用期間短縮", value: "50%" },
-              { label: "顧客満足度", value: "4.8/5.0" },
-            ].map((s) => (
-              <div key={s.label} className="bg-white rounded-xl border border-gray-200 p-5 text-center">
-                <p className="text-2xl font-bold text-indigo-600">{s.value}</p>
-                <p className="text-xs text-gray-500 mt-1">{s.label}</p>
+          <Reveal>
+            <div className="text-center mb-16">
+              <div className="inline-flex items-center gap-2 bg-indigo-50 text-indigo-600 text-sm font-semibold px-4 py-1.5 rounded-full mb-6 border border-indigo-100">
+                <div className="w-1.5 h-1.5 rounded-full bg-indigo-600" />
+                Vision
               </div>
-            ))}
-          </div>
+              <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">導が目指すこと</h1>
+              <p className="text-gray-500 max-w-2xl mx-auto leading-relaxed">
+                導はまだ始まったばかりのサービスです。
+                これから一社一社と向き合いながら、以下の未来を実現していきます。
+              </p>
+            </div>
+          </Reveal>
 
-          {/* Case Studies */}
-          <div className="space-y-8">
-            {caseStudies.map((cs, i) => (
-              <div key={i} className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-                {/* Header */}
-                <div className="flex items-center gap-4 p-6 border-b border-gray-100">
-                  <div className={`w-12 h-12 rounded-xl ${cs.logoColor} flex items-center justify-center`}>
-                    <span className="text-white font-bold text-lg">{cs.logo}</span>
-                  </div>
-                  <div>
-                    <h3 className="font-bold text-gray-900">{cs.company}</h3>
-                    <span className="text-sm text-gray-500">{cs.industry}</span>
-                  </div>
+          {/* Current Status */}
+          <Reveal>
+            <div className="bg-indigo-50 rounded-2xl p-8 mb-16 border border-indigo-100">
+              <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                <div className="w-2 h-2 rounded-full bg-indigo-600 animate-pulse" />
+                現在の状況
+              </h2>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                <div className="bg-white rounded-xl p-5 text-center">
+                  <p className="text-2xl font-bold text-indigo-600">1社</p>
+                  <p className="text-xs text-gray-500 mt-1">導入企業</p>
                 </div>
+                <div className="bg-white rounded-xl p-5 text-center">
+                  <p className="text-2xl font-bold text-gray-400">準備中</p>
+                  <p className="text-xs text-gray-500 mt-1">AI面接実績</p>
+                </div>
+                <div className="bg-white rounded-xl p-5 text-center">
+                  <p className="text-2xl font-bold text-indigo-600">2025年</p>
+                  <p className="text-xs text-gray-500 mt-1">サービス開始</p>
+                </div>
+              </div>
+            </div>
+          </Reveal>
 
-                <div className="p-6">
-                  {/* Summary */}
-                  <p className="text-gray-600 mb-6">{cs.summary}</p>
-
-                  {/* Stats */}
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-                    {cs.stats.map((stat) => (
-                      <div key={stat.label} className="bg-gray-50 rounded-lg p-4 flex items-center gap-3">
-                        <StatIcon type={stat.icon} />
-                        <div>
-                          <p className="text-lg font-bold text-gray-900">{stat.value}</p>
-                          <p className="text-xs text-gray-500">{stat.label}</p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* Quote */}
-                  <div className="bg-indigo-50 rounded-lg p-5 border-l-4 border-indigo-600">
-                    <p className="text-sm text-gray-700 italic leading-relaxed mb-3">
-                      &ldquo;{cs.quote}&rdquo;
-                    </p>
-                    <div className="flex items-center gap-2">
-                      <div className="w-8 h-8 rounded-full bg-indigo-200 flex items-center justify-center">
-                        <span className="text-indigo-700 text-xs font-medium">{cs.quotePerson.charAt(0)}</span>
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium text-gray-900">{cs.quotePerson}</p>
-                        <p className="text-xs text-gray-500">{cs.company} {cs.quoteRole}</p>
+          {/* Vision Cards */}
+          <div className="space-y-6">
+            {visionItems.map((item, i) => (
+              <Reveal key={item.title} delay={i * 100}>
+                <div className="group bg-white rounded-2xl border border-gray-200 p-8 hover:border-indigo-200 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-500">
+                  <div className="flex items-start gap-6">
+                    <div className="w-14 h-14 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center flex-shrink-0 group-hover:bg-indigo-600 group-hover:text-white transition-all duration-300">
+                      <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">{item.icon}</svg>
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="text-lg font-bold text-gray-900 mb-2">{item.title}</h3>
+                      <p className="text-sm text-gray-500 leading-relaxed mb-4">{item.description}</p>
+                      <div className="inline-flex items-center gap-2 bg-gray-50 text-gray-600 text-xs font-medium px-3 py-1.5 rounded-full border border-gray-100">
+                        <svg className="w-3.5 h-3.5 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3v1.5M3 21v-6m0 0 2.77-.693a9 9 0 0 1 6.208.682l.108.054a9 9 0 0 0 6.086.71l3.114-.732a48.524 48.524 0 0 1-.005-10.499l-3.11.732a9 9 0 0 1-6.085-.711l-.108-.054a9 9 0 0 0-6.208-.682L3 4.5M3 15V4.5" />
+                        </svg>
+                        {item.target}
                       </div>
                     </div>
                   </div>
                 </div>
-              </div>
+              </Reveal>
             ))}
           </div>
 
           {/* CTA */}
-          <div className="mt-12 bg-white rounded-xl border border-gray-200 p-10 text-center">
-            <h2 className="text-2xl font-bold text-gray-900 mb-3">貴社の採用課題をMichibikiで解決しませんか？</h2>
-            <p className="text-gray-600 mb-6 max-w-lg mx-auto">
-              導入に関するご相談・デモのご依頼はお気軽にお問い合わせください。
-            </p>
-            <div className="flex items-center justify-center gap-4">
-              <button className="px-6 py-3 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 transition-colors">
-                お問い合わせ
-              </button>
-              <button className="px-6 py-3 bg-white text-indigo-600 font-medium rounded-lg border border-indigo-200 hover:bg-indigo-50 transition-colors">
-                資料ダウンロード
-              </button>
+          <Reveal>
+            <div className="mt-16 bg-gradient-to-br from-indigo-600 to-purple-700 rounded-2xl p-10 text-center relative overflow-hidden">
+              <div className="absolute top-0 left-1/4 w-64 h-64 bg-white/5 rounded-full blur-3xl" />
+              <div className="relative z-10">
+                <h2 className="text-2xl font-bold text-white mb-3">一緒に採用の未来をつくりませんか？</h2>
+                <p className="text-indigo-100/80 mb-8 max-w-lg mx-auto leading-relaxed">
+                  導はまだ小さなサービスですが、だからこそ一社一社に丁寧に向き合います。
+                  まずはお気軽にご相談ください。
+                </p>
+                <div className="flex items-center justify-center gap-4">
+                  <Link href="/contact"
+                    className="px-8 py-3.5 bg-white text-indigo-700 font-semibold rounded-xl hover:bg-indigo-50 transition-all duration-300 hover:shadow-xl text-sm">
+                    お問い合わせ
+                  </Link>
+                  <Link href="/interview"
+                    className="px-8 py-3.5 text-white/80 font-semibold rounded-xl border border-white/20 hover:bg-white/10 transition-all duration-300 text-sm">
+                    面接を体験する
+                  </Link>
+                </div>
+              </div>
             </div>
-          </div>
+          </Reveal>
         </div>
       </main>
       <Footer />

@@ -61,9 +61,9 @@ const interviewTypes = [
 ];
 
 const steps = [
-  { step: "01", title: "準備", description: "面接タイプを選択し、カメラ・マイクの動作確認を行います。練習モードで何度でもリハーサルできます。", emoji: "🎯" },
-  { step: "02", title: "面接実施", description: "AIが構造化された質問を行います。ビデオ通話形式で、自然な会話のように進行します。", emoji: "🎤" },
-  { step: "03", title: "結果確認", description: "面接終了後、AIがスキルを分析。詳細なフィードバックとスコアを確認できます。", emoji: "📊" },
+  { step: "01", title: "準備", description: "面接タイプを選択し、カメラ・マイクの動作確認を行います。練習モードで何度でもリハーサルできます。" },
+  { step: "02", title: "面接実施", description: "AIが構造化された質問を行います。ビデオ通話形式で、自然な会話のように進行します。" },
+  { step: "03", title: "結果確認", description: "面接終了後、AIがスキルを分析。詳細なフィードバックとスコアを確認できます。" },
 ];
 
 const features = [
@@ -187,7 +187,6 @@ export default function RootPage() {
             {steps.map((s, i) => (
               <Reveal key={s.step} delay={i * 150}>
                 <div className="relative group cursor-default bg-white rounded-2xl p-8 border border-gray-100 hover:border-indigo-200 hover:shadow-xl hover:-translate-y-1 transition-all duration-500">
-                  <div className="text-3xl mb-4">{s.emoji}</div>
                   <div className="text-4xl font-bold text-indigo-100 group-hover:text-indigo-500 transition-colors duration-500 mb-3">{s.step}</div>
                   <h3 className="text-lg font-bold text-gray-900 mb-3 group-hover:text-indigo-700 transition-colors duration-300">{s.title}</h3>
                   <p className="text-sm text-gray-500 leading-relaxed">{s.description}</p>
@@ -257,12 +256,12 @@ export default function RootPage() {
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {features.map((f, i) => (
               <Reveal key={f.title} delay={i * 100}>
-                <div className="group bg-white rounded-2xl p-6 border border-white hover:border-indigo-100 hover:shadow-lg hover:-translate-y-1 transition-all duration-500">
-                  <div className="w-12 h-12 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center mb-4 group-hover:bg-indigo-600 group-hover:text-white transition-all duration-300">
+                <div className="group bg-white rounded-2xl p-6 border border-white hover:border-indigo-100 hover:shadow-lg hover:-translate-y-1 transition-all duration-500 h-full flex flex-col">
+                  <div className="w-12 h-12 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center mb-4 group-hover:bg-indigo-600 group-hover:text-white transition-all duration-300 flex-shrink-0">
                     <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">{f.icon}</svg>
                   </div>
                   <h3 className="text-sm font-bold text-gray-900 mb-2">{f.title}</h3>
-                  <p className="text-sm text-gray-500 leading-relaxed">{f.description}</p>
+                  <p className="text-sm text-gray-500 leading-relaxed flex-1">{f.description}</p>
                 </div>
               </Reveal>
             ))}
