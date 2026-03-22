@@ -226,42 +226,38 @@ export default function RootPage() {
         </div>
       </section>
 
-      {/* ═══ INTERVIEW TYPES ═══ */}
+      {/* ═══ INTERVIEW TYPES (grouped, matching dashboard) ═══ */}
       <section className="py-20 px-4 relative">
         <MouseGlow />
         <div className="max-w-6xl mx-auto relative z-10">
           <Reveal>
             <div className="flex items-center gap-2 justify-center mb-3">
               <div className="w-1.5 h-1.5 rounded-full bg-indigo-600" />
-              <span className="text-sm font-semibold text-indigo-600">Interview Types</span>
+              <span className="text-sm font-semibold text-indigo-600">33+分野対応</span>
             </div>
             <h2 className="text-3xl font-bold text-gray-900 text-center mb-3">面接タイプを選ぶ</h2>
             <p className="text-gray-500 text-center mb-14 max-w-xl mx-auto">
-              あなたの専門分野に合わせた面接を受験できます
+              9つの業界グループ、33以上の専門分野に対応した面接を受験できます
             </p>
           </Reveal>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
-            {interviewTypes.map((type, i) => (
-              <Reveal key={type.title} delay={i * 80}>
-                <div className="group border border-gray-200 rounded-2xl p-6 hover:border-indigo-200 hover:shadow-xl hover:-translate-y-1 transition-all duration-500 relative overflow-hidden">
-                  {/* Hover gradient overlay */}
-                  <div className="absolute inset-0 bg-gradient-to-br from-indigo-50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                  <div className="relative z-10">
-                    <div className="w-12 h-12 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center mb-4 group-hover:scale-110 group-hover:bg-indigo-100 transition-all duration-300">
-                      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">{type.icon}</svg>
-                    </div>
-                    <h3 className="text-base font-bold text-gray-900 mb-1 group-hover:text-indigo-700 transition-colors">{type.title}</h3>
-                    <p className="text-sm text-gray-500 mb-4 leading-relaxed">{type.description}</p>
-                    <div className="flex items-center gap-2 mb-5">
-                      <span className="text-xs bg-gray-100 text-gray-600 px-2.5 py-1 rounded-full">{type.duration}</span>
-                      {type.format.map((f) => (
-                        <span key={f} className="text-xs bg-indigo-50 text-indigo-600 px-2.5 py-1 rounded-full">{f}</span>
-                      ))}
-                    </div>
-                    <button onClick={() => handlePractice(type.category)}
-                      className="w-full text-center text-sm bg-indigo-600 text-white px-3 py-2.5 rounded-xl hover:bg-indigo-700 transition-all duration-300 font-semibold group-hover:shadow-md">
-                      練習する
-                    </button>
+          <div className="space-y-6">
+            {interviewGroups.map((group, gi) => (
+              <Reveal key={group.group} delay={gi * 60}>
+                <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden hover:border-indigo-200 hover:shadow-lg transition-all duration-500">
+                  <div className="px-6 py-4 border-b border-gray-100 bg-gray-50/50">
+                    <h3 className="font-bold text-gray-900 text-sm">{group.group}
+                      <span className="ml-2 text-xs font-normal text-gray-400">{group.categories.length}分野</span>
+                    </h3>
+                  </div>
+                  <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-px bg-gray-100">
+                    {group.categories.map((cat) => (
+                      <button key={cat.category} onClick={() => handlePractice(cat.category)}
+                        className="group bg-white p-5 text-left hover:bg-indigo-50/50 transition-colors duration-300">
+                        <h4 className="text-sm font-semibold text-gray-900 group-hover:text-indigo-700 transition-colors mb-1">{cat.title}</h4>
+                        <p className="text-xs text-gray-400 leading-relaxed line-clamp-2">{cat.description}</p>
+                        <span className="inline-block mt-2 text-xs text-indigo-600 font-medium opacity-0 group-hover:opacity-100 transition-opacity">練習する →</span>
+                      </button>
+                    ))}
                   </div>
                 </div>
               </Reveal>
