@@ -20,6 +20,7 @@ export interface Database {
           bio: string | null;
           location: string | null;
           phone: string | null;
+          linkedin_url: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -33,6 +34,7 @@ export interface Database {
           bio?: string | null;
           location?: string | null;
           phone?: string | null;
+          linkedin_url?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -46,6 +48,7 @@ export interface Database {
           bio?: string | null;
           location?: string | null;
           phone?: string | null;
+          linkedin_url?: string | null;
           updated_at?: string;
         };
       };

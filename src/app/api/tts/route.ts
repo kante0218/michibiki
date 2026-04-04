@@ -1,40 +1,34 @@
 import { NextRequest, NextResponse } from "next/server";
-import { EdgeTTS } from "edge-tts-universal";
+import { encode } from "@msgpack/msgpack";
 import { rateLimit } from "@/lib/rate-limit";
 
 const limiter = rateLimit({ maxRequests: 30, windowMs: 60_000 });
 
-// Voice presets optimized for interview context
-const VOICE_PRESETS: Record<string, { voice: string; rate: string; pitch: string; label: string }> = {
-  "keita-interviewer": {
-    voice: "ja-JP-KeitaNeural",
-    rate: "-8%",    // Slightly slower — calm, deliberate interviewer pace
-    pitch: "-2Hz",  // Slightly lower — authoritative tone
-    label: "男性面接官（落ち着いた声）",
+// Fish Audio voice presets for interview context
+const VOICE_PRESETS: Record<string, { referenceId: string; label: string; gender: string }> = {
+  "male-interviewer": {
+    referenceId: process.env.FISH_AUDIO_VOICE_MALE || "",
+    label: "男性面接官（落ち着いた自然な声）",
+    gender: "male",
   },
-  "nanami-interviewer": {
-    voice: "ja-JP-NanamiNeural",
-    rate: "-6%",    // Slightly slower — professional pace
-    pitch: "-1Hz",  // Slightly lower — mature tone
-    label: "女性面接官（丁寧な声）",
-  },
-  "keita-casual": {
-    voice: "ja-JP-KeitaNeural",
-    rate: "-3%",
-    pitch: "+0Hz",
-    label: "男性（カジュアル）",
-  },
-  "nanami-casual": {
-    voice: "ja-JP-NanamiNeural",
-    rate: "-3%",
-    pitch: "+0Hz",
-    label: "女性（カジュアル）",
+  "female-interviewer": {
+    referenceId: process.env.FISH_AUDIO_VOICE_FEMALE || "",
+    label: "女性面接官（丁寧で自然な声）",
+    gender: "female",
   },
 };
 
-const DEFAULT_PRESET = "keita-interviewer";
+const DEFAULT_PRESET = "male-interviewer";
 
 export async function POST(req: NextRequest) {
+  const apiKey = process.env.FISH_AUDIO_API_KEY;
+  if (!apiKey) {
+    return NextResponse.json(
+      { error: "Fish Audio API key not configured" },
+      { status: 503 }
+    );
+  }
+
   const ip = req.headers.get("x-forwarded-for")?.split(",")[0] ?? "anonymous";
   const { success } = limiter(ip);
   if (!success) {
@@ -42,7 +36,7 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const { text, voice, preset } = await req.json();
+    const { text, preset } = await req.json();
 
     if (!text || typeof text !== "string") {
       return NextResponse.json({ error: "text is required" }, { status: 400 });
@@ -52,23 +46,46 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Text too long (max 2000 chars)" }, { status: 400 });
     }
 
-    // Use preset if provided, otherwise fall back to voice param or default
     const selectedPreset = preset && preset in VOICE_PRESETS
       ? VOICE_PRESETS[preset]
       : VOICE_PRESETS[DEFAULT_PRESET];
 
-    const allowedVoices = ["ja-JP-NanamiNeural", "ja-JP-KeitaNeural"];
-    const finalVoice = voice && allowedVoices.includes(voice)
-      ? voice
-      : selectedPreset.voice;
+    const body: Record<string, unknown> = {
+      text,
+      format: "mp3",
+      mp3_bitrate: 128,
+      chunk_length: 200,
+      normalize: true,
+      latency: "normal",
+    };
 
-    const tts = new EdgeTTS(text, finalVoice, {
-      rate: selectedPreset.rate,
-      pitch: selectedPreset.pitch,
+    if (selectedPreset.referenceId) {
+      body.reference_id = selectedPreset.referenceId;
+    }
+
+    const msgpackBody = encode(body);
+
+    const response = await fetch("https://api.fish.audio/v1/tts", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${apiKey}`,
+        "Content-Type": "application/msgpack",
+        "model": "s2",
+      },
+      body: msgpackBody,
+      signal: AbortSignal.timeout(30000),
     });
-    const result = await tts.synthesize();
 
-    const audioBuffer = Buffer.from(await result.audio.arrayBuffer());
+    if (!response.ok) {
+      const errorText = await response.text().catch(() => "");
+      console.error("Fish Audio TTS error:", response.status, errorText);
+      return NextResponse.json(
+        { error: "Fish Audio TTS synthesis failed" },
+        { status: 502 }
+      );
+    }
+
+    const audioBuffer = await response.arrayBuffer();
 
     return new NextResponse(new Uint8Array(audioBuffer), {
       status: 200,
@@ -78,16 +95,18 @@ export async function POST(req: NextRequest) {
       },
     });
   } catch (err) {
-    console.error("TTS error:", err);
-    return NextResponse.json({ error: "TTS generation failed" }, { status: 500 });
+    console.error("Fish Audio TTS error:", err);
+    return NextResponse.json({ error: "Fish Audio TTS generation failed" }, { status: 500 });
   }
 }
 
-// GET endpoint to list available presets
 export async function GET() {
+  const isConfigured = !!process.env.FISH_AUDIO_API_KEY;
   const presets = Object.entries(VOICE_PRESETS).map(([key, value]) => ({
     id: key,
     label: value.label,
+    gender: value.gender,
+    hasVoice: !!value.referenceId,
   }));
-  return NextResponse.json({ presets });
+  return NextResponse.json({ isConfigured, presets });
 }

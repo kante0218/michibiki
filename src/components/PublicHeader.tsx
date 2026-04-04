@@ -10,17 +10,14 @@ export default function PublicHeader() {
             <Logo size="header" iconOnly showBrandName />
           </Link>
           <nav className="hidden md:flex items-center gap-1">
+            <Link href="/#how-it-works" className="text-sm text-gray-500 hover:text-gray-900 hover:bg-gray-50 px-3 py-1.5 rounded-md transition-colors">
+              使い方
+            </Link>
+            <Link href="/interview" className="text-sm text-gray-500 hover:text-gray-900 hover:bg-gray-50 px-3 py-1.5 rounded-md transition-colors">
+              AI面接
+            </Link>
             <Link href="/for-companies" className="text-sm text-gray-500 hover:text-gray-900 hover:bg-gray-50 px-3 py-1.5 rounded-md transition-colors">
               企業向け
-            </Link>
-            <Link href="/pricing" className="text-sm text-gray-500 hover:text-gray-900 hover:bg-gray-50 px-3 py-1.5 rounded-md transition-colors">
-              料金プラン
-            </Link>
-            <Link href="/cases" className="text-sm text-gray-500 hover:text-gray-900 hover:bg-gray-50 px-3 py-1.5 rounded-md transition-colors">
-              導入事例
-            </Link>
-            <Link href="/blog" className="text-sm text-gray-500 hover:text-gray-900 hover:bg-gray-50 px-3 py-1.5 rounded-md transition-colors">
-              ブログ
             </Link>
             <Link href="/help" className="text-sm text-gray-500 hover:text-gray-900 hover:bg-gray-50 px-3 py-1.5 rounded-md transition-colors">
               ヘルプ

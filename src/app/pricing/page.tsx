@@ -7,18 +7,18 @@ import Link from "next/link";
 
 const plans = [
   {
-    name: "フリー",
+    name: "学生プラン",
     price: "¥0",
-    period: "永年無料",
-    description: "求職者の方・お試し利用に",
+    period: "完全無料",
+    description: "高専生・大学院生の方に",
     features: [
       { label: "AI面接練習（無制限）", included: true },
       { label: "33分野対応", included: true },
       { label: "スキル評価レポート", included: true },
       { label: "求人検索・閲覧", included: true },
-      { label: "企業向けAI面接（月5件）", included: true },
-      { label: "候補者スクリーニング", included: false },
-      { label: "採用分析ダッシュボード", included: false },
+      { label: "インターン・新卒求人への応募", included: true },
+      { label: "企業からのスカウト受信", included: true },
+      { label: "学生コミュニティアクセス", included: true },
       { label: "専任サポート", included: false },
     ],
     cta: "無料で始める",
@@ -29,13 +29,13 @@ const plans = [
     name: "ビジネス",
     price: "¥150,000",
     period: "月額（税抜）",
-    description: "採用を効率化したい企業に",
+    description: "高専生・大学院生を採用したい企業に",
     features: [
       { label: "AI面接（月100件）", included: true },
       { label: "33分野の専門面接", included: true },
-      { label: "候補者スキルレポート", included: true },
-      { label: "候補者プールへのアクセス", included: true },
-      { label: "候補者スクリーニング", included: true },
+      { label: "学生スキルレポート", included: true },
+      { label: "学生候補者プールへのアクセス", included: true },
+      { label: "学生スクリーニング", included: true },
       { label: "採用分析ダッシュボード", included: true },
       { label: "チャットサポート", included: true },
       { label: "API連携", included: false },
@@ -48,11 +48,11 @@ const plans = [
     name: "エンタープライズ",
     price: "¥300,000〜",
     period: "月額（税抜）",
-    description: "大規模採用・カスタム対応が必要な企業に",
+    description: "大規模な学生採用・産学連携が必要な企業に",
     features: [
       { label: "AI面接（無制限）", included: true },
       { label: "カスタム面接テンプレート", included: true },
-      { label: "候補者プール優先アクセス", included: true },
+      { label: "学生候補者プール優先アクセス", included: true },
       { label: "高度な採用分析・レポート", included: true },
       { label: "ATS/HRIS連携", included: true },
       { label: "専任サクセスマネージャー", included: true },
@@ -83,20 +83,20 @@ const faqs = [
     a: "エンタープライズプランでは、利用人数に応じたカスタム料金をご案内しています。まずはお問い合わせください。チーム規模に応じたボリュームディスカウントもございます。",
   },
   {
-    q: "無料トライアルはありますか？",
-    a: "プロプランは14日間の無料トライアルをご用意しています。トライアル期間中は全機能をお試しいただけます。クレジットカードの登録は不要です。",
+    q: "学生は本当に無料ですか？",
+    a: "はい、高専生・大学院生を含むすべての学生は完全無料でご利用いただけます。AI面接練習、スキル評価、求人応募まですべて無料です。",
   },
   {
     q: "年間契約の割引はありますか？",
-    a: "はい、プロプランの年間契約では20%の割引が適用され、月あたり¥3,980でご利用いただけます。",
+    a: "はい、ビジネスプランの年間契約では20%の割引が適用されます。詳しくはお問い合わせください。",
   },
 ];
 
 const comparisonFeatures = [
-  { name: "AI面接件数", free: "月5件", pro: "月100件", enterprise: "無制限" },
+  { name: "AI面接件数", free: "無制限（練習）", pro: "月100件", enterprise: "無制限" },
   { name: "対応分野", free: "33分野", pro: "33分野", enterprise: "33分野+カスタム" },
-  { name: "候補者スキルレポート", free: "基本", pro: "詳細", enterprise: "詳細+カスタム" },
-  { name: "候補者プール", free: "---", pro: "アクセス可", enterprise: "優先アクセス" },
+  { name: "学生スキルレポート", free: "基本", pro: "詳細", enterprise: "詳細+カスタム" },
+  { name: "学生候補者プール", free: "---", pro: "アクセス可", enterprise: "優先アクセス" },
   { name: "採用分析", free: "---", pro: "基本ダッシュボード", enterprise: "高度な分析+エクスポート" },
   { name: "サポート", free: "FAQ", pro: "チャット", enterprise: "専任マネージャー" },
   { name: "API/ATS連携", free: "---", pro: "---", enterprise: "カスタム対応" },
@@ -117,7 +117,7 @@ export default function PricingPage() {
           <div className="mb-8">
             <h1 className="text-3xl font-bold text-gray-900 mb-2">料金プラン</h1>
             <p className="text-gray-600">
-              あなたのニーズに合ったプランをお選びください。すべてのプランに基本的なAI機能が含まれています。
+              学生は完全無料。企業向けプランで高専生・大学院生の採用を効率化できます。
             </p>
           </div>
 
@@ -182,8 +182,8 @@ export default function PricingPage() {
                   <thead>
                     <tr className="bg-gray-50 border-b border-gray-200">
                       <th className="text-left p-4 font-semibold text-gray-800 w-1/4">機能</th>
-                      <th className="text-center p-4 font-semibold text-gray-800">フリー</th>
-                      <th className="text-center p-4 font-semibold text-indigo-600">プロ</th>
+                      <th className="text-center p-4 font-semibold text-gray-800">学生プラン</th>
+                      <th className="text-center p-4 font-semibold text-indigo-600">ビジネス</th>
                       <th className="text-center p-4 font-semibold text-gray-800">エンタープライズ</th>
                     </tr>
                   </thead>

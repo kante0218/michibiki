@@ -77,7 +77,7 @@ export async function POST(request: Request) {
                 © 2026 Michibiki. All rights reserved.
               </p>
               <p style="font-size: 11px; color: #cbd5e1; margin-top: 4px;">
-                <a href="https://www.michibiki.tech" style="color: #94a3b8; text-decoration: none;">www.michibiki.tech</a>
+                <a href="https://michibiki.tech" style="color: #94a3b8; text-decoration: none;">michibiki.tech</a>
               </p>
             </div>
           </div>

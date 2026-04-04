@@ -34,7 +34,7 @@ type SidebarItem = "dashboard" | "jobs" | "candidates" | "offers" | "analytics" 
 const sidebarItems: { key: SidebarItem; label: string; icon: string }[] = [
   { key: "dashboard", label: "ダッシュボード", icon: "home" },
   { key: "jobs", label: "求人管理", icon: "briefcase" },
-  { key: "candidates", label: "候補者", icon: "users" },
+  { key: "candidates", label: "学生候補者", icon: "users" },
   { key: "offers", label: "オファー管理", icon: "mail" },
   { key: "analytics", label: "分析", icon: "chart" },
   { key: "settings", label: "設定", icon: "settings" },
@@ -256,7 +256,7 @@ function OfferModal({
               <textarea
                 value={offerForm.message}
                 onChange={(e) => setOfferForm((f) => ({ ...f, message: e.target.value }))}
-                placeholder="候補者へのメッセージを入力してください"
+                placeholder="学生候補者へのメッセージを入力してください"
                 rows={4}
                 className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-300 transition-all resize-none"
               />
@@ -843,7 +843,7 @@ export default function CompanyDashboardPage() {
                     </svg>
                   </div>
                   <h3 className="text-lg font-semibold text-gray-900 mb-2">求人がありません</h3>
-                  <p className="text-sm text-gray-500 mb-6 max-w-sm mx-auto">最初の求人を作成して、候補者を見つけましょう。</p>
+                  <p className="text-sm text-gray-500 mb-6 max-w-sm mx-auto">最初の求人を作成して、学生候補者を見つけましょう。</p>
                   <Link
                     href="/company/post"
                     className="text-sm font-medium text-white bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 px-6 py-2.5 rounded-xl transition-all inline-flex items-center gap-2 shadow-md shadow-indigo-500/25"
@@ -922,8 +922,8 @@ export default function CompanyDashboardPage() {
           {activeSection === "candidates" && (
             <div className="space-y-6">
               <div>
-                <h1 className="text-2xl font-bold text-gray-900 tracking-tight">候補者</h1>
-                <p className="text-sm text-gray-500 mt-1">応募した候補者一覧</p>
+                <h1 className="text-2xl font-bold text-gray-900 tracking-tight">学生候補者</h1>
+                <p className="text-sm text-gray-500 mt-1">応募した学生候補者一覧</p>
               </div>
 
               {candidates.length === 0 ? (
@@ -933,8 +933,8 @@ export default function CompanyDashboardPage() {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
                     </svg>
                   </div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2">候補者がいません</h3>
-                  <p className="text-sm text-gray-500 max-w-sm mx-auto">求人に応募があると、ここに候補者が表示されます。</p>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2">学生候補者がいません</h3>
+                  <p className="text-sm text-gray-500 max-w-sm mx-auto">求人に応募があると、ここに学生候補者が表示されます。</p>
                 </div>
               ) : (
                 <div className="grid gap-4">
@@ -1006,7 +1006,7 @@ export default function CompanyDashboardPage() {
                     </svg>
                   </div>
                   <h3 className="text-lg font-semibold text-gray-900 mb-2">送信済みオファーはありません</h3>
-                  <p className="text-sm text-gray-500 max-w-sm mx-auto">候補者にオファーを送ると、ここに表示されます。</p>
+                  <p className="text-sm text-gray-500 max-w-sm mx-auto">学生候補者にオファーを送ると、ここに表示されます。</p>
                 </div>
               ) : (
                 <div className="grid gap-4">

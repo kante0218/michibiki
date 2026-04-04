@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useCallback, type ReactNode } from "react"
 import { useRouter } from "next/navigation";
 import PublicHeader from "@/components/PublicHeader";
 import Footer from "@/components/Footer";
+import { interviewGroups } from "@/lib/interviewCategories";
 
 /* ─── Scroll-triggered reveal ─── */
 function Reveal({ children, className = "", delay = 0, direction = "up" }: { children: ReactNode; className?: string; delay?: number; direction?: "up" | "left" | "right" | "scale" }) {
@@ -39,83 +40,29 @@ function MouseGlow({ className = "" }: { className?: string }) {
     style={{ background: "radial-gradient(500px circle at var(--mx, 50%) var(--my, 50%), rgba(99,102,241,0.04), transparent 60%)" }} />;
 }
 
-const interviewGroups = [
-  { group: "IT・エンジニアリング", categories: [
-    { title: "ソフトウェアエンジニアリング", category: "software_engineering", description: "アルゴリズム、システム設計、コーディング実技を含む総合的な技術面接です。" },
-    { title: "データサイエンス", category: "data_science", description: "統計分析、機械学習、データ可視化に関する実践的な面接です。" },
-    { title: "AI・機械学習エンジニア", category: "ai_ml_engineer", description: "深層学習、NLP、LLMの知識と実装力を評価する面接です。" },
-    { title: "インフラ・DevOps", category: "infra_devops", description: "クラウド、CI/CD、コンテナ技術の知識を評価する面接です。" },
-    { title: "セキュリティエンジニア", category: "security_engineer", description: "脆弱性分析、ネットワークセキュリティの専門面接です。" },
-    { title: "モバイルアプリ開発", category: "mobile_development", description: "iOS/Android開発、React Native、Flutterの実践面接です。" },
-  ]},
-  { group: "デザイン・クリエイティブ", categories: [
-    { title: "UI/UXデザイン", category: "design", description: "デザイン思考、ユーザーリサーチ、プロトタイピング力を評価します。" },
-    { title: "グラフィックデザイン", category: "graphic_design", description: "ビジュアルデザイン、タイポグラフィ、ブランディングの面接です。" },
-    { title: "動画制作・映像", category: "video_production", description: "映像編集、企画力、ストーリーテリングを評価する面接です。" },
-  ]},
-  { group: "ビジネス・マネジメント", categories: [
-    { title: "プロダクトマネジメント", category: "product_management", description: "プロダクト戦略、優先順位付け、ユーザー理解力を評価します。" },
-    { title: "ビジネスコンサルティング", category: "business_consulting", description: "ケーススタディ、問題解決力、コミュニケーション力を評価します。" },
-    { title: "営業・セールス", category: "sales", description: "提案力、交渉力、顧客対応スキルを評価する面接です。" },
-    { title: "マーケティング", category: "marketing", description: "デジタルマーケティング、分析、戦略立案の面接です。" },
-  ]},
-  { group: "金融・ファイナンス", categories: [
-    { title: "金融アナリスト", category: "financial_analyst", description: "財務分析、バリュエーション、リスク管理の専門面接です。" },
-    { title: "投資・ファンドマネジメント", category: "investment_fund", description: "ポートフォリオ理論、投資戦略、市場分析の面接です。" },
-    { title: "フィンテック", category: "fintech", description: "決済技術、ブロックチェーン、金融規制の面接です。" },
-    { title: "会計・税務", category: "accounting_tax", description: "簿記、税法、監査手法の知識を評価する面接です。" },
-  ]},
-  { group: "医療・ヘルスケア", categories: [
-    { title: "医療・臨床", category: "healthcare", description: "臨床知識、診断力、患者対応スキルを評価する面接です。" },
-    { title: "看護・介護", category: "nursing_care", description: "ケアプランニング、患者観察、チーム連携の面接です。" },
-    { title: "薬剤師・製薬", category: "pharmacy", description: "調剤、薬理学、服薬指導の専門面接です。" },
-    { title: "医療IT・ヘルステック", category: "health_tech", description: "電子カルテ、遠隔医療、医療データ分析の面接です。" },
-  ]},
-  { group: "教育・研究", categories: [
-    { title: "教育・講師", category: "education", description: "教育理論、授業設計、生徒指導力を評価する面接です。" },
-    { title: "EdTech", category: "edtech", description: "教育テクノロジー、LMS、オンライン教材開発の面接です。" },
-    { title: "研究員・アカデミア", category: "research_academia", description: "研究計画、論文作成、学術発表の能力を評価する面接です。" },
-  ]},
-  { group: "クリエイター・インフルエンサー", categories: [
-    { title: "インフルエンサー・SNS", category: "influencer_sns", description: "コンテンツ企画、エンゲージメント、ブランド構築の面接です。" },
-    { title: "YouTuber・配信者", category: "youtuber_streamer", description: "動画企画、視聴者分析、収益化戦略の面接です。" },
-    { title: "コンテンツクリエイター", category: "content_creator", description: "ライティング、編集、マルチメディア制作の面接です。" },
-  ]},
-  { group: "コーポレート・管理", categories: [
-    { title: "人事・採用", category: "hr_recruitment", description: "採用戦略、労務管理、組織開発の面接です。" },
-    { title: "経理・財務", category: "accounting_finance", description: "財務諸表、予算管理、資金調達の面接です。" },
-    { title: "法務・コンプライアンス", category: "legal_compliance", description: "契約法、知的財産、コンプライアンス管理の面接です。" },
-  ]},
-  { group: "新領域・先端技術", categories: [
-    { title: "ブロックチェーン・Web3", category: "blockchain_web3", description: "スマートコントラクト、DeFi、NFTの専門面接です。" },
-    { title: "ゲーム開発", category: "game_development", description: "Unity/Unreal、ゲームデザイン、3Dモデリングの面接です。" },
-    { title: "DX推進・コンサルタント", category: "dx_consultant", description: "デジタル変革、業務改善、テクノロジー導入の面接です。" },
-  ]},
-];
-
 const steps = [
-  { step: "01", title: "準備", description: "面接タイプを選択し、カメラ・マイクの動作確認を行います。練習モードで何度でもリハーサルできます。" },
-  { step: "02", title: "面接実施", description: "AIが構造化された質問を行います。ビデオ通話形式で、自然な会話のように進行します。" },
-  { step: "03", title: "結果確認", description: "面接終了後、AIがスキルを分析。詳細なフィードバックとスコアを確認できます。" },
+  { step: "01", title: "プロフィール登録", description: "学校名・専攻・研究テーマなどを登録。あなたの強みをAIが分析します。" },
+  { step: "02", title: "AI面接を受ける", description: "専門分野に合わせたAI面接を受験。技術テスト+ビデオ面接で総合評価します。" },
+  { step: "03", title: "企業とマッチング", description: "あなたのスキルと志向に合った企業からオファーが届きます。" },
 ];
 
 const features = [
-  { title: "再受験可能（最大2回）", description: "結果に満足できなければ、同じ案件で最大2回まで再挑戦できます。",
-    icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /> },
-  { title: "練習モード無制限", description: "本番前に何度でも練習できます。評価には影響しません。",
-    icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" /> },
+  { title: "高専生・大学院生に特化", description: "理系学生の専門知識・研究力を正しく評価できる面接を提供します。",
+    icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4.26 10.147a60.438 60.438 0 00-.491 6.347A48.627 48.627 0 0112 20.904a48.627 48.627 0 018.232-4.41 60.46 60.46 0 00-.491-6.347m-15.482 0a50.57 50.57 0 00-2.658-.813A59.905 59.905 0 0112 3.493a59.902 59.902 0 0110.399 5.84c-.896.248-1.783.52-2.658.814m-15.482 0A50.697 50.697 0 0112 13.489a50.702 50.702 0 017.74-3.342M6.75 15a.75.75 0 100-1.5.75.75 0 000 1.5zm0 0v-3.675A55.378 55.378 0 0112 8.443m-7.007 11.55A5.981 5.981 0 006.75 15.75v-1.5" /> },
+  { title: "新卒・インターン特化", description: "新卒採用・インターンシップに特化した求人マッチングを実現します。",
+    icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20.25 14.15v4.25c0 1.094-.787 2.036-1.872 2.18-2.087.277-4.216.42-6.378.42s-4.291-.143-6.378-.42c-1.085-.144-1.872-1.086-1.872-2.18v-4.25m16.5 0a2.18 2.18 0 00.75-1.661V8.706c0-1.081-.768-2.015-1.837-2.175a48.114 48.114 0 00-3.413-.387m4.5 8.006c-.194.165-.42.295-.673.38A23.978 23.978 0 0112 15.75c-2.648 0-5.195-.429-7.577-1.22a2.016 2.016 0 01-.673-.38m0 0A2.18 2.18 0 013 12.489V8.706c0-1.081.768-2.015 1.837-2.175a48.111 48.111 0 013.413-.387m7.5 0V5.25A2.25 2.25 0 0013.5 3h-3a2.25 2.25 0 00-2.25 2.25v.894m7.5 0a48.667 48.667 0 00-7.5 0M12 12.75h.008v.008H12v-.008z" /> },
   { title: "AIフィードバック", description: "面接後に詳細なフィードバックとスキル評価を受け取れます。",
     icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" /> },
-  { title: "日本語完全対応", description: "質問・回答・フィードバックすべて日本語で完結します。",
-    icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129" /> },
+  { title: "学生は完全無料", description: "登録からAI面接、企業マッチングまで、学生は一切費用がかかりません。",
+    icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 11.25v8.25a1.5 1.5 0 01-1.5 1.5H5.25a1.5 1.5 0 01-1.5-1.5v-8.25M12 4.875A2.625 2.625 0 109.375 7.5H12m0-2.625V7.5m0-2.625A2.625 2.625 0 1114.625 7.5H12m0 0V21" /> },
 ];
 
 const faqs = [
-  { q: "AI面接はどのように行われますか？", a: "Webブラウザ上でAIとビデオ通話形式で行います。AIが質問を出し、あなたが回答する形式です。自然な会話のように進行し、追加質問もAIが自動で行います。" },
-  { q: "面接の結果はどのように使われますか？", a: "面接結果はスキルスコアとしてプロフィールに反映され、企業があなたを見つけやすくなります。スコアが高いほど、より多くの企業からオファーを受ける可能性が高まります。" },
-  { q: "不合格になることはありますか？", a: "合格・不合格という概念はありません。あなたのスキルレベルを正確に測定し、そのレベルに合った求人をマッチングします。結果に満足できなければ再受験も可能です。" },
-  { q: "どのような環境で受験すべきですか？", a: "安定したインターネット接続、静かな環境、Webカメラとマイクが必要です。Chrome またはEdgeブラウザの最新版を推奨します。" },
-  { q: "練習モードと本番の違いは何ですか？", a: "練習モードは何度でも利用でき、結果はプロフィールに反映されません。本番は同じ案件で最大2回まで受験でき、最高スコアがプロフィールに反映されます。" },
+  { q: "高専生・大学院生以外も使えますか？", a: "現在は高専生（本科・専攻科）と大学院生（修士・博士）を対象としたサービスです。理系の専門知識を正しく評価するために特化しています。" },
+  { q: "AI面接はどのように行われますか？", a: "Webブラウザ上でAIとビデオ通話形式で行います。専門分野に合わせた技術テスト（選択5問+記述5問）とAIビデオ面接を組み合わせた実践的な面接です。" },
+  { q: "面接の結果はどのように使われますか？", a: "面接結果はスキルスコアとしてプロフィールに反映され、あなたの専門性に合った企業からオファーが届きます。" },
+  { q: "どのような企業が登録していますか？", a: "高専卒・大学院卒を積極採用するメーカー、IT企業、インフラ企業、研究機関などが登録しています。新卒採用・インターンシップの求人が中心です。" },
+  { q: "費用はかかりますか？", a: "学生は完全無料です。プロフィール登録、AI面接、企業マッチング、すべて無料でご利用いただけます。" },
 ];
 
 export default function RootPage() {
@@ -131,8 +78,8 @@ export default function RootPage() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  const handlePractice = (category?: string) => {
-    router.push(`/interview/practice${category ? `?category=${category}` : ""}`);
+  const handleStart = (category?: string) => {
+    router.push(`/interview/live${category ? `?category=${category}` : ""}`);
   };
 
   return (
@@ -142,51 +89,46 @@ export default function RootPage() {
       {/* ═══ HERO ═══ */}
       <section className="relative pt-24 pb-10 px-4 overflow-hidden">
         <MouseGlow />
-        {/* Parallax gradient orbs */}
         <div className="absolute inset-0 pointer-events-none">
           <div className="absolute top-10 left-1/4 w-[500px] h-[500px] rounded-full bg-indigo-500 opacity-[0.06] blur-[120px]"
             style={{ transform: `translateY(${scrollY * 0.08}px)` }} />
           <div className="absolute bottom-0 right-1/4 w-[400px] h-[400px] rounded-full bg-purple-400 opacity-[0.04] blur-[100px]"
             style={{ transform: `translateY(${scrollY * -0.06}px)` }} />
         </div>
-        {/* Floating particles */}
         {[...Array(5)].map((_, i) => (
           <div key={i} className="absolute rounded-full bg-indigo-400/10 animate-pulse pointer-events-none"
             style={{ width: `${16 + i * 10}px`, height: `${16 + i * 10}px`, left: `${12 + i * 18}%`, top: `${20 + (i % 3) * 20}%`, animationDuration: `${3 + i * 0.7}s`, animationDelay: `${i * 0.5}s` }} />
         ))}
 
         <div className="max-w-3xl mx-auto text-center relative z-10">
-          {/* Badge */}
           <div className="transition-all duration-700" style={{ opacity: heroLoaded ? 1 : 0, transform: heroLoaded ? "translateY(0)" : "translateY(20px)", transitionDelay: "200ms" }}>
             <div className="inline-flex items-center gap-2 bg-indigo-50 text-indigo-700 text-sm font-medium px-4 py-1.5 rounded-full mb-6 border border-indigo-100">
               <div className="w-2 h-2 rounded-full bg-indigo-600 animate-pulse" />
-              AI搭載の次世代面接
+              高専生・大学院生のための就活プラットフォーム
             </div>
           </div>
 
-          {/* Title with shimmer effect */}
           <h1 className="text-4xl sm:text-5xl font-bold text-gray-900 leading-tight mb-6 transition-all duration-700"
             style={{ opacity: heroLoaded ? 1 : 0, transform: heroLoaded ? "translateY(0)" : "translateY(30px)", transitionDelay: "400ms" }}>
-            AI面接で、あなたの
+            研究も、就活も、
             <br />
             <span className="bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-600 bg-clip-text text-transparent bg-[length:200%_auto]"
               style={{ animation: "shimmer 3s linear infinite" }}>
-              実力を証明
+              妥協しない
             </span>
-            しよう
           </h1>
 
           <p className="text-lg text-gray-500 leading-relaxed max-w-2xl mx-auto mb-10 transition-all duration-700"
             style={{ opacity: heroLoaded ? 1 : 0, transform: heroLoaded ? "translateY(0)" : "translateY(30px)", transitionDelay: "600ms" }}>
-            20分間の構造化されたAI面接で、あなたのスキルを客観的に評価。
-            面接結果は世界中の企業に共有され、あなたに最適な求人とマッチングされます。
+            AI面接があなたの専門性・研究力・ポテンシャルを正しく評価。
+            高専生・大学院生を求める企業と最適にマッチングします。
           </p>
 
           <div className="flex flex-col sm:flex-row gap-3 justify-center transition-all duration-700"
             style={{ opacity: heroLoaded ? 1 : 0, transform: heroLoaded ? "translateY(0)" : "translateY(20px)", transitionDelay: "800ms" }}>
-            <button onClick={() => handlePractice()}
+            <button onClick={() => router.push("/signup")}
               className="group inline-flex items-center justify-center gap-2 bg-indigo-600 text-white px-8 py-3.5 rounded-xl font-semibold hover:bg-indigo-700 transition-all duration-300 hover:shadow-lg hover:shadow-indigo-200 hover:-translate-y-0.5 text-base">
-              練習を始める
+              無料で始める
               <svg className="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />
               </svg>
@@ -197,7 +139,25 @@ export default function RootPage() {
             </button>
           </div>
         </div>
+      </section>
 
+      {/* ═══ STATS ═══ */}
+      <section className="py-12 px-4 border-y border-gray-100">
+        <div className="max-w-4xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
+          {[
+            { value: "22+", label: "専門分野" },
+            { value: "6", label: "面接カテゴリ" },
+            { value: "100%", label: "学生無料" },
+            { value: "AI", label: "面接・評価" },
+          ].map((stat, i) => (
+            <Reveal key={i} delay={i * 100}>
+              <div>
+                <div className="text-3xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">{stat.value}</div>
+                <div className="text-sm text-gray-500 mt-1">{stat.label}</div>
+              </div>
+            </Reveal>
+          ))}
+        </div>
       </section>
 
       {/* ═══ HOW IT WORKS ═══ */}
@@ -207,8 +167,8 @@ export default function RootPage() {
         }} />
         <div className="max-w-5xl mx-auto relative z-10">
           <Reveal direction="scale">
-            <h2 className="text-3xl font-bold text-gray-900 text-center mb-4">AI面接の流れ</h2>
-            <p className="text-gray-500 text-center mb-14 max-w-md mx-auto">3つのステップで、あなたのスキルを客観的に評価します</p>
+            <h2 className="text-3xl font-bold text-gray-900 text-center mb-4">就活の流れ</h2>
+            <p className="text-gray-500 text-center mb-14 max-w-md mx-auto">3つのステップで、あなたに最適な企業と出会えます</p>
           </Reveal>
           <div className="grid md:grid-cols-3 gap-8">
             {steps.map((s, i) => (
@@ -217,7 +177,6 @@ export default function RootPage() {
                   <div className="text-4xl font-bold text-indigo-100 group-hover:text-indigo-500 transition-colors duration-500 mb-3">{s.step}</div>
                   <h3 className="text-lg font-bold text-gray-900 mb-3 group-hover:text-indigo-700 transition-colors duration-300">{s.title}</h3>
                   <p className="text-sm text-gray-500 leading-relaxed">{s.description}</p>
-                  {/* Connecting line */}
                   {i < 2 && <div className="hidden md:block absolute top-1/2 -right-4 w-8 h-px bg-gray-200" />}
                 </div>
               </Reveal>
@@ -226,18 +185,18 @@ export default function RootPage() {
         </div>
       </section>
 
-      {/* ═══ INTERVIEW TYPES (grouped, matching dashboard) ═══ */}
+      {/* ═══ INTERVIEW TYPES ═══ */}
       <section className="py-20 px-4 relative">
         <MouseGlow />
         <div className="max-w-6xl mx-auto relative z-10">
           <Reveal>
             <div className="flex items-center gap-2 justify-center mb-3">
               <div className="w-1.5 h-1.5 rounded-full bg-indigo-600" />
-              <span className="text-sm font-semibold text-indigo-600">33+分野対応</span>
+              <span className="text-sm font-semibold text-indigo-600">22+分野対応</span>
             </div>
-            <h2 className="text-3xl font-bold text-gray-900 text-center mb-3">面接タイプを選ぶ</h2>
+            <h2 className="text-3xl font-bold text-gray-900 text-center mb-3">AI面接の分野を選ぶ</h2>
             <p className="text-gray-500 text-center mb-14 max-w-xl mx-auto">
-              9つの業界グループ、33以上の専門分野に対応した面接を受験できます
+              高専・大学院の専門分野に合わせた面接を受験できます
             </p>
           </Reveal>
           <div className="space-y-6">
@@ -251,11 +210,11 @@ export default function RootPage() {
                   </div>
                   <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-px bg-gray-100">
                     {group.categories.map((cat) => (
-                      <button key={cat.category} onClick={() => handlePractice(cat.category)}
+                      <button key={cat.category} onClick={() => handleStart(cat.category)}
                         className="group bg-white p-5 text-left hover:bg-indigo-50/50 transition-colors duration-300">
                         <h4 className="text-sm font-semibold text-gray-900 group-hover:text-indigo-700 transition-colors mb-1">{cat.title}</h4>
                         <p className="text-xs text-gray-400 leading-relaxed line-clamp-2">{cat.description}</p>
-                        <span className="inline-block mt-2 text-xs text-indigo-600 font-medium opacity-0 group-hover:opacity-100 transition-opacity">練習する →</span>
+                        <span className="inline-block mt-2 text-xs text-indigo-600 font-medium opacity-0 group-hover:opacity-100 transition-opacity">面接を受ける →</span>
                       </button>
                     ))}
                   </div>
@@ -274,7 +233,7 @@ export default function RootPage() {
         }} />
         <div className="max-w-5xl mx-auto relative z-10">
           <Reveal>
-            <h2 className="text-3xl font-bold text-gray-900 text-center mb-14">AI面接の特長</h2>
+            <h2 className="text-3xl font-bold text-gray-900 text-center mb-14">選ばれる理由</h2>
           </Reveal>
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {features.map((f, i) => (
@@ -292,8 +251,51 @@ export default function RootPage() {
         </div>
       </section>
 
-      {/* ═══ FAQ ═══ */}
+      {/* ═══ TARGET AUDIENCE ═══ */}
       <section className="py-20 px-4">
+        <div className="max-w-5xl mx-auto">
+          <Reveal>
+            <h2 className="text-3xl font-bold text-gray-900 text-center mb-14">こんな方におすすめ</h2>
+          </Reveal>
+          <div className="grid md:grid-cols-2 gap-8">
+            <Reveal delay={0}>
+              <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl p-8 border border-blue-100">
+                <div className="w-12 h-12 rounded-xl bg-blue-600 text-white flex items-center justify-center mb-5">
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M11.42 15.17l-5.657-5.657a8 8 0 1111.314 0l-5.657 5.657zm0 0L12 21" />
+                  </svg>
+                </div>
+                <h3 className="text-xl font-bold text-gray-900 mb-3">高専生</h3>
+                <ul className="space-y-2 text-sm text-gray-600">
+                  <li className="flex items-start gap-2"><span className="text-blue-600 mt-0.5">-</span>本科4-5年生で就活を始めたい</li>
+                  <li className="flex items-start gap-2"><span className="text-blue-600 mt-0.5">-</span>専攻科から就職を考えている</li>
+                  <li className="flex items-start gap-2"><span className="text-blue-600 mt-0.5">-</span>高専で学んだ技術力を正しく評価してほしい</li>
+                  <li className="flex items-start gap-2"><span className="text-blue-600 mt-0.5">-</span>メーカーやIT企業でエンジニアとして働きたい</li>
+                </ul>
+              </div>
+            </Reveal>
+            <Reveal delay={150}>
+              <div className="bg-gradient-to-br from-purple-50 to-violet-50 rounded-2xl p-8 border border-purple-100">
+                <div className="w-12 h-12 rounded-xl bg-purple-600 text-white flex items-center justify-center mb-5">
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" />
+                  </svg>
+                </div>
+                <h3 className="text-xl font-bold text-gray-900 mb-3">大学院生</h3>
+                <ul className="space-y-2 text-sm text-gray-600">
+                  <li className="flex items-start gap-2"><span className="text-purple-600 mt-0.5">-</span>修士・博士課程で研究と就活を両立したい</li>
+                  <li className="flex items-start gap-2"><span className="text-purple-600 mt-0.5">-</span>研究スキルを企業にアピールしたい</li>
+                  <li className="flex items-start gap-2"><span className="text-purple-600 mt-0.5">-</span>専門性を活かせる企業を見つけたい</li>
+                  <li className="flex items-start gap-2"><span className="text-purple-600 mt-0.5">-</span>研究発表の経験を就活に活かしたい</li>
+                </ul>
+              </div>
+            </Reveal>
+          </div>
+        </div>
+      </section>
+
+      {/* ═══ FAQ ═══ */}
+      <section className="py-20 px-4 bg-gray-50">
         <div className="max-w-2xl mx-auto">
           <Reveal>
             <h2 className="text-3xl font-bold text-gray-900 text-center mb-12">よくある質問</h2>
@@ -301,7 +303,7 @@ export default function RootPage() {
           <div className="space-y-3">
             {faqs.map((faq, i) => (
               <Reveal key={i} delay={i * 60}>
-                <div className="border border-gray-200 rounded-2xl overflow-hidden hover:border-indigo-200 transition-colors duration-300">
+                <div className="border border-gray-200 rounded-2xl overflow-hidden hover:border-indigo-200 transition-colors duration-300 bg-white">
                   <button onClick={() => setOpenFaq(openFaq === i ? null : i)}
                     className="flex items-center justify-between w-full px-6 py-5 text-left hover:bg-gray-50 transition-colors">
                     <span className="text-sm font-semibold text-gray-900">{faq.q}</span>
@@ -330,13 +332,13 @@ export default function RootPage() {
         </div>
         <div className="max-w-2xl mx-auto text-center relative z-10">
           <Reveal>
-            <h2 className="text-3xl font-bold text-white mb-4">面接を始めましょう</h2>
+            <h2 className="text-3xl font-bold text-white mb-4">あなたの専門性を、正しく評価する就活を</h2>
             <p className="text-indigo-100/80 mb-10 text-base lg:text-lg leading-relaxed">
-              まずは練習モードで体験してみませんか？<br />登録不要で、すぐに始められます。
+              高専・大学院で培った力を活かせる企業と出会いましょう。<br />学生は完全無料です。
             </p>
-            <button onClick={() => handlePractice()}
+            <button onClick={() => router.push("/signup")}
               className="group inline-flex items-center justify-center gap-2 bg-white text-indigo-700 px-10 py-4 rounded-xl font-bold hover:bg-indigo-50 transition-all duration-300 hover:shadow-xl text-base">
-              練習を始める
+              無料で始める
               <svg className="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />
               </svg>
@@ -347,12 +349,12 @@ export default function RootPage() {
 
       {/* SEO Content */}
       <section className="sr-only" aria-label="導（みちびき）について">
-        <h2>導（みちびき）- AI面接練習・AI人材マッチングプラットフォーム</h2>
-        <p>導（みちびき / Michibiki）は、AIを活用した面接練習と人材マッチングのプラットフォームです。ソフトウェアエンジニアリング、データサイエンス、プロダクトマネジメント、デザイン、マーケティングなど33分野のAI面接練習を無料で提供しています。</p>
-        <h3>AI面接練習の特徴</h3>
-        <p>技術テスト（選択問題5問＋記述問題5問）とAIビデオ面接を組み合わせた実践的な模擬面接です。AIがあなたの弱点を分析し、的確なフィードバックを提供します。</p>
-        <h3>企業向けAI採用支援</h3>
-        <p>AIが候補者のスキルを客観的に評価し、企業の求める人材像と自動マッチングします。採用コストの削減、選考時間の短縮、ミスマッチの防止を実現します。</p>
+        <h2>導（みちびき）- 高専生・大学院生の就活・採用プラットフォーム</h2>
+        <p>導（みちびき / Michibiki）は、高専生と大学院生に特化したAI面接・採用マッチングプラットフォームです。機械工学、電気電子工学、情報工学、化学工学など22以上の専門分野に対応したAI面接を提供し、理系学生の専門知識・研究力を正しく評価します。</p>
+        <h3>高専生・大学院生向けAI面接の特徴</h3>
+        <p>技術テスト（選択問題5問＋記述問題5問）とAIビデオ面接を組み合わせた実践的な面接です。研究プレゼンテーション、論文ディスカッション、専門技術の評価を通じて、あなたの強みを可視化します。</p>
+        <h3>企業向け高専・大学院生採用支援</h3>
+        <p>AIが候補者の専門性・研究力・ポテンシャルを客観的に評価し、企業の求める人材像と自動マッチングします。理系人材の採用に強い、次世代の採用プラットフォームです。</p>
       </section>
 
       <Footer />

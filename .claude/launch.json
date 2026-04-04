@@ -3,8 +3,9 @@
   "configurations": [
     {
       "name": "mercor-jp",
-      "runtimeExecutable": "npx",
-      "runtimeArgs": ["next", "dev"],
+      "runtimeExecutable": "/usr/local/bin/node",
+      "runtimeArgs": ["node_modules/.bin/next", "dev"],
+      "env": { "PATH": "/usr/local/bin:/opt/homebrew/bin:/usr/bin:/bin" },
       "port": 3000,
       "autoPort": true
     }

@@ -33,16 +33,6 @@ export function Sidebar({ activeItem = "explore" }: SidebarProps) {
       ),
     },
     {
-      id: "expert",
-      label: "エキスパート",
-      href: "/expert",
-      icon: (
-        <svg className="w-[20px] h-[20px]" fill="none" stroke="currentColor" strokeWidth={1.4} viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.455 2.456L21.75 6l-1.036.259a3.375 3.375 0 00-2.455 2.456z" />
-        </svg>
-      ),
-    },
-    {
       id: "home",
       label: "ホーム",
       href: "/home",
@@ -53,32 +43,12 @@ export function Sidebar({ activeItem = "explore" }: SidebarProps) {
       ),
     },
     {
-      id: "referrals",
-      label: "紹介",
-      href: "/referrals",
-      icon: (
-        <svg className="w-[20px] h-[20px]" fill="none" stroke="currentColor" strokeWidth={1.4} viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
-        </svg>
-      ),
-    },
-    {
       id: "interview",
-      label: "面接練習",
+      label: "AI面接",
       href: "/interview",
       icon: (
         <svg className="w-[20px] h-[20px]" fill="none" stroke="currentColor" strokeWidth={1.4} viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
-        </svg>
-      ),
-    },
-    {
-      id: "earnings",
-      label: "収益",
-      href: "/earnings",
-      icon: (
-        <svg className="w-[20px] h-[20px]" fill="none" stroke="currentColor" strokeWidth={1.4} viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
         </svg>
       ),
     },
@@ -247,7 +217,6 @@ export function Sidebar({ activeItem = "explore" }: SidebarProps) {
                   : "text-gray-400 hover:text-gray-600 hover:bg-gray-50"
               }`}
             >
-              {/* Active indicator bar */}
               {isActive && (
                 <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 bg-gradient-to-b from-indigo-500 to-purple-500 rounded-r-full" />
               )}
@@ -397,16 +366,16 @@ export function TopBar() {
   const currentStep = !hasResume ? 1 : !hasLocation ? 2 : 3;
 
   const steps = [
-    { num: 1, label: "履歴書", completed: hasResume, href: "/profile" },
-    { num: 2, label: "所在地", completed: hasLocation, href: "/profile" },
-    { num: 3, label: "アセスメント", completed: false, href: "/interview" },
+    { num: 1, label: "プロフィール", completed: hasResume, href: "/profile" },
+    { num: 2, label: "学校情報", completed: hasLocation, href: "/profile" },
+    { num: 3, label: "AI面接", completed: false, href: "/interview" },
   ];
 
   return (
     <div className="h-14 bg-white border-b border-gray-100 shadow-[0_1px_3px_rgba(0,0,0,0.04)] flex items-center justify-between pl-16 md:pl-[112px] pr-6">
-      {/* Left: Get Instant Work Offers */}
+      {/* Left: Get Offers */}
       <div className="flex items-center gap-2 text-sm text-gray-700">
-        <span className="font-semibold truncate">ワークオファーを受け取る</span>
+        <span className="font-semibold truncate">企業からオファーを受け取る</span>
         <svg className="w-4 h-4 text-gray-300" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" />
         </svg>
@@ -468,7 +437,7 @@ export function TopBar() {
         <svg className="w-4 h-4 sm:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
         </svg>
-        <span className="hidden sm:inline">履歴書をアップロード</span>
+        <span className="hidden sm:inline">プロフィールを設定</span>
       </a>
     </div>
   );

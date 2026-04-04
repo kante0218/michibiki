@@ -72,9 +72,9 @@ export async function middleware(request: NextRequest) {
       "script-src 'self' 'unsafe-inline' https://accounts.google.com",
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
       "font-src 'self' https://fonts.gstatic.com",
-      "img-src 'self' data: blob: https://*.supabase.co https://*.googleusercontent.com",
-      "connect-src 'self' https://*.supabase.co https://accounts.google.com wss://*.supabase.co",
-      "frame-src https://accounts.google.com",
+      "img-src 'self' data: blob: https://*.supabase.co https://*.googleusercontent.com https://media.licdn.com https://*.licdn.com",
+      "connect-src 'self' https://*.supabase.co https://accounts.google.com https://www.linkedin.com https://api.linkedin.com wss://*.supabase.co",
+      "frame-src https://accounts.google.com https://www.linkedin.com",
       "object-src 'none'",
       "base-uri 'self'",
       "form-action 'self'",
@@ -82,14 +82,26 @@ export async function middleware(request: NextRequest) {
     ].join("; ")
   );
 
-  // ─── HTTPS Redirect (production only) ───
-  if (
-    process.env.NODE_ENV === "production" &&
-    request.headers.get("x-forwarded-proto") === "http"
-  ) {
-    const httpsUrl = new URL(request.url);
-    httpsUrl.protocol = "https:";
-    return NextResponse.redirect(httpsUrl, 301);
+  // ─── Domain normalization & HTTPS Redirect (production only) ───
+  if (process.env.NODE_ENV === "production") {
+    const url = new URL(request.url);
+    let needsRedirect = false;
+
+    // Force HTTPS
+    if (request.headers.get("x-forwarded-proto") === "http") {
+      url.protocol = "https:";
+      needsRedirect = true;
+    }
+
+    // Normalize www → non-www
+    if (url.hostname === "www.michibiki.tech") {
+      url.hostname = "michibiki.tech";
+      needsRedirect = true;
+    }
+
+    if (needsRedirect) {
+      return NextResponse.redirect(url, 301);
+    }
   }
 
   return response;

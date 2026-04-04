@@ -188,11 +188,8 @@ function LiveInterviewContent() {
   const ttsAudioRef = useRef<HTMLAudioElement | null>(null);
   const [isSpeaking, setIsSpeaking] = useState(false);
 
-  // Voice settings (default to tuned Edge TTS interviewer voice)
-  const [voiceProvider] = useState<"edge" | "voicevox" | "google">("edge");
-  const [edgePreset] = useState("keita-interviewer");
-  const [voicevoxSpeaker] = useState("ryusei");
-  const [googleVoice] = useState("wavenet-male-d");
+  // Voice settings (Fish Audio)
+  const [fishPreset] = useState("male-interviewer");
 
   // Fallback text input
   const [fallbackText, setFallbackText] = useState("");
@@ -373,40 +370,12 @@ function LiveInterviewContent() {
       }
       setIsSpeaking(true);
 
-      // VOICEVOX: returns a streaming URL that the browser plays directly
-      if (voiceProvider === "voicevox") {
-        const res = await fetch("/api/tts/voicevox", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ text, speaker: voicevoxSpeaker }),
-        });
-        if (!res.ok) throw new Error("VOICEVOX API failed");
-        const data = await res.json();
-        if (!data.audioUrl) throw new Error("No audio URL");
-
-        const audio = new Audio(data.audioUrl);
-        ttsAudioRef.current = audio;
-        audio.onended = () => { setIsSpeaking(false); ttsAudioRef.current = null; };
-        audio.onerror = () => { setIsSpeaking(false); ttsAudioRef.current = null; };
-        await audio.play();
-        return;
-      }
-
-      // Edge TTS and Google TTS: return audio blob directly
-      let res: Response;
-      if (voiceProvider === "google") {
-        res = await fetch("/api/tts/google", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ text, voice: googleVoice }),
-        });
-      } else {
-        res = await fetch("/api/tts", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ text, preset: edgePreset }),
-        });
-      }
+      // Fish Audio TTS: returns audio blob directly
+      const res = await fetch("/api/tts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text, preset: fishPreset }),
+      });
 
       if (!res.ok) {
         if (window.speechSynthesis) {
@@ -447,7 +416,7 @@ function LiveInterviewContent() {
         }
       } catch { /* ignore */ }
     }
-  }, [voiceProvider, edgePreset, voicevoxSpeaker, googleVoice]);
+  }, [fishPreset]);
 
   const stopSpeaking = useCallback(() => {
     if (ttsAudioRef.current) {

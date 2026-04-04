@@ -19,135 +19,8 @@ interface SkillCategory {
   skills: Skill[];
 }
 
-/* ── LinkedIn Connection Section ── */
-function LinkedInConnectionSection() {
-  const [linkedInConnected, setLinkedInConnected] = useState(false);
-  const [linkedInEmail, setLinkedInEmail] = useState<string | null>(null);
-  const [linkedInName, setLinkedInName] = useState<string | null>(null);
-  const [linkLoading, setLinkLoading] = useState(false);
-  const [checkLoading, setCheckLoading] = useState(true);
+/* ── LinkedIn Connection Section ── (removed, replaced by linkedin_url field in profile edit) */
 
-  useEffect(() => {
-    checkLinkedInStatus();
-  }, []);
-
-  const checkLinkedInStatus = async () => {
-    try {
-      const { getLinkedIdentities } = await import("@/lib/auth");
-      const { identities, user } = await getLinkedIdentities();
-      const linkedinId = identities.find(
-        (id: { provider: string }) => id.provider === "linkedin_oidc"
-      );
-      if (linkedinId) {
-        setLinkedInConnected(true);
-        setLinkedInEmail((linkedinId as { identity_data?: { email?: string } }).identity_data?.email || null);
-        setLinkedInName((linkedinId as { identity_data?: { full_name?: string; name?: string } }).identity_data?.full_name || (linkedinId as { identity_data?: { name?: string } }).identity_data?.name || null);
-      }
-    } catch {}
-    setCheckLoading(false);
-  };
-
-  const handleLink = async () => {
-    setLinkLoading(true);
-    try {
-      const { linkLinkedInAccount } = await import("@/lib/auth");
-      const { error } = await linkLinkedInAccount();
-      if (error) {
-        alert("LinkedIn連携に失敗しました: " + (error as Error).message);
-        setLinkLoading(false);
-      }
-    } catch {
-      alert("LinkedIn連携中にエラーが発生しました");
-      setLinkLoading(false);
-    }
-  };
-
-  const handleUnlink = async () => {
-    if (!confirm("LinkedIn連携を解除しますか？")) return;
-    setLinkLoading(true);
-    try {
-      const { unlinkLinkedInAccount } = await import("@/lib/auth");
-      const { error } = await unlinkLinkedInAccount();
-      if (error) {
-        alert("連携解除に失敗しました: " + (error as Error).message);
-      } else {
-        setLinkedInConnected(false);
-        setLinkedInEmail(null);
-        setLinkedInName(null);
-      }
-    } catch {
-      alert("連携解除中にエラーが発生しました");
-    }
-    setLinkLoading(false);
-  };
-
-  return (
-    <section className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 sm:p-8 hover:shadow-md transition-shadow duration-200">
-      <div className="flex items-center gap-3 mb-6">
-        <div className="w-8 h-8 rounded-lg bg-[#0A66C2]/10 flex items-center justify-center">
-          <svg className="w-4 h-4 text-[#0A66C2]" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
-          </svg>
-        </div>
-        <h2 className="text-lg font-semibold text-gray-900">LinkedIn連携</h2>
-      </div>
-
-      {checkLoading ? (
-        <div className="flex items-center gap-3 py-4 px-4">
-          <div className="w-5 h-5 border-2 border-gray-200 border-t-indigo-500 rounded-full animate-spin" />
-          <span className="text-sm text-gray-400">確認中...</span>
-        </div>
-      ) : linkedInConnected ? (
-        <div className="space-y-4">
-          <div className="flex items-center gap-4 py-4 px-4 bg-emerald-50/50 border border-emerald-100 rounded-xl">
-            <div className="w-10 h-10 rounded-full bg-[#0A66C2] flex items-center justify-center flex-shrink-0">
-              <svg className="w-5 h-5 text-white" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
-              </svg>
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2">
-                <p className="text-sm font-semibold text-gray-900">連携済み</p>
-                <svg className="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                </svg>
-              </div>
-              {linkedInName && <p className="text-sm text-gray-600 truncate">{linkedInName}</p>}
-              {linkedInEmail && <p className="text-xs text-gray-400 truncate">{linkedInEmail}</p>}
-            </div>
-          </div>
-          <button
-            onClick={handleUnlink}
-            disabled={linkLoading}
-            className="text-sm font-medium text-red-600 bg-red-50 hover:bg-red-100 disabled:opacity-50 px-5 py-2.5 rounded-xl transition-colors"
-          >
-            {linkLoading ? "解除中..." : "連携を解除"}
-          </button>
-        </div>
-      ) : (
-        <div className="space-y-4">
-          <p className="text-sm text-gray-500 leading-relaxed">
-            LinkedInアカウントを連携すると、プロフィール情報の自動インポートや、LinkedInネットワークを活用したリファラルが可能になります。
-          </p>
-          <button
-            onClick={handleLink}
-            disabled={linkLoading}
-            className="flex items-center gap-3 px-5 py-3 bg-[#0A66C2] hover:bg-[#004182] disabled:opacity-50 text-white text-sm font-medium rounded-xl shadow-sm hover:shadow transition-all duration-200 disabled:cursor-not-allowed"
-          >
-            {linkLoading ? (
-              <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-            ) : (
-              <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
-              </svg>
-            )}
-            LinkedInアカウントを連携する
-          </button>
-        </div>
-      )}
-    </section>
-  );
-}
 
 /* ── Toast component ── */
 function Toast({ message, type, onClose }: { message: string; type: "success" | "error"; onClose: () => void }) {
@@ -200,7 +73,21 @@ export default function ProfilePage() {
   const [draftTitle, setDraftTitle] = useState("");
   const [draftLocation, setDraftLocation] = useState("");
   const [draftBio, setDraftBio] = useState("");
+  const [draftLinkedInUrl, setDraftLinkedInUrl] = useState("");
   const [savingProfile, setSavingProfile] = useState(false);
+
+  /* ── Student-specific fields (localStorage until DB migration) ── */
+  const [studentInfo, setStudentInfo] = useState({
+    schoolType: "",
+    schoolName: "",
+    department: "",
+    labName: "",
+    researchTopic: "",
+    expectedGraduation: "",
+    grade: "",
+  });
+  const [editingStudentInfo, setEditingStudentInfo] = useState(false);
+  const [savingStudentInfo, setSavingStudentInfo] = useState(false);
 
   /* ── Avatar upload ── */
   const avatarInputRef = useRef<HTMLInputElement>(null);
@@ -348,6 +235,15 @@ export default function ProfilePage() {
     }
   }, [loading]);
 
+  /* ── Load student info from localStorage ── */
+  useEffect(() => {
+    if (!user) return;
+    try {
+      const stored = localStorage.getItem(`studentInfo_${user.id}`);
+      if (stored) setStudentInfo(JSON.parse(stored));
+    } catch { /* ignore parse errors */ }
+  }, [user]);
+
   /* ── Fetch all data ── */
   useEffect(() => {
     if (!user) return;
@@ -409,6 +305,7 @@ export default function ProfilePage() {
     setDraftTitle(profile.title || "");
     setDraftLocation(profile.location || "");
     setDraftBio(profile.bio || "");
+    setDraftLinkedInUrl((profile as any).linkedin_url || "");
     setEditMode(true);
   };
 
@@ -422,13 +319,14 @@ export default function ProfilePage() {
           title: draftTitle,
           location: draftLocation,
           bio: draftBio,
+          linkedin_url: draftLinkedInUrl || null,
           updated_at: new Date().toISOString(),
         })
         .eq("id", user.id);
 
       if (error) throw error;
 
-      setProfile((prev) => prev ? { ...prev, full_name: draftName, title: draftTitle, location: draftLocation, bio: draftBio } : prev);
+      setProfile((prev) => prev ? { ...prev, full_name: draftName, title: draftTitle, location: draftLocation, bio: draftBio, linkedin_url: draftLinkedInUrl || null } as any : prev);
       setEditMode(false);
       await refreshProfile();
       showToast("プロフィールを保存しました");
@@ -441,6 +339,20 @@ export default function ProfilePage() {
 
   const handleCancelProfile = () => {
     setEditMode(false);
+  };
+
+  const handleSaveStudentInfo = async () => {
+    if (!user) return;
+    setSavingStudentInfo(true);
+    try {
+      localStorage.setItem(`studentInfo_${user.id}`, JSON.stringify(studentInfo));
+      setEditingStudentInfo(false);
+      showToast("学校・研究情報を保存しました");
+    } catch {
+      showToast("保存に失敗しました", "error");
+    } finally {
+      setSavingStudentInfo(false);
+    }
   };
 
   const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -842,6 +754,23 @@ export default function ProfilePage() {
                           className={inputClass}
                         />
                       </div>
+                      <div>
+                        <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">LinkedIn URL</label>
+                        <div className="relative">
+                          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <svg className="w-4 h-4 text-[#0A66C2]" viewBox="0 0 24 24" fill="currentColor">
+                              <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+                            </svg>
+                          </div>
+                          <input
+                            type="url"
+                            value={draftLinkedInUrl}
+                            onChange={(e) => setDraftLinkedInUrl(e.target.value)}
+                            placeholder="https://www.linkedin.com/in/username"
+                            className={`${inputClass} pl-10`}
+                          />
+                        </div>
+                      </div>
                       <div className="flex gap-3 pt-1">
                         <button
                           onClick={handleSaveProfile}
@@ -891,6 +820,19 @@ export default function ProfilePage() {
                       </div>
                       {profileBio && (
                         <p className="text-sm text-gray-600 mt-3 leading-relaxed">{profileBio}</p>
+                      )}
+                      {(profile as any)?.linkedin_url && (
+                        <a
+                          href={(profile as any).linkedin_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1.5 mt-3 text-sm text-[#0A66C2] hover:underline"
+                        >
+                          <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+                          </svg>
+                          LinkedIn
+                        </a>
                       )}
                     </>
                   )}
@@ -1295,6 +1237,191 @@ export default function ProfilePage() {
                   </div>
                 )}
               </section>
+
+              {/* 学校・研究情報 (Student Info) */}
+              <section className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 sm:p-8 hover:shadow-md transition-shadow duration-200">
+                <div className="flex items-center justify-between mb-6">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-lg bg-cyan-50 flex items-center justify-center">
+                      <svg className="w-4 h-4 text-cyan-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
+                      </svg>
+                    </div>
+                    <h2 className="text-lg font-semibold text-gray-900">学校・研究情報</h2>
+                  </div>
+                  {!editingStudentInfo && (
+                    <button
+                      onClick={() => setEditingStudentInfo(true)}
+                      className="text-sm text-indigo-600 hover:text-indigo-700 font-medium flex items-center gap-1.5 bg-indigo-50 hover:bg-indigo-100 px-3.5 py-2 rounded-xl transition-colors"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                      </svg>
+                      編集
+                    </button>
+                  )}
+                </div>
+
+                {editingStudentInfo ? (
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">学校種別 *</label>
+                        <select
+                          value={studentInfo.schoolType}
+                          onChange={(e) => setStudentInfo({ ...studentInfo, schoolType: e.target.value })}
+                          className={inputClass}
+                        >
+                          <option value="">選択してください</option>
+                          <option value="高専本科">高専本科</option>
+                          <option value="高専専攻科">高専専攻科</option>
+                          <option value="修士課程">修士課程</option>
+                          <option value="博士課程">博士課程</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">学校名 *</label>
+                        <input
+                          type="text"
+                          value={studentInfo.schoolName}
+                          onChange={(e) => setStudentInfo({ ...studentInfo, schoolName: e.target.value })}
+                          placeholder="例: 東京工業高等専門学校"
+                          className={inputClass}
+                        />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">学科・専攻 *</label>
+                        <input
+                          type="text"
+                          value={studentInfo.department}
+                          onChange={(e) => setStudentInfo({ ...studentInfo, department: e.target.value })}
+                          placeholder="例: 情報工学科"
+                          className={inputClass}
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">学年</label>
+                        <input
+                          type="text"
+                          value={studentInfo.grade}
+                          onChange={(e) => setStudentInfo({ ...studentInfo, grade: e.target.value })}
+                          placeholder="例: 4年"
+                          className={inputClass}
+                        />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">研究室名</label>
+                        <input
+                          type="text"
+                          value={studentInfo.labName}
+                          onChange={(e) => setStudentInfo({ ...studentInfo, labName: e.target.value })}
+                          placeholder="例: 田中研究室"
+                          className={inputClass}
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">卒業予定年月</label>
+                        <input
+                          type="month"
+                          value={studentInfo.expectedGraduation}
+                          onChange={(e) => setStudentInfo({ ...studentInfo, expectedGraduation: e.target.value })}
+                          className={inputClass}
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">研究テーマ</label>
+                      <textarea
+                        value={studentInfo.researchTopic}
+                        onChange={(e) => setStudentInfo({ ...studentInfo, researchTopic: e.target.value })}
+                        rows={3}
+                        placeholder="例: 深層学習を用いた自然言語処理の研究"
+                        className={inputClass}
+                      />
+                    </div>
+                    <div className="flex gap-3 pt-1">
+                      <button
+                        onClick={handleSaveStudentInfo}
+                        disabled={savingStudentInfo}
+                        className="text-sm font-medium text-white bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 disabled:opacity-50 px-5 py-2.5 rounded-xl transition-all shadow-sm hover:shadow-md"
+                      >
+                        {savingStudentInfo ? "保存中..." : "保存する"}
+                      </button>
+                      <button
+                        onClick={() => setEditingStudentInfo(false)}
+                        className="text-sm font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 px-5 py-2.5 rounded-xl transition-colors"
+                      >
+                        キャンセル
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    {studentInfo.schoolType || studentInfo.schoolName ? (
+                      <div className="space-y-3">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          {studentInfo.schoolType && (
+                            <div>
+                              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">学校種別</p>
+                              <p className="text-sm text-gray-900 font-medium">{studentInfo.schoolType}</p>
+                            </div>
+                          )}
+                          {studentInfo.schoolName && (
+                            <div>
+                              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">学校名</p>
+                              <p className="text-sm text-gray-900 font-medium">{studentInfo.schoolName}</p>
+                            </div>
+                          )}
+                          {studentInfo.department && (
+                            <div>
+                              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">学科・専攻</p>
+                              <p className="text-sm text-gray-900 font-medium">{studentInfo.department}</p>
+                            </div>
+                          )}
+                          {studentInfo.grade && (
+                            <div>
+                              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">学年</p>
+                              <p className="text-sm text-gray-900 font-medium">{studentInfo.grade}</p>
+                            </div>
+                          )}
+                          {studentInfo.labName && (
+                            <div>
+                              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">研究室名</p>
+                              <p className="text-sm text-gray-900 font-medium">{studentInfo.labName}</p>
+                            </div>
+                          )}
+                          {studentInfo.expectedGraduation && (
+                            <div>
+                              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">卒業予定年月</p>
+                              <p className="text-sm text-gray-900 font-medium">{studentInfo.expectedGraduation}</p>
+                            </div>
+                          )}
+                        </div>
+                        {studentInfo.researchTopic && (
+                          <div>
+                            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">研究テーマ</p>
+                            <p className="text-sm text-gray-700 leading-relaxed">{studentInfo.researchTopic}</p>
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="flex flex-col items-center justify-center py-12">
+                        <div className="w-16 h-16 rounded-2xl bg-gray-50 flex items-center justify-center mb-4">
+                          <svg className="w-8 h-8 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
+                          </svg>
+                        </div>
+                        <p className="text-sm font-medium text-gray-400">学校・研究情報がまだありません</p>
+                        <p className="text-xs text-gray-300 mt-1">編集ボタンから追加しましょう</p>
+                      </div>
+                    )}
+                  </>
+                )}
+              </section>
             </div>
           )}
 
@@ -1599,8 +1726,6 @@ export default function ProfilePage() {
                 </div>
               </section>
 
-              {/* LinkedIn連携 */}
-              <LinkedInConnectionSection />
 
               {/* プライバシー設定 */}
               <section className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 sm:p-8 hover:shadow-md transition-shadow duration-200">

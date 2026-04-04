@@ -10,18 +10,17 @@ export default function Footer() {
               <LogoDark size="header" iconOnly showBrandName />
             </div>
             <p className="text-gray-500 text-sm leading-relaxed">
-              AIが最適な人材と企業をマッチング。
-              日本の働き方を変える、次世代プラットフォーム。
+              高専生・大学院生の専門性を正しく評価し、
+              最適な企業とマッチングする採用プラットフォーム。
             </p>
           </div>
 
           <div>
-            <h4 className="text-white font-medium text-sm mb-4">求職者向け</h4>
+            <h4 className="text-white font-medium text-sm mb-4">学生向け</h4>
             <ul className="space-y-2.5">
+              <li><a href="/interview" className="text-gray-500 hover:text-gray-300 text-sm transition-colors">AI面接を受ける</a></li>
               <li><a href="/explore" className="text-gray-500 hover:text-gray-300 text-sm transition-colors">求人を探す</a></li>
-              <li><a href="/interview" className="text-gray-500 hover:text-gray-300 text-sm transition-colors">スキル評価を受ける</a></li>
-              <li><a href="/interview" className="text-gray-500 hover:text-gray-300 text-sm transition-colors">APEX スコア</a></li>
-              <li><a href="/expert" className="text-gray-500 hover:text-gray-300 text-sm transition-colors">エキスパート面接</a></li>
+              <li><a href="/profile" className="text-gray-500 hover:text-gray-300 text-sm transition-colors">プロフィール設定</a></li>
               <li><a href="/help" className="text-gray-500 hover:text-gray-300 text-sm transition-colors">ヘルプセンター</a></li>
             </ul>
           </div>
@@ -29,10 +28,9 @@ export default function Footer() {
           <div>
             <h4 className="text-white font-medium text-sm mb-4">企業向け</h4>
             <ul className="space-y-2.5">
-              <li><a href="/for-companies" className="text-gray-500 hover:text-gray-300 text-sm transition-colors">AI採用支援</a></li>
+              <li><a href="/for-companies" className="text-gray-500 hover:text-gray-300 text-sm transition-colors">高専・大学院生の採用</a></li>
               <li><a href="/pricing" className="text-gray-500 hover:text-gray-300 text-sm transition-colors">料金プラン</a></li>
-              <li><a href="/cases" className="text-gray-500 hover:text-gray-300 text-sm transition-colors">導入事例</a></li>
-              <li><a href="/roi-calculator" className="text-gray-500 hover:text-gray-300 text-sm transition-colors">ROI計算ツール</a></li>
+              <li><a href="/contact" className="text-gray-500 hover:text-gray-300 text-sm transition-colors">お問い合わせ</a></li>
             </ul>
           </div>
 
@@ -41,7 +39,6 @@ export default function Footer() {
             <ul className="space-y-2.5">
               <li><a href="/about" className="text-gray-500 hover:text-gray-300 text-sm transition-colors">私たちについて</a></li>
               <li><a href="/blog" className="text-gray-500 hover:text-gray-300 text-sm transition-colors">ブログ</a></li>
-              <li><a href="/careers" className="text-gray-500 hover:text-gray-300 text-sm transition-colors">採用情報</a></li>
               <li><a href="/contact" className="text-gray-500 hover:text-gray-300 text-sm transition-colors">お問い合わせ</a></li>
             </ul>
           </div>

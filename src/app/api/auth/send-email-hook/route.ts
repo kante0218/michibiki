@@ -128,7 +128,8 @@ export async function POST(request: Request) {
     const confirmationUrl = email_data?.confirmation_url || email_data?.action_link || "";
     const token = email_data?.token || "";
     const tokenHash = email_data?.token_hash || "";
-    const redirectTo = email_data?.redirect_to || "https://www.michibiki.tech/home";
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://michibiki.tech";
+    const redirectTo = email_data?.redirect_to || `${siteUrl}/home`;
 
     if (!toEmail) {
       return NextResponse.json({ error: "No email address" }, { status: 400 });

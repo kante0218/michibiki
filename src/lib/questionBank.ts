@@ -508,7 +508,29 @@ questionBank.financial_analyst = mergeBank(questionBank.financial_analyst, finan
 questionBank.healthcare = mergeBank(questionBank.healthcare, healthcareExtra);
 questionBank.education = mergeBank(questionBank.education, educationExtra);
 
-// AI生成フォールバック用: バンクがないカテゴリはnullを返す
+// 高専・大学院生向け新カテゴリ（AI生成のみ、問題バンクなし）
+// interviewCategories.ts の全カテゴリ:
+// 高専・工学系: mechanical_engineering, electrical_engineering, computer_science,
+//   chemical_engineering, civil_engineering, bioengineering
+// 大学院・研究系: research_presentation, thesis_discussion,
+//   conference_presentation, research_planning
+// 情報・IT系: programming, data_science, ai_ml, web_development
+// ものづくり・設計: cad_design, circuit_design, manufacturing
+// 基礎力・ポテンシャル: logical_thinking, communication, teamwork_leadership
+// 業界別適性: manufacturer_fit, it_company_fit, infrastructure_fit
+const AI_ONLY_CATEGORIES = new Set([
+  "mechanical_engineering", "electrical_engineering", "computer_science",
+  "chemical_engineering", "civil_engineering", "bioengineering",
+  "research_presentation", "thesis_discussion", "conference_presentation",
+  "research_planning", "programming", "data_science", "ai_ml",
+  "web_development", "cad_design", "circuit_design", "manufacturing",
+  "logical_thinking", "communication", "teamwork_leadership",
+  "manufacturer_fit", "it_company_fit", "infrastructure_fit",
+]);
+
+// AI生成フォールバック用: バンクがないカテゴリはfalseを返す
+// 新しい高専・大学院生向けカテゴリは全てAI生成を使用
 export function hasQuestionBank(category: string): boolean {
+  if (AI_ONLY_CATEGORIES.has(category)) return false;
   return category in questionBank;
 }
