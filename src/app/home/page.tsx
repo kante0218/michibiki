@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Sidebar, TopBar } from "@/components/ExploreHeader";
+import { Sidebar } from "@/components/ExploreHeader";
 import { useAuth } from "@/lib/AuthContext";
 import { supabase } from "@/lib/supabase";
 import type { Database } from "@/lib/database.types";
@@ -490,7 +490,6 @@ export default function HomePage() {
 
       <div className="ml-0 md:ml-[96px]">
         {/* Top bar */}
-        <TopBar />
 
         {/* Important Tasks Section - Mercor style */}
         <div className="px-6 pt-6 pb-2 max-w-[1400px]">

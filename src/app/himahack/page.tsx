@@ -1,6 +1,6 @@
 "use client";
 
-import { Sidebar, TopBar } from "@/components/ExploreHeader";
+import { Sidebar } from "@/components/ExploreHeader";
 
 export default function HimahackPage() {
   return (
@@ -8,7 +8,6 @@ export default function HimahackPage() {
       <Sidebar activeItem="himahack" />
 
       <div className="flex-1 md:ml-[72px]">
-        <TopBar />
 
         <main className="max-w-2xl mx-auto px-6 py-24 text-center">
           {/* Gift box icon */}

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Sidebar, TopBar } from "@/components/ExploreHeader";
+import { Sidebar } from "@/components/ExploreHeader";
 import { interviewGroups } from "@/lib/interviewCategories";
 
 // SVG icons per group name
@@ -195,7 +195,6 @@ export default function InterviewPage() {
 
       {/* Main content */}
       <div className="ml-0 md:ml-[96px]">
-        <TopBar />
         <div className="px-6 py-6 max-w-[1400px]">
           {/* Page header */}
           <div className="mb-8">

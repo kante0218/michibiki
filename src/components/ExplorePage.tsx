@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { Sidebar, TopBar } from "@/components/ExploreHeader";
+import { Sidebar } from "@/components/ExploreHeader";
 import FilterBar from "@/components/FilterBar";
 import JobCard from "@/components/JobCard";
 import JobDetail from "@/components/JobDetail";
@@ -158,7 +158,6 @@ export default function ExplorePage({ initialJobs = [] }: { initialJobs?: Job[] 
       {/* Main area right of sidebar */}
       <div className="ml-0 md:ml-[96px]">
         {/* Top bar */}
-        <TopBar />
 
         {/* Content area */}
         <div className="px-6 py-6 max-w-[1400px]">

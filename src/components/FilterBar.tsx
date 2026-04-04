@@ -264,7 +264,6 @@ export default function FilterBar({
   const { user } = useAuth();
   const [sortOpen, setSortOpen] = useState(false);
   const [filterOpen, setFilterOpen] = useState(false);
-  const [referralOpen, setReferralOpen] = useState(false);
   const [copied, setCopied] = useState(false);
   const sortRef = useRef<HTMLDivElement>(null);
   const filterRef = useRef<HTMLDivElement>(null);
@@ -308,25 +307,11 @@ export default function FilterBar({
     }
   };
 
-  const referralLink = user
-    ? `${typeof window !== "undefined" ? window.location.origin : ""}/ref/${user.id}`
-    : null;
-
   const handleCopyLink = async () => {
-    if (!referralLink) return;
     try {
-      await navigator.clipboard.writeText(referralLink);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch {
-      const textArea = document.createElement("textarea");
-      textArea.value = referralLink;
-      document.body.appendChild(textArea);
-      textArea.select();
-      document.execCommand("copy");
-      document.body.removeChild(textArea);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
     }
   };
 
@@ -528,157 +513,8 @@ export default function FilterBar({
           )}
         </div>
 
-        {/* Refer & Earn button - gradient */}
-        <button
-          onClick={() => setReferralOpen(true)}
-          className="hidden sm:flex items-center gap-2.5 h-11 px-6 text-sm bg-gradient-to-r from-orange-400 via-pink-500 to-rose-500 text-white rounded-full hover:from-orange-500 hover:via-pink-600 hover:to-rose-600 transition-all duration-200 font-bold flex-shrink-0 whitespace-nowrap shadow-lg shadow-pink-300/40 hover:shadow-xl hover:shadow-pink-300/50 hover:-translate-y-0.5 tracking-wide"
-        >
-          <svg className="w-[18px] h-[18px]" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M18 9a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM6 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" />
-            <path strokeLinecap="round" strokeLinejoin="round" d="m8.7 10.7 6.6-3.4M8.7 13.3l6.6 3.4" />
-            <path strokeLinecap="round" strokeLinejoin="round" d="M18 21a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" />
-          </svg>
-          紹介して報酬GET
-        </button>
       </div>
 
-      {/* Referral Modal */}
-      {referralOpen && (
-        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 animate-in fade-in duration-200">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4 relative overflow-hidden">
-            {/* Gradient header */}
-            <div className="bg-gradient-to-r from-orange-400 via-pink-500 to-indigo-500 p-6 pb-8">
-              <button
-                onClick={() => setReferralOpen(false)}
-                className="absolute top-4 right-4 text-white/80 hover:text-white transition-colors"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-              <div className="text-center">
-                <div className="w-14 h-14 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center mx-auto mb-3">
-                  <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M18 9a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM6 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" d="m8.7 10.7 6.6-3.4M8.7 13.3l6.6 3.4" />
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M18 21a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" />
-                  </svg>
-                </div>
-                <h2 className="text-xl font-bold text-white">紹介して報酬GET</h2>
-                <p className="text-sm text-white/80 mt-1">
-                  友達を紹介して、採用されると紹介報酬を獲得できます
-                </p>
-              </div>
-            </div>
-
-            <div className="p-6 -mt-3">
-              {/* Referral link or login prompt */}
-              <div className="mb-5">
-                <label className="text-xs font-semibold text-gray-500 mb-2 block uppercase tracking-wider">
-                  あなたの紹介リンク
-                </label>
-                {referralLink ? (
-                  <div className="flex items-center gap-2">
-                    <input
-                      type="text"
-                      readOnly
-                      value={referralLink}
-                      className="flex-1 h-11 px-4 text-sm bg-gray-50 border-2 border-gray-200 rounded-xl text-gray-700 select-all focus:outline-none focus:border-indigo-300"
-                      onClick={(e) => (e.target as HTMLInputElement).select()}
-                    />
-                    <button
-                      onClick={handleCopyLink}
-                      className={`h-11 px-4 text-sm font-semibold rounded-xl transition-all duration-200 whitespace-nowrap ${
-                        copied
-                          ? "bg-emerald-50 text-emerald-700 border-2 border-emerald-200"
-                          : "bg-indigo-600 text-white hover:bg-indigo-700 shadow-md shadow-indigo-200/50"
-                      }`}
-                    >
-                      {copied ? "コピー済み" : "コピー"}
-                    </button>
-                  </div>
-                ) : (
-                  <div className="flex items-center gap-2 p-4 bg-amber-50 border-2 border-amber-200 rounded-xl">
-                    <svg className="w-5 h-5 text-amber-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
-                    </svg>
-                    <p className="text-sm text-amber-800 font-medium">ログインしてください</p>
-                    <a
-                      href="/login"
-                      className="ml-auto text-sm font-semibold text-indigo-600 hover:text-indigo-700 whitespace-nowrap"
-                    >
-                      ログイン
-                    </a>
-                  </div>
-                )}
-              </div>
-
-              {/* Share options - only show when logged in */}
-              {referralLink && (
-                <div className="mb-5">
-                  <label className="text-xs font-semibold text-gray-500 mb-2.5 block uppercase tracking-wider">
-                    共有する
-                  </label>
-                  <div className="flex gap-2">
-                    {/* LINE */}
-                    <a
-                      href={`https://line.me/R/share?text=${encodeURIComponent("Michibikiで一緒に働きませんか？ " + referralLink)}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex-1 flex items-center justify-center gap-1.5 h-11 text-sm font-semibold bg-[#06C755] text-white rounded-xl hover:opacity-90 transition-all duration-200 shadow-sm"
-                    >
-                      <span className="font-bold text-xs">LINE</span>
-                    </a>
-                    {/* Twitter/X */}
-                    <a
-                      href={`https://twitter.com/intent/tweet?text=${encodeURIComponent("Michibikiで一緒に働きませんか？ " + referralLink)}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex-1 flex items-center justify-center gap-1.5 h-11 text-sm font-semibold bg-gray-900 text-white rounded-xl hover:opacity-90 transition-all duration-200 shadow-sm"
-                    >
-                      <span className="font-bold text-xs">X</span>
-                    </a>
-                    {/* Email */}
-                    <a
-                      href={`mailto:?subject=${encodeURIComponent("Michibikiへの招待")}&body=${encodeURIComponent("Michibikiで一緒に働きませんか？\n\n" + referralLink)}`}
-                      className="flex-1 flex items-center justify-center gap-1.5 h-11 text-sm font-semibold bg-gray-600 text-white rounded-xl hover:opacity-90 transition-all duration-200 shadow-sm"
-                    >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                      </svg>
-                      <span className="text-xs">メール</span>
-                    </a>
-                  </div>
-                </div>
-              )}
-
-              {/* Bonus explanation */}
-              <div className="bg-gradient-to-br from-indigo-50 to-purple-50 rounded-xl p-4 border border-indigo-100">
-                <h4 className="text-xs font-bold text-indigo-800 mb-2 flex items-center gap-1.5">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8V7m0 1v8m0 0v1" />
-                  </svg>
-                  紹介報酬について
-                </h4>
-                <ul className="text-xs text-indigo-700 space-y-1.5">
-                  <li className="flex items-start gap-2">
-                    <span className="w-1 h-1 rounded-full bg-indigo-400 mt-1.5 flex-shrink-0" />
-                    紹介した方が登録すると <strong>¥1,000</strong> のボーナス
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="w-1 h-1 rounded-full bg-indigo-400 mt-1.5 flex-shrink-0" />
-                    紹介した方が採用されると <strong>¥50,000</strong> のボーナス
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="w-1 h-1 rounded-full bg-indigo-400 mt-1.5 flex-shrink-0" />
-                    紹介人数に上限はありません
-                  </li>
-                </ul>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </>
   );
 }

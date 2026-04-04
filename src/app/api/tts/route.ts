@@ -4,21 +4,8 @@ import { rateLimit } from "@/lib/rate-limit";
 
 const limiter = rateLimit({ maxRequests: 30, windowMs: 60_000 });
 
-// Fish Audio voice presets for interview context
-const VOICE_PRESETS: Record<string, { referenceId: string; label: string; gender: string }> = {
-  "male-interviewer": {
-    referenceId: process.env.FISH_AUDIO_VOICE_MALE || "",
-    label: "男性面接官（落ち着いた自然な声）",
-    gender: "male",
-  },
-  "female-interviewer": {
-    referenceId: process.env.FISH_AUDIO_VOICE_FEMALE || "",
-    label: "女性面接官（丁寧で自然な声）",
-    gender: "female",
-  },
-};
-
-const DEFAULT_PRESET = "male-interviewer";
+// Fish Audio voice reference ID
+const FISH_VOICE_ID = process.env.FISH_AUDIO_VOICE_ID || "";
 
 export async function POST(req: NextRequest) {
   const apiKey = process.env.FISH_AUDIO_API_KEY;
@@ -36,7 +23,7 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const { text, preset } = await req.json();
+    const { text } = await req.json();
 
     if (!text || typeof text !== "string") {
       return NextResponse.json({ error: "text is required" }, { status: 400 });
@@ -45,10 +32,6 @@ export async function POST(req: NextRequest) {
     if (text.length > 2000) {
       return NextResponse.json({ error: "Text too long (max 2000 chars)" }, { status: 400 });
     }
-
-    const selectedPreset = preset && preset in VOICE_PRESETS
-      ? VOICE_PRESETS[preset]
-      : VOICE_PRESETS[DEFAULT_PRESET];
 
     const body: Record<string, unknown> = {
       text,
@@ -59,8 +42,8 @@ export async function POST(req: NextRequest) {
       latency: "normal",
     };
 
-    if (selectedPreset.referenceId) {
-      body.reference_id = selectedPreset.referenceId;
+    if (FISH_VOICE_ID) {
+      body.reference_id = FISH_VOICE_ID;
     }
 
     const msgpackBody = encode(body);
@@ -102,11 +85,5 @@ export async function POST(req: NextRequest) {
 
 export async function GET() {
   const isConfigured = !!process.env.FISH_AUDIO_API_KEY;
-  const presets = Object.entries(VOICE_PRESETS).map(([key, value]) => ({
-    id: key,
-    label: value.label,
-    gender: value.gender,
-    hasVoice: !!value.referenceId,
-  }));
-  return NextResponse.json({ isConfigured, presets });
+  return NextResponse.json({ isConfigured, hasVoice: !!FISH_VOICE_ID });
 }

@@ -188,9 +188,6 @@ function LiveInterviewContent() {
   const ttsAudioRef = useRef<HTMLAudioElement | null>(null);
   const [isSpeaking, setIsSpeaking] = useState(false);
 
-  // Voice settings (Fish Audio)
-  const [fishPreset] = useState("male-interviewer");
-
   // Fallback text input
   const [fallbackText, setFallbackText] = useState("");
 
@@ -374,7 +371,7 @@ function LiveInterviewContent() {
       const res = await fetch("/api/tts", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text, preset: fishPreset }),
+        body: JSON.stringify({ text }),
       });
 
       if (!res.ok) {
@@ -416,7 +413,7 @@ function LiveInterviewContent() {
         }
       } catch { /* ignore */ }
     }
-  }, [fishPreset]);
+  }, []);
 
   const stopSpeaking = useCallback(() => {
     if (ttsAudioRef.current) {

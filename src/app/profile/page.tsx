@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { Sidebar, TopBar } from "@/components/ExploreHeader";
+import { Sidebar } from "@/components/ExploreHeader";
 import { useAuth } from "@/lib/AuthContext";
 import { supabase } from "@/lib/supabase";
 import type { Database } from "@/lib/database.types";
@@ -675,7 +675,6 @@ export default function ProfilePage() {
 
       {/* Main content area */}
       <div className="ml-0 md:ml-[96px]">
-        <TopBar />
         {/* ── Gradient Banner ── */}
         <div className="relative">
           <div className="h-40 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500" />

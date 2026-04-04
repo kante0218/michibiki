@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useAuth } from "@/lib/AuthContext";
 import { supabase } from "@/lib/supabase";
-import { Sidebar, TopBar } from "@/components/ExploreHeader";
+import { Sidebar } from "@/components/ExploreHeader";
 import {
   FiUploadCloud,
   FiLink,
@@ -120,7 +120,6 @@ export default function ReferralsPage() {
       <Sidebar activeItem="referrals" />
 
       <div className="ml-0 md:ml-[96px]">
-        <TopBar />
         <div className="px-6 py-6 max-w-[1400px]">
           {/* Header */}
           <div className="flex items-center justify-between mb-6">
