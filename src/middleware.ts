@@ -52,10 +52,11 @@ export async function middleware(request: NextRequest) {
   // Referrer policy - don't leak full URL to external sites
   response.headers.set("Referrer-Policy", "strict-origin-when-cross-origin");
 
-  // Permissions policy - restrict browser features
+  // Permissions policy - allow camera/mic from same origin (required for AI interview),
+  // deny geolocation/payment
   response.headers.set(
     "Permissions-Policy",
-    "camera=(), microphone=(), geolocation=(), payment=()"
+    "camera=(self), microphone=(self), geolocation=(), payment=()"
   );
 
   // Strict Transport Security - force HTTPS (1 year)

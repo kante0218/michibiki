@@ -39,6 +39,20 @@ interface ProductionInterview {
   created_at: string;
 }
 
+interface PracticeEvaluation {
+  overallScore?: number;
+  technicalScore?: number;
+  researchScore?: number;
+  communicationScore?: number;
+  problemSolvingScore?: number;
+  potentialScore?: number;
+  summary?: string;
+  strengths?: string[];
+  improvements?: string[];
+  recommendation?: string;
+  detailedFeedback?: string;
+}
+
 interface JobInfo {
   id: string;
   title: string;
@@ -132,9 +146,12 @@ function LiveInterviewContent() {
   const searchParams = useSearchParams();
   const { user, loading: authLoading } = useAuth();
   const interviewId = searchParams.get("interviewId");
+  const categoryParam = searchParams.get("category");
+  const isPractice = !interviewId && !!categoryParam;
 
   // Phase management
   const [phase, setPhase] = useState<Phase>("loading");
+  const [practiceEvaluation, setPracticeEvaluation] = useState<PracticeEvaluation | null>(null);
 
   // Interview data
   const [interview, setInterview] = useState<ProductionInterview | null>(null);
@@ -533,7 +550,51 @@ function LiveInterviewContent() {
   // Load interview data
   // -------------------------------------------------------
   useEffect(() => {
-    if (!user || !interviewId || phase !== "loading") return;
+    if (!user || phase !== "loading") return;
+    if (!interviewId && !isPractice) return;
+
+    // Practice mode: fetch test questions from /api/interview and skip DB
+    if (isPractice && categoryParam) {
+      const loadPracticeTest = async () => {
+        try {
+          const res = await fetch("/api/interview", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              action: "generate_test",
+              category: categoryParam,
+              jobTitle: "AI面接練習",
+              jobDescription: "",
+            }),
+          });
+          const data = await res.json();
+          if (data.error) {
+            setError(
+              data.error.includes("Overloaded")
+                ? "AIサーバーが混雑しています。しばらく待ってから再試行してください。"
+                : "テスト問題の生成に失敗しました。もう一度お試しください。"
+            );
+            return;
+          }
+          if (Array.isArray(data.questions) && data.questions.length > 0) {
+            // Normalize ids to numbers for the existing UI contract
+            const normalized = data.questions.map(
+              (q: Record<string, unknown>, i: number) => ({
+                ...q,
+                id: typeof q.id === "number" ? q.id : i + 1,
+              })
+            );
+            setTestQuestions(normalized as TestQuestion[]);
+          }
+          setPhase("instructions");
+        } catch (err) {
+          console.error("Failed to load practice test:", err);
+          setError("テスト問題の読み込みに失敗しました。");
+        }
+      };
+      loadPracticeTest();
+      return;
+    }
 
     const loadInterview = async () => {
       try {
@@ -614,7 +675,7 @@ function LiveInterviewContent() {
 
     loadInterview();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user, interviewId, phase]);
+  }, [user, interviewId, isPractice, categoryParam, phase]);
 
   // -------------------------------------------------------
   // Test navigation
@@ -635,6 +696,10 @@ function LiveInterviewContent() {
   // Start interview flow
   // -------------------------------------------------------
   const handleStartInterview = async () => {
+    if (isPractice) {
+      setPhase("camera_setup");
+      return;
+    }
     if (!interviewId) return;
 
     try {
@@ -708,19 +773,21 @@ function LiveInterviewContent() {
       answer: testAnswers[q.id] || "",
     }));
 
-    // Submit answers to API
-    try {
-      await fetch("/api/production-interview", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          action: "submit_answers",
-          productionInterviewId: interviewId,
-          answers: formattedAnswers,
-        }),
-      });
-    } catch (err) {
-      console.error("Failed to submit test answers:", err);
+    // Submit answers to API (skip for practice mode)
+    if (!isPractice) {
+      try {
+        await fetch("/api/production-interview", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            action: "submit_answers",
+            productionInterviewId: interviewId,
+            answers: formattedAnswers,
+          }),
+        });
+      } catch (err) {
+        console.error("Failed to submit test answers:", err);
+      }
     }
 
     // Proceed to video interview
@@ -747,16 +814,25 @@ function LiveInterviewContent() {
     }, 200);
 
     try {
-      const res = await fetch("/api/production-interview", {
+      const endpoint = isPractice ? "/api/interview" : "/api/production-interview";
+      const body = isPractice
+        ? {
+            action: "interview_question",
+            category: categoryParam,
+            jobTitle: "AI面接練習",
+            conversationHistory: [],
+          }
+        : {
+            action: "interview_question",
+            productionInterviewId: interviewId,
+            questionNumber: 1,
+            conversationHistory: [],
+            category: jobInfo?.category || "general",
+          };
+      const res = await fetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          action: "interview_question",
-          productionInterviewId: interviewId,
-          questionNumber: 1,
-          conversationHistory: [],
-          category: jobInfo?.category || "general",
-        }),
+        body: JSON.stringify(body),
       });
       const data = await res.json();
       if (data.error) {
@@ -805,16 +881,25 @@ function LiveInterviewContent() {
       }
 
       // Get next question
-      const res = await fetch("/api/production-interview", {
+      const endpoint = isPractice ? "/api/interview" : "/api/production-interview";
+      const body = isPractice
+        ? {
+            action: "interview_question",
+            category: categoryParam,
+            jobTitle: "AI面接練習",
+            conversationHistory: updatedHistory,
+          }
+        : {
+            action: "interview_question",
+            productionInterviewId: interviewId,
+            questionNumber: newCount,
+            conversationHistory: updatedHistory,
+            category: jobInfo?.category || "general",
+          };
+      const res = await fetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          action: "interview_question",
-          productionInterviewId: interviewId,
-          questionNumber: newCount,
-          conversationHistory: updatedHistory,
-          category: jobInfo?.category || "general",
-        }),
+        body: JSON.stringify(body),
       });
       const data = await res.json();
       if (data.error) {
@@ -844,10 +929,45 @@ function LiveInterviewContent() {
   };
 
   const handleCompleteInterview = async (finalConversation: { role: "user" | "assistant"; content: string }[]) => {
-    // Stop recording and upload
-    const recordingBlob = await stopInterviewRecording();
     setPhase("submitting");
     setIsTimerRunning(false);
+
+    if (isPractice) {
+      // Practice mode: no recording upload, no DB write — fetch AI evaluation
+      try { await stopInterviewRecording(); } catch { /* ignore */ }
+      stopCamera();
+
+      try {
+        const testResultsPayload = testQuestions.map((q) => ({
+          question: q.question,
+          answer: testAnswers[q.id] || "",
+          correctAnswer: q.correctAnswer,
+          type: q.type,
+        }));
+        const res = await fetch("/api/interview", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            action: "evaluate_interview",
+            category: categoryParam,
+            conversationHistory: finalConversation,
+            testResults: testResultsPayload,
+          }),
+        });
+        const data = await res.json();
+        if (!data.error) {
+          setPracticeEvaluation(data as PracticeEvaluation);
+        }
+      } catch (err) {
+        console.error("Failed to evaluate practice interview:", err);
+      }
+
+      setPhase("completed");
+      return;
+    }
+
+    // Production mode: stop recording and upload
+    const recordingBlob = await stopInterviewRecording();
     stopCamera();
 
     // Upload recording
@@ -900,7 +1020,7 @@ function LiveInterviewContent() {
   }
   if (!user) return null;
 
-  if (!interviewId) {
+  if (!interviewId && !isPractice) {
     router.replace("/interview");
     return (
       <div className="min-h-screen flex items-center justify-center bg-white">
@@ -1002,7 +1122,7 @@ function LiveInterviewContent() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
                   </svg>
                 </div>
-                <h1 className="text-2xl font-bold text-gray-900 mb-2">本番面接</h1>
+                <h1 className="text-2xl font-bold text-gray-900 mb-2">{isPractice ? "AI面接練習" : "本番面接"}</h1>
                 <p className="text-gray-500 text-sm">以下の内容をご確認の上、面接を開始してください</p>
               </div>
 
@@ -1056,20 +1176,37 @@ function LiveInterviewContent() {
               </div>
 
               {/* Warning */}
-              <div className="bg-red-50 border border-red-200 rounded-xl p-5 mb-8">
-                <div className="flex items-start gap-3">
-                  <svg className="w-5 h-5 text-red-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.072 16.5c-.77.833.192 2.5 1.732 2.5z" />
-                  </svg>
-                  <div>
-                    <p className="text-red-800 text-sm font-semibold mb-1">重要な注意事項</p>
-                    <p className="text-red-700 text-sm leading-relaxed">
-                      この面接は一度のみ受験可能です。開始すると中断できません。
-                      安定したインターネット環境で、静かな場所から受験してください。
-                    </p>
+              {isPractice ? (
+                <div className="bg-indigo-50 border border-indigo-200 rounded-xl p-5 mb-8">
+                  <div className="flex items-start gap-3">
+                    <svg className="w-5 h-5 text-indigo-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <div>
+                      <p className="text-indigo-800 text-sm font-semibold mb-1">練習モードのご案内</p>
+                      <p className="text-indigo-700 text-sm leading-relaxed">
+                        これはAI面接の練習です。何度でも受験でき、結果は企業側には送信されません。
+                        安定したインターネット環境で、静かな場所から受験してください。
+                      </p>
+                    </div>
                   </div>
                 </div>
-              </div>
+              ) : (
+                <div className="bg-red-50 border border-red-200 rounded-xl p-5 mb-8">
+                  <div className="flex items-start gap-3">
+                    <svg className="w-5 h-5 text-red-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.072 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                    </svg>
+                    <div>
+                      <p className="text-red-800 text-sm font-semibold mb-1">重要な注意事項</p>
+                      <p className="text-red-700 text-sm leading-relaxed">
+                        この面接は一度のみ受験可能です。開始すると中断できません。
+                        安定したインターネット環境で、静かな場所から受験してください。
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {/* Requirements */}
               <div className="bg-gray-50 rounded-xl p-5 mb-8">
@@ -1217,7 +1354,7 @@ function LiveInterviewContent() {
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-indigo-500 mt-0.5">{testQuestions.length > 0 ? "3." : "2."}</span>
-                  面接完了 - 結果は企業に送信されます
+                  面接完了 - {isPractice ? "AIフィードバックを表示します" : "結果は企業に送信されます"}
                 </li>
               </ul>
             </div>
@@ -1651,6 +1788,119 @@ function LiveInterviewContent() {
   // PHASE: Completed
   // -------------------------------------------------------
   if (phase === "completed") {
+    if (isPractice) {
+      const ev = practiceEvaluation;
+      return (
+        <div className="min-h-screen bg-gray-50 flex flex-col">
+          <LiveInterviewHeader subtitle="面接完了" timerDisplay={timerDisplay} showRec={false} showQuestionCount={false} questionCount={0} maxQuestions={maxInterviewQuestions} />
+          <div className="flex-1 px-4 py-10">
+            <div className="max-w-2xl mx-auto">
+              <div className="text-center mb-8">
+                <div className="w-20 h-20 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto mb-6">
+                  <svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
+                <h2 className="text-2xl font-bold text-gray-900 mb-2">お疲れさまでした！</h2>
+                <p className="text-gray-500 text-sm">AI面接練習が完了しました。以下のフィードバックをご確認ください。</p>
+              </div>
+
+              {ev ? (
+                <div className="space-y-5">
+                  {typeof ev.overallScore === "number" && (
+                    <div className="bg-white rounded-2xl border border-gray-200 p-6 text-center">
+                      <p className="text-xs text-gray-500 mb-1">総合スコア</p>
+                      <p className="text-5xl font-extrabold text-indigo-600 mb-1">{ev.overallScore}<span className="text-xl text-gray-400">/100</span></p>
+                      {ev.recommendation && (
+                        <p className="text-xs text-gray-500 mt-2">評価：{ev.recommendation}</p>
+                      )}
+                    </div>
+                  )}
+
+                  <div className="grid grid-cols-2 gap-3">
+                    {[
+                      { label: "専門知識", v: ev.technicalScore },
+                      { label: "研究力", v: ev.researchScore },
+                      { label: "論理的思考力", v: ev.problemSolvingScore },
+                      { label: "コミュニケーション", v: ev.communicationScore },
+                      { label: "ポテンシャル", v: ev.potentialScore },
+                    ].filter((x) => typeof x.v === "number").map((x) => (
+                      <div key={x.label} className="bg-white rounded-xl border border-gray-200 p-4">
+                        <p className="text-[11px] text-gray-500 mb-1">{x.label}</p>
+                        <p className="text-2xl font-bold text-gray-900">{x.v}<span className="text-xs text-gray-400">/100</span></p>
+                        <div className="mt-2 h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                          <div className="h-full bg-indigo-500 rounded-full" style={{ width: `${x.v}%` }} />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {ev.summary && (
+                    <div className="bg-white rounded-xl border border-gray-200 p-5">
+                      <h3 className="text-sm font-bold text-gray-900 mb-2">総合評価</h3>
+                      <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-line">{ev.summary}</p>
+                    </div>
+                  )}
+
+                  {Array.isArray(ev.strengths) && ev.strengths.length > 0 && (
+                    <div className="bg-white rounded-xl border border-gray-200 p-5">
+                      <h3 className="text-sm font-bold text-emerald-700 mb-3">強み</h3>
+                      <ul className="space-y-2">
+                        {ev.strengths.map((s, i) => (
+                          <li key={i} className="text-sm text-gray-700 flex gap-2">
+                            <span className="text-emerald-500">◎</span>{s}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  {Array.isArray(ev.improvements) && ev.improvements.length > 0 && (
+                    <div className="bg-white rounded-xl border border-gray-200 p-5">
+                      <h3 className="text-sm font-bold text-amber-700 mb-3">改善ポイント</h3>
+                      <ul className="space-y-2">
+                        {ev.improvements.map((s, i) => (
+                          <li key={i} className="text-sm text-gray-700 flex gap-2">
+                            <span className="text-amber-500">▲</span>{s}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  {ev.detailedFeedback && (
+                    <div className="bg-white rounded-xl border border-gray-200 p-5">
+                      <h3 className="text-sm font-bold text-gray-900 mb-2">詳細フィードバック</h3>
+                      <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-line">{ev.detailedFeedback}</p>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="bg-white rounded-xl border border-gray-200 p-6 text-center">
+                  <p className="text-sm text-gray-500">フィードバックを準備しています...</p>
+                </div>
+              )}
+
+              <div className="flex items-center justify-center gap-3 mt-8">
+                <button
+                  onClick={() => router.push("/interview")}
+                  className="bg-indigo-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-indigo-700 transition-colors text-sm"
+                >
+                  別の分野を練習する
+                </button>
+                <button
+                  onClick={() => router.push("/home")}
+                  className="bg-white text-gray-700 border border-gray-200 px-6 py-3 rounded-lg font-medium hover:bg-gray-50 transition-colors text-sm"
+                >
+                  ホームに戻る
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
     return (
       <div className="min-h-screen bg-gray-50 flex flex-col">
         <LiveInterviewHeader subtitle="面接完了" timerDisplay={timerDisplay} showRec={false} showQuestionCount={false} questionCount={0} maxQuestions={maxInterviewQuestions} />
